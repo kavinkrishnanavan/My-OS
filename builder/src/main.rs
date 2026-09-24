@@ -96,6 +96,7 @@ fn main() {
         ("tscdemo", "tscdemo", "tscdemo.elf"),
         ("fsdemo", "fsdemo", "fsdemo.elf"),
         ("mmapdemo", "mmapdemo", "mmapdemo.elf"),
+        ("unixdemo", "unixdemo", "unixdemo.elf"),
     ];
 
     let target_root = std::env::var_os("CARGO_TARGET_DIR")

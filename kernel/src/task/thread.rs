@@ -135,6 +135,23 @@ struct Thread {
     /// collide, initialized to `crate::mmap::MMAP_BASE` for isolated
     /// threads and unused (`0`) otherwise, same convention as `heap_next`.
     mmap_next: u64,
+    /// Whichever thread was `sched.current` at the moment this one was
+    /// spawned (`SYS_GETPPID`) — real for every isolated thread, including
+    /// a boot-spawned `spawn_userland_demos` process (parent is thread 0,
+    /// the boot thread, not a special-cased `None`). `None` only for the
+    /// three non-isolated kernel-thread demo paths, which never go
+    /// through `finish_spawn_isolated` at all.
+    parent: Option<ThreadId>,
+    /// This thread's working directory (`SYS_GETCWD`/`SYS_CHDIR`) — a
+    /// real, if minimal, feature: `chdir` validates the target is an
+    /// actual directory via `fs::stat` before accepting it, this isn't a
+    /// no-op stub. Every thread starts at `"/"`.
+    cwd: alloc::string::String,
+    /// `SYS_UMASK`'s stored value — accepted and returned faithfully, but
+    /// nothing in `fs.rs` actually enforces file permissions yet (this
+    /// FAT32 filesystem has no permission bits at all), so this is
+    /// honestly inert bookkeeping, not real access control.
+    umask: u64,
     /// This thread's open files (`sys_open`/`sys_read`/`sys_close`),
     /// keyed by file descriptor. Whole-file, not streamed — `fs::read`
     /// itself only ever reads a complete file at once (see its own doc
@@ -197,6 +214,16 @@ enum OpenFile {
     /// the refcount gets dropped on teardown.
     PipeRead { id: crate::pipe::PipeId },
     PipeWrite { id: crate::pipe::PipeId },
+    /// `sys_usock_create`/`sys_usock_accept` — an in-kernel Unix domain
+    /// socket (`crate::unixsocket`), routed through the regular fd table
+    /// (unlike a raw `UnixSocketId`, which has no per-thread ownership or
+    /// teardown on its own) so `SYS_CLOSE` and thread-exit's
+    /// `finalize_open_files` reclaim it the same way every other fd kind
+    /// already does — without this, a thread that exits (or crashes)
+    /// without an explicit close would leak the socket, and worse, a
+    /// listener's bound name would stay claimed forever, permanently
+    /// blocking anyone else from ever binding it again.
+    UnixSocket { id: crate::unixsocket::UnixSocketId },
 }
 
 struct Scheduler {
@@ -225,7 +252,7 @@ static SCHEDULER: Mutex<Option<Scheduler>> = Mutex::new(None);
 pub fn init() {
     without_interrupts(|| {
         let mut threads = BTreeMap::new();
-        threads.insert(ThreadId(0), Thread { saved_gpr_rsp: 0, _stack: None, frame_buf: None, cr3: None, heap_next: 0, mmap_next: 0, open_files: BTreeMap::new(), next_fd: FIRST_REAL_FD, owned_frames: alloc::vec::Vec::new(), arg: alloc::vec::Vec::new() });
+        threads.insert(ThreadId(0), Thread { saved_gpr_rsp: 0, _stack: None, frame_buf: None, cr3: None, heap_next: 0, mmap_next: 0, parent: None, cwd: alloc::string::String::from("/"), umask: 0o022, open_files: BTreeMap::new(), next_fd: FIRST_REAL_FD, owned_frames: alloc::vec::Vec::new(), arg: alloc::vec::Vec::new() });
         *SCHEDULER.lock() = Some(Scheduler {
             threads,
             ready: VecDeque::new(),
@@ -284,7 +311,7 @@ pub fn spawn(entry: extern "C" fn() -> !) -> ThreadId {
     without_interrupts(|| {
         let mut guard = SCHEDULER.lock();
         let sched = guard.as_mut().expect("task::thread::init() must run before spawn()");
-        sched.threads.insert(id, Thread { saved_gpr_rsp: gpr_rsp, _stack: Some(stack), frame_buf: None, cr3: None, heap_next: 0, mmap_next: 0, open_files: BTreeMap::new(), next_fd: FIRST_REAL_FD, owned_frames: alloc::vec::Vec::new(), arg: alloc::vec::Vec::new() });
+        sched.threads.insert(id, Thread { saved_gpr_rsp: gpr_rsp, _stack: Some(stack), frame_buf: None, cr3: None, heap_next: 0, mmap_next: 0, parent: None, cwd: alloc::string::String::from("/"), umask: 0o022, open_files: BTreeMap::new(), next_fd: FIRST_REAL_FD, owned_frames: alloc::vec::Vec::new(), arg: alloc::vec::Vec::new() });
         sched.ready.push_back(id);
     });
 
@@ -344,7 +371,7 @@ pub fn spawn_user(payload: &[u8]) -> Result<ThreadId, &'static str> {
     without_interrupts(|| {
         let mut guard = SCHEDULER.lock();
         let sched = guard.as_mut().expect("task::thread::init() must run before spawn_user()");
-        sched.threads.insert(id, Thread { saved_gpr_rsp: gpr_rsp, _stack: None, frame_buf: Some(frame_buf), cr3: None, heap_next: 0, mmap_next: 0, open_files: BTreeMap::new(), next_fd: FIRST_REAL_FD, owned_frames: alloc::vec::Vec::new(), arg: alloc::vec::Vec::new() });
+        sched.threads.insert(id, Thread { saved_gpr_rsp: gpr_rsp, _stack: None, frame_buf: Some(frame_buf), cr3: None, heap_next: 0, mmap_next: 0, parent: None, cwd: alloc::string::String::from("/"), umask: 0o022, open_files: BTreeMap::new(), next_fd: FIRST_REAL_FD, owned_frames: alloc::vec::Vec::new(), arg: alloc::vec::Vec::new() });
         sched.ready.push_back(id);
     });
 
@@ -444,9 +471,10 @@ fn finish_spawn_isolated(cr3_frame: PhysFrame<Size4KiB>, entry_point: u64, stack
     without_interrupts(|| {
         let mut guard = SCHEDULER.lock();
         let sched = guard.as_mut().expect("task::thread::init() must run before spawning an isolated thread");
+        let parent = Some(sched.current);
         sched
             .threads
-            .insert(id, Thread { saved_gpr_rsp: gpr_rsp, _stack: None, frame_buf: Some(frame_buf), cr3: Some(cr3_frame), heap_next: HEAP_BASE, mmap_next: crate::mmap::MMAP_BASE, open_files: BTreeMap::new(), next_fd: FIRST_REAL_FD, owned_frames, arg });
+            .insert(id, Thread { saved_gpr_rsp: gpr_rsp, _stack: None, frame_buf: Some(frame_buf), cr3: Some(cr3_frame), heap_next: HEAP_BASE, mmap_next: crate::mmap::MMAP_BASE, parent, cwd: alloc::string::String::from("/"), umask: 0o022, open_files: BTreeMap::new(), next_fd: FIRST_REAL_FD, owned_frames, arg });
         sched.ready.push_back(id);
     });
 
@@ -754,6 +782,87 @@ pub fn sys_munmap(addr: u64, bytes: u64) -> u64 {
     }
 }
 
+/// This kernel is single-user (no real accounts, no permission
+/// enforcement anywhere in `fs.rs`) — `SYS_GETUID`/`SYS_GETGID`/
+/// `SYS_GETEUID`/`SYS_GETEGID` all honestly return `0` ("root"), the same
+/// simplification a lot of embedded/hobby kernels make rather than
+/// building a real user/group model nothing here would enforce anyway.
+pub fn sys_getuid() -> u64 {
+    0
+}
+
+/// The kernel side of `SYS_GETPPID`: this thread's `parent` field, or
+/// `u64::MAX` if it has none (a non-isolated kernel-thread demo — see
+/// `Thread::parent`'s own doc comment).
+pub fn sys_getppid() -> u64 {
+    let guard = SCHEDULER.lock();
+    let sched = guard.as_ref().expect("scheduler not initialized");
+    let thread = sched.threads.get(&sched.current).expect("current thread must be registered");
+    thread.parent.map(|p| p.0).unwrap_or(FD_ERROR)
+}
+
+/// The kernel side of `SYS_GETCWD`: copies this thread's `cwd` string
+/// into `buf_ptr[..buf_len]`, returning how many bytes actually landed
+/// (truncated, not erroring, if `buf_len` is too small — same permissive
+/// posture `sys_getarg` already takes).
+pub fn sys_getcwd(buf_ptr: u64, buf_len: u64) -> u64 {
+    let guard = SCHEDULER.lock();
+    let sched = guard.as_ref().expect("scheduler not initialized");
+    let thread = sched.threads.get(&sched.current).expect("current thread must be registered");
+    let bytes = thread.cwd.as_bytes();
+    let n = bytes.len().min(buf_len as usize);
+    unsafe { core::ptr::copy_nonoverlapping(bytes.as_ptr(), buf_ptr as *mut u8, n) };
+    n as u64
+}
+
+/// The kernel side of `SYS_CHDIR`: a real check, not a no-op — the target
+/// must actually exist and be a directory per `crate::fs::stat`, matching
+/// what a real `chdir` refuses. `path` is stored as an owned `String`
+/// (independent of the caller's own copy, which has no guaranteed
+/// lifetime past this call — same reasoning `sys_open`'s `OpenFile::Write`
+/// path already documents).
+pub fn sys_chdir(path_ptr: u64, path_len: u64) -> u64 {
+    let path_bytes = unsafe { core::slice::from_raw_parts(path_ptr as *const u8, path_len as usize) };
+    let Ok(path) = core::str::from_utf8(path_bytes) else {
+        return FD_ERROR;
+    };
+    let stat = crate::fs::stat(path);
+    if !stat.exists || !stat.is_dir {
+        return FD_ERROR;
+    }
+
+    let mut guard = SCHEDULER.lock();
+    let sched = guard.as_mut().expect("scheduler not initialized");
+    let id = sched.current;
+    let thread = sched.threads.get_mut(&id).expect("current thread must be registered");
+    thread.cwd = alloc::string::String::from(path);
+    0
+}
+
+/// The kernel side of `SYS_UMASK`: stores `new_mask` and returns whatever
+/// was stored before — the classic `umask` return convention. Accepted
+/// and returned faithfully; see `Thread::umask`'s own doc comment for why
+/// nothing actually enforces it yet.
+pub fn sys_umask(new_mask: u64) -> u64 {
+    let mut guard = SCHEDULER.lock();
+    let sched = guard.as_mut().expect("scheduler not initialized");
+    let id = sched.current;
+    let thread = sched.threads.get_mut(&id).expect("current thread must be registered");
+    let old = thread.umask;
+    thread.umask = new_mask;
+    old
+}
+
+/// The kernel side of `SYS_ISATTY`: `1` only for `fd == 1` (the `stdout`
+/// convention every demo's `Writer` already targets — see
+/// `interrupts.rs`'s `SYS_WRITE` handler), `0` for everything else. There
+/// is no real terminal/tty layer here at all; this is an honest
+/// reflection of the one fd this kernel treats specially, not a faked
+/// general tty subsystem.
+pub fn sys_isatty(fd: u64) -> u64 {
+    (fd == 1) as u64
+}
+
 /// A sentinel, not a real fd — every syscall below uses `u64::MAX` for
 /// "this failed" (bad path, bad utf8, unknown fd), the same loose
 /// convention `spawn`/`sbrk`'s callers already tolerate. There's no
@@ -766,6 +875,127 @@ const FD_ERROR: u64 = u64::MAX;
 /// more progress" (driven by `net_poll_loop`, not this call itself —
 /// see `OpenFile::Socket`'s doc comment).
 const WOULD_BLOCK: u64 = u64::MAX - 1;
+
+/// The kernel side of `SYS_USOCK_CREATE`: allocates a fresh
+/// `crate::unixsocket` id and immediately wraps it in a regular fd (see
+/// `OpenFile::UnixSocket`'s doc comment for why — teardown on close/exit
+/// needs it), so every other unix-socket syscall below takes a normal fd
+/// number, not a raw `UnixSocketId`. Always succeeds.
+pub fn sys_usock_create() -> u64 {
+    let socket_id = crate::unixsocket::create();
+    let mut guard = SCHEDULER.lock();
+    let sched = guard.as_mut().expect("scheduler not initialized");
+    let id = sched.current;
+    let thread = sched.threads.get_mut(&id).expect("current thread must be registered");
+    let fd = thread.next_fd;
+    thread.next_fd += 1;
+    thread.open_files.insert(fd, OpenFile::UnixSocket { id: socket_id });
+    fd as u64
+}
+
+/// Looks up `fd`'s underlying `UnixSocketId`, or `None` if `fd` isn't a
+/// `UnixSocket` fd at all. Shared by every `sys_usock_*` call below that
+/// needs to translate a caller's fd into the id `crate::unixsocket`
+/// actually operates on.
+fn usock_id_for_fd(fd: u64) -> Option<crate::unixsocket::UnixSocketId> {
+    let guard = SCHEDULER.lock();
+    let sched = guard.as_ref().expect("scheduler not initialized");
+    let thread = sched.threads.get(&sched.current).expect("current thread must be registered");
+    match thread.open_files.get(&(fd as u32)) {
+        Some(OpenFile::UnixSocket { id }) => Some(*id),
+        _ => None,
+    }
+}
+
+/// The kernel side of `SYS_USOCK_BIND_LISTEN`: `rdi`-equivalent `fd` must
+/// be a `UnixSocket` fd from `sys_usock_create`. `0` success, `FD_ERROR`
+/// failure (bad fd, or the name is already bound).
+pub fn sys_usock_bind_listen(fd: u64, name_ptr: u64, name_len: u64, backlog: u64) -> u64 {
+    let Some(socket_id) = usock_id_for_fd(fd) else {
+        return FD_ERROR;
+    };
+    let name_bytes = unsafe { core::slice::from_raw_parts(name_ptr as *const u8, name_len as usize) };
+    let Ok(name) = core::str::from_utf8(name_bytes) else {
+        return FD_ERROR;
+    };
+    match crate::unixsocket::bind_and_listen(socket_id, name, backlog as usize) {
+        Ok(()) => 0,
+        Err(_) => FD_ERROR,
+    }
+}
+
+/// The kernel side of `SYS_USOCK_ACCEPT`: on a real pending connection,
+/// mints a *new* fd (own `OpenFile::UnixSocket` entry, own lifetime —
+/// independent of the listening fd) for the accepted end and returns it.
+/// `WOULD_BLOCK` if nothing's pending yet, `FD_ERROR` if `fd` isn't a
+/// listening `UnixSocket` fd at all.
+pub fn sys_usock_accept(fd: u64) -> u64 {
+    let Some(socket_id) = usock_id_for_fd(fd) else {
+        return FD_ERROR;
+    };
+    match crate::unixsocket::accept(socket_id) {
+        Ok(accepted_id) => {
+            let mut guard = SCHEDULER.lock();
+            let sched = guard.as_mut().expect("scheduler not initialized");
+            let id = sched.current;
+            let thread = sched.threads.get_mut(&id).expect("current thread must be registered");
+            let new_fd = thread.next_fd;
+            thread.next_fd += 1;
+            thread.open_files.insert(new_fd, OpenFile::UnixSocket { id: accepted_id });
+            new_fd as u64
+        }
+        Err(crate::unixsocket::UnixSocketError::WouldBlock) => WOULD_BLOCK,
+        Err(_) => FD_ERROR,
+    }
+}
+
+/// The kernel side of `SYS_USOCK_CONNECT`: `0` success, `FD_ERROR`
+/// failure (bad fd, or nothing listening under `name` / its backlog is
+/// full — see `unixsocket::connect`'s own doc comment on why those two
+/// cases share one error).
+pub fn sys_usock_connect(fd: u64, name_ptr: u64, name_len: u64) -> u64 {
+    let Some(socket_id) = usock_id_for_fd(fd) else {
+        return FD_ERROR;
+    };
+    let name_bytes = unsafe { core::slice::from_raw_parts(name_ptr as *const u8, name_len as usize) };
+    let Ok(name) = core::str::from_utf8(name_bytes) else {
+        return FD_ERROR;
+    };
+    match crate::unixsocket::connect(socket_id, name) {
+        Ok(()) => 0,
+        Err(_) => FD_ERROR,
+    }
+}
+
+/// The kernel side of `SYS_USOCK_READ`. `WOULD_BLOCK` if connected but
+/// nothing's buffered yet, `FD_ERROR` for a bad fd or a genuinely broken
+/// connection (should not arise in normal use — see `unixsocket::read`'s
+/// own doc comment on when it returns `BrokenPipe`).
+pub fn sys_usock_read(fd: u64, buf_ptr: u64, len: u64) -> u64 {
+    let Some(socket_id) = usock_id_for_fd(fd) else {
+        return FD_ERROR;
+    };
+    let buf = unsafe { core::slice::from_raw_parts_mut(buf_ptr as *mut u8, len as usize) };
+    match crate::unixsocket::read(socket_id, buf) {
+        Ok(n) => n as u64,
+        Err(crate::unixsocket::UnixSocketError::WouldBlock) => WOULD_BLOCK,
+        Err(_) => FD_ERROR,
+    }
+}
+
+/// The kernel side of `SYS_USOCK_WRITE`. Same return convention as
+/// `sys_usock_read`.
+pub fn sys_usock_write(fd: u64, buf_ptr: u64, len: u64) -> u64 {
+    let Some(socket_id) = usock_id_for_fd(fd) else {
+        return FD_ERROR;
+    };
+    let buf = unsafe { core::slice::from_raw_parts(buf_ptr as *const u8, len as usize) };
+    match crate::unixsocket::write(socket_id, buf) {
+        Ok(n) => n as u64,
+        Err(crate::unixsocket::UnixSocketError::WouldBlock) => WOULD_BLOCK,
+        Err(_) => FD_ERROR,
+    }
+}
 
 /// The kernel side of `SYS_OPEN`: reads `path_ptr[..path_len]` (user
 /// memory — valid to dereference directly here for the same reason
@@ -1378,6 +1608,10 @@ fn finalize_open_file(file: OpenFile) -> u64 {
         }
         OpenFile::PipeWrite { id } => {
             crate::pipe::close_write_end(id);
+            0
+        }
+        OpenFile::UnixSocket { id } => {
+            crate::unixsocket::close(id);
             0
         }
     }

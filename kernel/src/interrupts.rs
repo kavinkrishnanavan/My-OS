@@ -394,6 +394,21 @@ const SYS_RENAME: u64 = 30;
 const SYS_STAT: u64 = 31;
 const SYS_MMAP_ANON: u64 = 32;
 const SYS_MUNMAP: u64 = 33;
+const SYS_GETUID: u64 = 34;
+const SYS_GETGID: u64 = 35;
+const SYS_GETEUID: u64 = 36;
+const SYS_GETEGID: u64 = 37;
+const SYS_GETPPID: u64 = 38;
+const SYS_GETCWD: u64 = 39;
+const SYS_CHDIR: u64 = 40;
+const SYS_UMASK: u64 = 41;
+const SYS_ISATTY: u64 = 42;
+const SYS_USOCK_CREATE: u64 = 43;
+const SYS_USOCK_BIND_LISTEN: u64 = 44;
+const SYS_USOCK_ACCEPT: u64 = 45;
+const SYS_USOCK_CONNECT: u64 = 46;
+const SYS_USOCK_READ: u64 = 47;
+const SYS_USOCK_WRITE: u64 = 48;
 
 /// Upper bound on one `SYS_WRITE` call — it reads directly out of user
 /// memory with no length-vs-actual-mapping validation (see the handler's
@@ -696,6 +711,68 @@ extern "C" fn syscall_handler(_frame: *const RawInterruptFrame, gprs: *mut Saved
         // most recent `SYS_MMAP_ANON` call (LIFO-only arena).
         SYS_MUNMAP => {
             g.rax = crate::task::thread::sys_munmap(g.rdi, g.rsi);
+            gprs_addr
+        }
+        // No args. This kernel is single-user — see `sys_getuid`'s own
+        // doc comment — so all four of these honestly return `0`.
+        SYS_GETUID | SYS_GETGID | SYS_GETEUID | SYS_GETEGID => {
+            g.rax = crate::task::thread::sys_getuid();
+            gprs_addr
+        }
+        // No args. Returns the spawning thread's id, or `u64::MAX` for a
+        // thread with no parent (a non-isolated kernel-thread demo).
+        SYS_GETPPID => {
+            g.rax = crate::task::thread::sys_getppid();
+            gprs_addr
+        }
+        // `rdi`/`rsi` = buf ptr/len. Returns bytes written.
+        SYS_GETCWD => {
+            g.rax = crate::task::thread::sys_getcwd(g.rdi, g.rsi);
+            gprs_addr
+        }
+        // `rdi`/`rsi` = path ptr/len. `0` success (target must actually
+        // be a directory), `u64::MAX` failure.
+        SYS_CHDIR => {
+            g.rax = crate::task::thread::sys_chdir(g.rdi, g.rsi);
+            gprs_addr
+        }
+        // `rdi` = new mask. Returns the previous mask.
+        SYS_UMASK => {
+            g.rax = crate::task::thread::sys_umask(g.rdi);
+            gprs_addr
+        }
+        // `rdi` = fd. `1` iff `fd == 1` (the stdout convention).
+        SYS_ISATTY => {
+            g.rax = crate::task::thread::sys_isatty(g.rdi);
+            gprs_addr
+        }
+        // No args. Returns a fresh unix-socket fd — always succeeds.
+        SYS_USOCK_CREATE => {
+            g.rax = crate::task::thread::sys_usock_create();
+            gprs_addr
+        }
+        // `rdi` = fd, `rsi`/`rdx` = name ptr/len, `r8` = backlog.
+        SYS_USOCK_BIND_LISTEN => {
+            g.rax = crate::task::thread::sys_usock_bind_listen(g.rdi, g.rsi, g.rdx, g.r8);
+            gprs_addr
+        }
+        // `rdi` = listening fd. Returns a new fd for the accepted
+        // connection, `WOULD_BLOCK`, or `FD_ERROR`.
+        SYS_USOCK_ACCEPT => {
+            g.rax = crate::task::thread::sys_usock_accept(g.rdi);
+            gprs_addr
+        }
+        // `rdi` = fd, `rsi`/`rdx` = name ptr/len.
+        SYS_USOCK_CONNECT => {
+            g.rax = crate::task::thread::sys_usock_connect(g.rdi, g.rsi, g.rdx);
+            gprs_addr
+        }
+        SYS_USOCK_READ => {
+            g.rax = crate::task::thread::sys_usock_read(g.rdi, g.rsi, g.rdx);
+            gprs_addr
+        }
+        SYS_USOCK_WRITE => {
+            g.rax = crate::task::thread::sys_usock_write(g.rdi, g.rsi, g.rdx);
             gprs_addr
         }
         other => {

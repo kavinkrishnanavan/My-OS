@@ -108,6 +108,26 @@ pub extern "C" fn _start() -> ! {
         ct.year, ct.month, ct.day, ct.hour, ct.minute, ct.second, ct.nanos
     );
 
+    // Proves SYS_GETUID/GETPPID/GETCWD/CHDIR/UMASK/ISATTY.
+    let mut cwd_buf = [0u8; 32];
+    let cwd_len = myos_userlib::getcwd(&mut cwd_buf);
+    let mut cwd_before_buf = [0u8; 32];
+    cwd_before_buf[..cwd_len].copy_from_slice(&cwd_buf[..cwd_len]);
+    let cwd_before = core::str::from_utf8(&cwd_before_buf[..cwd_len]).unwrap_or("?");
+    let chdir_ok = myos_userlib::chdir("SUBDIR");
+    let cwd_len2 = myos_userlib::getcwd(&mut cwd_buf);
+    let cwd_after = core::str::from_utf8(&cwd_buf[..cwd_len2]).unwrap_or("?");
+    let chdir_bogus = myos_userlib::chdir("NOPE_NOT_A_DIR");
+    let old_umask = myos_userlib::umask(0o077);
+    let _ = writeln!(
+        Writer,
+        "spawner: getuid={} getppid={} cwd_before={cwd_before:?} chdir(SUBDIR)={chdir_ok} cwd_after={cwd_after:?} chdir(bogus)={chdir_bogus} umask(0o077) old={old_umask:#o} isatty(1)={} isatty(99)={}",
+        myos_userlib::getuid(),
+        myos_userlib::getppid(),
+        myos_userlib::isatty(1),
+        myos_userlib::isatty(99)
+    );
+
     myos_userlib::exit(0);
 }
 

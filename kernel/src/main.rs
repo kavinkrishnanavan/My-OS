@@ -37,6 +37,7 @@ mod rtc;
 mod serial;
 mod task;
 mod tsc;
+mod unixsocket;
 
 use bootloader_api::config::{BootloaderConfig, Mapping};
 use bootloader_api::{entry_point, BootInfo};
@@ -277,6 +278,7 @@ fn spawn_userland_demos() {
         "TSCDEMO.ELF",
         "FSDEMO.ELF",
         "MMAPDEMO.ELF",
+        "UNIXDEMO.ELF",
     ] {
         match fs::read(name) {
             Ok(bytes) => {

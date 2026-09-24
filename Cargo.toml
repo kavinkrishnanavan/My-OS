@@ -14,6 +14,7 @@ members = [
     "userland/tscdemo",
     "userland/fsdemo",
     "userland/mmapdemo",
+    "userland/unixdemo",
 ]
 
 # The builder runs on the HOST (Windows/Linux/macOS, normal std Rust) and

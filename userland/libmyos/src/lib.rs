@@ -55,6 +55,21 @@ const SYS_RENAME: u64 = 30;
 const SYS_STAT: u64 = 31;
 const SYS_MMAP_ANON: u64 = 32;
 const SYS_MUNMAP: u64 = 33;
+const SYS_GETUID: u64 = 34;
+const SYS_GETGID: u64 = 35;
+const SYS_GETEUID: u64 = 36;
+const SYS_GETEGID: u64 = 37;
+const SYS_GETPPID: u64 = 38;
+const SYS_GETCWD: u64 = 39;
+const SYS_CHDIR: u64 = 40;
+const SYS_UMASK: u64 = 41;
+const SYS_ISATTY: u64 = 42;
+const SYS_USOCK_CREATE: u64 = 43;
+const SYS_USOCK_BIND_LISTEN: u64 = 44;
+const SYS_USOCK_ACCEPT: u64 = 45;
+const SYS_USOCK_CONNECT: u64 = 46;
+const SYS_USOCK_READ: u64 = 47;
+const SYS_USOCK_WRITE: u64 = 48;
 
 /// The stdout convention `write_fd`'s callers (and `Writer`) use —
 /// `interrupts.rs`'s `SYS_WRITE` handler special-cases this straight to
@@ -548,9 +563,16 @@ pub fn arg_string() -> Option<alloc::string::String> {
 /// actually lets the scheduler preempt this thread and make progress on
 /// the child in between attempts; the pause between attempts just avoids
 /// hammering the scheduler lock harder than this needs to.
+/// Bounded, not truly infinite: an unbounded retry loop here is exactly
+/// the polling anti-pattern this kernel's own ATA driver and DMA
+/// allocator both had to be fixed for earlier — if the awaited thread
+/// somehow never exits, this returns `u64::MAX` instead of hanging the
+/// caller forever, converting a silent hang into a diagnosable failure.
+const WAIT_RETRY_LIMIT: u32 = 500_000;
+
 pub fn wait(handle: u64) -> u64 {
     let mut status: u64 = 0;
-    loop {
+    for _ in 0..WAIT_RETRY_LIMIT {
         let done: u64;
         unsafe {
             asm!(
@@ -567,6 +589,7 @@ pub fn wait(handle: u64) -> u64 {
             core::hint::spin_loop();
         }
     }
+    u64::MAX
 }
 
 /// Forcibly terminates another process (`handle`, a `spawn` return
@@ -809,6 +832,110 @@ pub fn pipe() -> Option<(u64, u64)> {
     }
 }
 
+/// Creates a fresh, unbound Unix-domain-socket-like endpoint (see
+/// `kernel/src/unixsocket.rs`) — a named, connection-oriented,
+/// non-blocking IPC primitive distinct from `pipe()`'s anonymous
+/// one-directional buffer: this one is addressed by a string, supports
+/// multiple independent connections via `usock_bind_listen`/
+/// `usock_accept`, and each connection is bidirectional. Always
+/// succeeds, returning a fresh socket id — not a real fd, and *not*
+/// valid as an argument to `close`/`read`/`write_fd`; use
+/// `usock_read`/`usock_write` instead (unix-socket ids live in a
+/// separate id space from the regular fd table).
+pub fn usock_create() -> u64 {
+    simple_syscall(SYS_USOCK_CREATE)
+}
+
+/// Binds `id` (from `usock_create`) to `name` and starts listening,
+/// with `backlog` pending connections queued before `usock_accept`
+/// catches up. Returns `true` on success, `false` if `name` is already
+/// bound by another listening socket.
+pub fn usock_bind_listen(id: u64, name: &str, backlog: u64) -> bool {
+    let result: u64;
+    unsafe {
+        asm!(
+            "int 0x80",
+            inout("rax") SYS_USOCK_BIND_LISTEN => result,
+            in("rdi") id,
+            in("rsi") name.as_ptr() as u64,
+            in("rdx") name.len() as u64,
+            in("r8") backlog,
+        );
+    }
+    result == 0
+}
+
+/// Non-blocking accept on a listening socket `id`: returns a *new*
+/// socket id for the next pending connection, `WOULD_BLOCK` if nothing
+/// is pending yet (retry later — see `connect_blocking`'s doc comment
+/// for the general shape of that retry loop), or `u64::MAX` if `id`
+/// isn't a listening socket at all.
+pub fn usock_accept(id: u64) -> u64 {
+    let result: u64;
+    unsafe {
+        asm!(
+            "int 0x80",
+            inout("rax") SYS_USOCK_ACCEPT => result,
+            in("rdi") id,
+        );
+    }
+    result
+}
+
+/// Connects socket `id` (from `usock_create`) to whatever's listening
+/// under `name`. Returns `true` on success, `false` if nothing is
+/// listening under that name or its backlog is full.
+pub fn usock_connect(id: u64, name: &str) -> bool {
+    let result: u64;
+    unsafe {
+        asm!(
+            "int 0x80",
+            inout("rax") SYS_USOCK_CONNECT => result,
+            in("rdi") id,
+            in("rsi") name.as_ptr() as u64,
+            in("rdx") name.len() as u64,
+        );
+    }
+    result == 0
+}
+
+/// Reads up to `buf.len()` bytes from a connected unix-socket `id` into
+/// `buf`, returning how many actually landed (`0` at EOF), `WOULD_BLOCK`
+/// if the connection is open but nothing's arrived yet, or `u64::MAX` if
+/// `id` isn't a connected socket. Use this instead of `read` — unix-socket
+/// ids don't live in the regular fd table `SYS_READ` looks up.
+pub fn usock_read(id: u64, buf: &mut [u8]) -> u64 {
+    let n: u64;
+    unsafe {
+        asm!(
+            "int 0x80",
+            inout("rax") SYS_USOCK_READ => n,
+            in("rdi") id,
+            in("rsi") buf.as_mut_ptr() as u64,
+            in("rdx") buf.len() as u64,
+        );
+    }
+    n
+}
+
+/// Writes `buf` to a connected unix-socket `id`, returning how many
+/// bytes were accepted, `WOULD_BLOCK` if the connection's buffer is
+/// currently full, or `u64::MAX` if `id` isn't a connected socket. Use
+/// this instead of `write_fd` — see `usock_read`'s doc comment for why.
+pub fn usock_write(id: u64, buf: &[u8]) -> u64 {
+    let n: u64;
+    unsafe {
+        asm!(
+            "int 0x80",
+            inout("rax") SYS_USOCK_WRITE => n,
+            in("rdi") id,
+            in("rsi") buf.as_ptr() as u64,
+            in("rdx") buf.len() as u64,
+        );
+    }
+    n
+}
+
 /// Terminates this thread — never returns. Whatever's ready next (some
 /// other thread, or this kernel's idle loop) resumes in its place.
 /// `status` is an arbitrary caller-defined code (`wait`, if anything
@@ -882,4 +1009,97 @@ unsafe impl GlobalAlloc for SbrkBumpAllocator {
     }
 
     unsafe fn dealloc(&self, _ptr: *mut u8, _layout: Layout) {}
+}
+
+/// This kernel is single-user — always `0` ("root"). See
+/// `kernel/src/task/thread.rs`'s `sys_getuid` doc comment.
+pub fn getuid() -> u64 {
+    simple_syscall(SYS_GETUID)
+}
+pub fn getgid() -> u64 {
+    simple_syscall(SYS_GETGID)
+}
+pub fn geteuid() -> u64 {
+    simple_syscall(SYS_GETEUID)
+}
+pub fn getegid() -> u64 {
+    simple_syscall(SYS_GETEGID)
+}
+
+/// The `ThreadId` of whoever spawned this process, or `u64::MAX` if it
+/// has none (a boot-time kernel-thread demo, not a real spawned process).
+pub fn getppid() -> u64 {
+    simple_syscall(SYS_GETPPID)
+}
+
+fn simple_syscall(num: u64) -> u64 {
+    let result: u64;
+    unsafe {
+        asm!(
+            "int 0x80",
+            inout("rax") num => result,
+        );
+    }
+    result
+}
+
+/// Copies this process's working directory into `buf`, returning how
+/// many bytes actually landed (truncated if `buf` is too small).
+pub fn getcwd(buf: &mut [u8]) -> usize {
+    let n: u64;
+    unsafe {
+        asm!(
+            "int 0x80",
+            inout("rax") SYS_GETCWD => n,
+            in("rdi") buf.as_mut_ptr() as u64,
+            in("rsi") buf.len() as u64,
+        );
+    }
+    n as usize
+}
+
+/// Changes this process's working directory. `path` must actually be an
+/// existing directory (checked kernel-side via `stat`) — this isn't a
+/// no-op. Returns `true` on success.
+pub fn chdir(path: &str) -> bool {
+    let result: u64;
+    unsafe {
+        asm!(
+            "int 0x80",
+            inout("rax") SYS_CHDIR => result,
+            in("rdi") path.as_ptr() as u64,
+            in("rsi") path.len() as u64,
+        );
+    }
+    result == 0
+}
+
+/// Sets the umask, returning the previous value. Accepted and returned
+/// faithfully, but nothing in this kernel's filesystem enforces
+/// permissions yet — see the kernel-side `sys_umask` doc comment.
+pub fn umask(new_mask: u64) -> u64 {
+    let old: u64;
+    unsafe {
+        asm!(
+            "int 0x80",
+            inout("rax") SYS_UMASK => old,
+            in("rdi") new_mask,
+        );
+    }
+    old
+}
+
+/// `true` only for `fd == STDOUT` — there is no real tty layer in this
+/// kernel; this reflects the one fd treated specially, not a general
+/// terminal subsystem.
+pub fn isatty(fd: u64) -> bool {
+    let result: u64;
+    unsafe {
+        asm!(
+            "int 0x80",
+            inout("rax") SYS_ISATTY => result,
+            in("rdi") fd,
+        );
+    }
+    result != 0
 }
