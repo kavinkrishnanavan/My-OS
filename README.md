@@ -95,11 +95,32 @@ cargo build -p myos-kernel --release
 # query if it isn't already a dotted-quad IP, opens its own TCP socket
 # fd, and does a real HTTP GET, printing the response — the same TCP/IP
 # stack the kernel's own boot-time HTTPS fetch uses, now reachable from
-# ring 3 instead of only from kernel code.
+# ring 3 instead of only from kernel code. pipedemo proves SYS_PIPE: a
+# real Unix-style in-kernel pipe (kernel/src/pipe.rs — a refcounted ring
+# buffer, non-blocking read/write since a syscall handler can never park
+# itself) — it opens a pipe, writes a message into the write end, closes
+# it, and reads the bytes back out the read end, round-tripping through
+# the kernel's own buffer rather than anything the two ends share
+# directly. Built by two parallel agents at once (kernel/src/pipe.rs;
+# the userland wrapper + this demo crate), same fixed-ABI-spec pattern as
+# SYS_MEMINFO above — integration (interrupts.rs dispatch, thread.rs fd
+# wiring) done by hand afterward since that's the one shared-file surface
+# multiple agents can't safely touch at once in a repo with no git
+# merge. Also flushed out a real, pre-existing latent bug while
+# integrating: net::rtl8139::init()'s alloc_dma_region() needs physically
+# *contiguous* frames, but the frame allocator was serving frames out of
+# its freed-list (page-table frames reclaimed from a just-killed process)
+# ahead of its bump cursor — spawner.elf killing counter.elf during boot
+# could populate that list right as NIC init ran, handing back an
+# unrelated recycled address mid-loop and breaking contiguity
+# deterministically once a fourth boot-time ELF spawn (this demo) shifted
+# the timing enough to hit it every run. Fixed in kernel/src/allocator.rs
+# with a bump-cursor-only allocation path reserved for DMA.
 (cd userland/hello && cargo build --release)
 (cd userland/counter && cargo build --release)
 (cd userland/spawner && cargo build --release)
 (cd userland/httpget && cargo build --release)
+(cd userland/pipedemo && cargo build --release)
 
 # package it into bootable images (nightly, for the bootloader crate's own build-std step)
 # — this also creates dist/myos-data.img on first run: an MBR + FAT32
