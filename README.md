@@ -116,11 +116,24 @@ cargo build -p myos-kernel --release
 # deterministically once a fourth boot-time ELF spawn (this demo) shifted
 # the timing enough to hit it every run. Fixed in kernel/src/allocator.rs
 # with a bump-cursor-only allocation path reserved for DMA.
+#
+# keydemo/rtcdemo prove SYS_READ_KEY and SYS_RTC_NOW: kernel/src/keyboard.rs
+# is a real IRQ1-driven PS/2 driver (Scancode Set 1 -> ASCII into a
+# non-blocking ring buffer — unlike every syscall added before it, this one
+# needed a real IDT/PIC interrupt handler, not just a dispatch entry).
+# kernel/src/rtc.rs reads the CMOS real-time clock (handling the
+# update-in-progress race, BCD-vs-binary and 12h/24h modes) — rtcdemo's
+# boot-time output has matched the real host date/time. Built by four
+# parallel agents across two independent features at once (keyboard
+# driver, RTC driver, the libmyos wrappers, both demo crates), same
+# fixed-ABI-spec-then-hand-integrate pattern as SYS_PIPE above.
 (cd userland/hello && cargo build --release)
 (cd userland/counter && cargo build --release)
 (cd userland/spawner && cargo build --release)
 (cd userland/httpget && cargo build --release)
 (cd userland/pipedemo && cargo build --release)
+(cd userland/keydemo && cargo build --release)
+(cd userland/rtcdemo && cargo build --release)
 
 # package it into bootable images (nightly, for the bootloader crate's own build-std step)
 # — this also creates dist/myos-data.img on first run: an MBR + FAT32
