@@ -8,15 +8,15 @@
 //! back to the executor, get resumed when the NIC IRQ or PIT tick says
 //! "check again", never a spin loop.
 
-use crate::gfx::{self, Color};
-use crate::html;
+use crate::gfx;
 use crate::img;
+use crate::layout;
 use crate::net::stack::{self, net_tick};
 use crate::net::tcp_stream::TcpStream;
 use crate::net::tls;
 use crate::serial_println;
 use alloc::format;
-use alloc::string::String;
+use alloc::string::{String, ToString};
 use alloc::vec::Vec;
 use noto_sans_mono_bitmap::RasterHeight;
 use smoltcp::socket::dns::GetQueryResultError;
@@ -200,9 +200,7 @@ async fn get(ip: IpAddress, target: &Url<'_>) -> Result<Vec<u8>, &'static str> {
 async fn plain_get(mut tcp: TcpStream, host: &str, path: &str) -> Result<Vec<u8>, &'static str> {
     use embedded_io_async::Write;
 
-    let request = format!(
-        "GET {path} HTTP/1.1\r\nHost: {host}\r\nConnection: close\r\nUser-Agent: myos/0.1\r\n\r\n"
-    );
+    let request = format!("GET {path} HTTP/1.1\r\nHost: {host}\r\nConnection: close\r\nUser-Agent: {MOBILE_USER_AGENT}\r\n\r\n");
     Write::write_all(&mut tcp, request.as_bytes())
         .await
         .map_err(|_| "tcp write failed")?;
@@ -258,6 +256,21 @@ fn dechunk(mut data: &[u8]) -> Vec<u8> {
 
 const MARGIN: usize = 24;
 
+/// A real, recognizable mobile-Chrome-on-Android `User-Agent` — sent on
+/// every request (see `plain_get` and `net::tls::get`, which uses the
+/// same string) so servers doing their own content negotiation serve us
+/// their lighter mobile skin/markup automatically, the same page a real
+/// phone would get. This matters a lot in practice: Wikipedia's desktop
+/// HTML for a long article can be 500KB+ of deeply nested markup (many
+/// scripts assume interactivity, dozens of inline `<style>` blocks,
+/// heavy navboxes/infoboxes) that this kernel's `O(nodes × css rules)`
+/// selector matching (see `layout.rs`) chews through far slower than the
+/// mobile skin's much simpler, flatter markup — this isn't just about
+/// looking closer to a phone's browser, it's what keeps a real page's
+/// render time from being painfully slow (or effectively hung-looking)
+/// on this kernel's current CSS engine.
+pub const MOBILE_USER_AGENT: &str = "Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36";
+
 fn render_status(msg: &str) {
     let mut guard = gfx::SCREEN.lock();
     if let Some(fb) = guard.as_mut() {
@@ -267,74 +280,232 @@ fn render_status(msg: &str) {
     }
 }
 
-/// Extracts visible text and images from `html` (see `html::extract`) and
-/// flows them onto the framebuffer in reading order: a title bar showing
-/// the host, then each block — headings in a larger bold-ish size, images
-/// fetched (against `target`, in case of a relative `src`), decoded, and
-/// blitted in place. Fetching each image is its own network round trip,
-/// so this holds the framebuffer lock only while actually drawing, never
-/// across an `.await`.
-async fn render_page(target: &Url<'_>, html_src: &str) {
-    let blocks = html::extract(html_src);
+/// A `layout::LayoutItem` with any network fetch already done — an
+/// `Image` here holds a decoded `Bitmap`, not a `src` string. Resolving
+/// everything up front (`resolve_items`) means the actual draw pass
+/// (`draw_at_scroll`) is pure and local: no `.await`, no network, so it
+/// can re-run on every scroll-key press without re-fetching anything.
+enum ResolvedItem {
+    Text { text: String, style: layout::ComputedStyle },
+    Image { bitmap: img::Bitmap },
+}
 
-    let (w, h, mut y) = {
+/// Parses `html` into a real DOM (`dom.rs`), resolves CSS (a built-in UA
+/// default stylesheet, page `<style>` tags, and up to one externally
+/// linked stylesheet — see `MAX_LINKED_STYLESHEETS` — merged via
+/// `layout::build_rules`), fetches/decodes every image once
+/// (`resolve_items`), then draws and re-draws the result on the
+/// framebuffer as the user scrolls (arrow keys / Page Up/Page Down —
+/// `crate::keyboard`'s extended-scancode support) via `draw_at_scroll`,
+/// polling non-blockingly between keystrokes the same way every other
+/// wait in this file does (`net_tick().await`, never a spin loop).
+async fn render_page(target: &Url<'_>, html_src: &str) {
+    render_status("Parsing page...");
+    let dom_root = crate::dom::parse(html_src);
+
+    // A fast, plain first pass — UA defaults only, no page CSS, no
+    // images — so *something readable* appears immediately instead of a
+    // blank/status screen for however long full CSS parsing and
+    // selector matching takes on a large real page (this kernel has no
+    // network-level streaming parser yet; this is the pragmatic
+    // equivalent of a real browser's "flash of unstyled content" moment,
+    // not true incremental parsing). Overwritten by the fully-styled
+    // pass below once it's ready.
+    let no_css = layout::build_rules("");
+    let quick_items = layout::flatten(&dom_root, &no_css);
+    let quick_bg = layout::page_background(&dom_root, &no_css);
+    let (quick_h, quick_x0, quick_w) = {
         let mut guard = gfx::SCREEN.lock();
         let Some(fb) = guard.as_mut() else { return };
-        fb.clear(gfx::BLACK);
+        (fb.height(), MARGIN, fb.width() - 2 * MARGIN)
+    };
+    let quick_resolved: Vec<ResolvedItem> = quick_items
+        .into_iter()
+        .filter_map(|item| match item {
+            layout::LayoutItem::Text { text, style } => Some(ResolvedItem::Text { text, style }),
+            layout::LayoutItem::Image { .. } => None,
+        })
+        .collect();
+    draw_at_scroll(&quick_resolved, quick_bg, quick_x0, quick_w, quick_h, 0);
+
+    let mut css_text = String::new();
+    layout::collect_inline_css(&dom_root, &mut css_text);
+
+    const MAX_LINKED_STYLESHEETS: usize = 2;
+    let mut fetched_stylesheets = 0usize;
+    for href in linked_stylesheet_hrefs(&dom_root) {
+        if fetched_stylesheets >= MAX_LINKED_STYLESHEETS {
+            break;
+        }
+        let css_url = resolve_url(target, &href);
+        serial_println!("http: fetching stylesheet {}", css_url);
+        if let Some(bytes) = fetch_bytes_quiet(&css_url).await {
+            css_text.push_str(&String::from_utf8_lossy(&bytes));
+            css_text.push('\n');
+            fetched_stylesheets += 1;
+        }
+    }
+
+    let rules = layout::build_rules(&css_text);
+    let items = layout::flatten(&dom_root, &rules);
+    let bg = layout::page_background(&dom_root, &rules);
+
+    let (viewport_h, content_x0, content_w) = {
+        let mut guard = gfx::SCREEN.lock();
+        let Some(fb) = guard.as_mut() else { return };
         let w = fb.width();
         let h = fb.height();
-        let y = fb.draw_wrapped(target.host, MARGIN, MARGIN, w - MARGIN, gfx::BLUE, gfx::BLACK, RasterHeight::Size16) + 12;
-        (w, h, y)
+        // A centered, narrower reading column when the page's own CSS
+        // asks for one (`width`/`max-width` on `<body>`/`<html>`, e.g.
+        // `example.com`'s `width:60vw`) — falls back to the full
+        // viewport (minus the outer gutter) otherwise.
+        let content_w = layout::page_content_width(&dom_root, &rules, w).unwrap_or(w - 2 * MARGIN);
+        let content_x0 = (w.saturating_sub(content_w)) / 2;
+        (h, content_x0, content_w)
     };
 
-    if blocks.is_empty() {
+    if items.is_empty() {
         let mut guard = gfx::SCREEN.lock();
         if let Some(fb) = guard.as_mut() {
+            fb.clear(bg);
             fb.draw_wrapped(
                 "(this page has no readable text — it likely relies on \
-                 JavaScript or CSS this kernel doesn't run)",
+                 JavaScript this kernel doesn't run)",
+                content_x0,
                 MARGIN,
-                y,
-                w - MARGIN,
+                content_x0 + content_w,
                 gfx::GRAY,
-                gfx::BLACK,
+                bg,
                 RasterHeight::Size16,
             );
         }
         return;
     }
 
-    for block in blocks {
-        if y > h {
-            break; // no scrolling yet — see README for what's next
-        }
-        match block {
-            html::Block::Text { heading, text } => {
-                let (color, size) = if heading {
-                    (gfx::WHITE, RasterHeight::Size24)
-                } else {
-                    (Color(0xd0, 0xd0, 0xd0), RasterHeight::Size16)
-                };
-                let mut guard = gfx::SCREEN.lock();
-                if let Some(fb) = guard.as_mut() {
-                    y = fb.draw_wrapped(&text, MARGIN, y, w - MARGIN, color, gfx::BLACK, size) + 6;
-                }
-            }
-            html::Block::Image { src } => {
+    let mut resolved = Vec::with_capacity(items.len());
+    for item in items {
+        match item {
+            layout::LayoutItem::Text { text, style } => resolved.push(ResolvedItem::Text { text, style }),
+            layout::LayoutItem::Image { src } => {
                 let image_url = resolve_url(target, &src);
                 serial_println!("http: fetching image {}", image_url);
-                let bitmap = fetch_bytes_quiet(&image_url).await.and_then(|bytes| img::decode(&bytes));
-                match bitmap {
-                    Some(bitmap) => {
-                        let mut guard = gfx::SCREEN.lock();
-                        if let Some(fb) = guard.as_mut() {
-                            y = fb.draw_bitmap(&bitmap, MARGIN, y, w - 2 * MARGIN) + 6;
-                        }
-                    }
+                match fetch_bytes_quiet(&image_url).await.and_then(|bytes| img::decode(&bytes)) {
+                    Some(bitmap) => resolved.push(ResolvedItem::Image { bitmap }),
                     None => serial_println!("http: image {} failed or unsupported format", image_url),
                 }
             }
         }
+    }
+
+    let mut scroll_y: usize = 0;
+    let content_height = draw_at_scroll(&resolved, bg, content_x0, content_w, viewport_h, 0);
+    let max_scroll = content_height.saturating_sub(viewport_h);
+
+    // Scroll loop: redraws only on an actual key press, otherwise just
+    // yields to the executor — same non-blocking-poll discipline as
+    // every network wait in this file, just driven by the keyboard
+    // buffer instead of a socket.
+    loop {
+        match crate::keyboard::pop_key() {
+            Some(crate::keyboard::KEY_DOWN) => scroll_y = (scroll_y + LINE_SCROLL_STEP).min(max_scroll),
+            Some(crate::keyboard::KEY_UP) => scroll_y = scroll_y.saturating_sub(LINE_SCROLL_STEP),
+            Some(crate::keyboard::KEY_PAGE_DOWN) => scroll_y = (scroll_y + viewport_h).min(max_scroll),
+            Some(crate::keyboard::KEY_PAGE_UP) => scroll_y = scroll_y.saturating_sub(viewport_h),
+            Some(_) | None => {
+                net_tick().await;
+                continue;
+            }
+        }
+        draw_at_scroll(&resolved, bg, content_x0, content_w, viewport_h, scroll_y);
+    }
+}
+
+const LINE_SCROLL_STEP: usize = 32;
+
+/// Draws `resolved` at vertical scroll offset `scroll_y` — pure and
+/// local (no `.await`, no network), so it's cheap enough to call on
+/// every scroll key press. Returns the total (unscrolled) content
+/// height, which the caller uses once, on the initial call, to compute
+/// `max_scroll`. Every item's position is computed unconditionally
+/// (`content_y` always advances) regardless of whether it's actually
+/// visible, so later items stay correctly positioned even while earlier
+/// ones are scrolled off — only the actual pixel-drawing is skipped for
+/// anything wholly outside `[scroll_y, scroll_y + viewport_h)`.
+fn draw_at_scroll(resolved: &[ResolvedItem], bg: gfx::Color, content_x0: usize, content_w: usize, viewport_h: usize, scroll_y: usize) -> usize {
+    let mut guard = gfx::SCREEN.lock();
+    let Some(fb) = guard.as_mut() else { return 0 };
+    fb.clear(bg);
+
+    let mut content_y: usize = MARGIN;
+    let right_edge = content_x0 + content_w;
+
+    for item in resolved {
+        match item {
+            ResolvedItem::Text { text, style } => {
+                content_y += style.margin_top;
+                let pad = style.padding;
+                let x0 = (if style.align_center {
+                    content_x0 + content_w.saturating_sub(text.len() * 8) / 2
+                } else {
+                    content_x0
+                }) + pad;
+                let weight = layout::font_weight(style);
+                let text_height = gfx::measure_wrapped_height(text, x0, right_edge - pad, style.size, weight);
+                let box_height = text_height + 2 * pad;
+
+                let screen_y = (content_y as isize) - (scroll_y as isize);
+                if screen_y + box_height as isize >= 0 && screen_y <= viewport_h as isize {
+                    let draw_y = screen_y.max(0) as usize;
+                    let para_bg = if let Some(box_color) = style.background {
+                        fb.fill_rect(content_x0, draw_y, content_w, box_height, box_color);
+                        box_color
+                    } else {
+                        bg
+                    };
+                    fb.draw_wrapped_styled(text, x0, draw_y + pad, right_edge - pad, style.color, para_bg, style.size, weight);
+                    if let Some((border_color, thickness)) = style.border_bottom {
+                        fb.fill_rect(content_x0, draw_y + box_height, content_w, thickness, border_color);
+                    }
+                }
+                content_y += box_height + 6 + style.margin_bottom;
+                if let Some((_, thickness)) = style.border_bottom {
+                    content_y += thickness + 4;
+                }
+            }
+            ResolvedItem::Image { bitmap } => {
+                let Some((_, img_h)) = gfx::bitmap_draw_size(bitmap, content_w) else {
+                    continue;
+                };
+                let screen_y = (content_y as isize) - (scroll_y as isize);
+                if screen_y + img_h as isize >= 0 && screen_y <= viewport_h as isize {
+                    fb.draw_bitmap(bitmap, content_x0, screen_y.max(0) as usize, content_w);
+                }
+                content_y += img_h + 6;
+            }
+        }
+    }
+    content_y
+}
+
+/// Finds every `<link rel="stylesheet" href="...">` in document order —
+/// real pages can reference several; `render_page` bounds how many it
+/// actually fetches (`MAX_LINKED_STYLESHEETS`), same "don't let one page
+/// load turn into downloading the whole site" reasoning `html.rs` used to
+/// document for its own `MAX_IMAGES` cap.
+fn linked_stylesheet_hrefs(node: &crate::dom::Node) -> Vec<String> {
+    let mut out = Vec::new();
+    collect_stylesheet_hrefs(node, &mut out);
+    out
+}
+
+fn collect_stylesheet_hrefs(node: &crate::dom::Node, out: &mut Vec<String>) {
+    if node.tag == "link" && node.attr("rel").is_some_and(|r| r.eq_ignore_ascii_case("stylesheet")) {
+        if let Some(href) = node.attr("href") {
+            out.push(href.to_string());
+        }
+    }
+    for child in &node.children {
+        collect_stylesheet_hrefs(child, out);
     }
 }
 

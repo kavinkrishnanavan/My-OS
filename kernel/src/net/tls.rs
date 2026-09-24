@@ -54,7 +54,8 @@ pub async fn get(tcp: TcpStream, host: &str, path: &str) -> Result<Vec<u8>, &'st
     serial_println!("tls: handshake complete with {host} (certificate NOT verified — see net/tls.rs)");
 
     let request = alloc::format!(
-        "GET {path} HTTP/1.1\r\nHost: {host}\r\nConnection: close\r\nUser-Agent: myos/0.1\r\n\r\n"
+        "GET {path} HTTP/1.1\r\nHost: {host}\r\nConnection: close\r\nUser-Agent: {}\r\n\r\n",
+        crate::net::http::MOBILE_USER_AGENT
     );
     tls.write(request.as_bytes())
         .await

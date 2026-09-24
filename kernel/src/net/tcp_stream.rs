@@ -20,6 +20,20 @@ pub struct TcpStream {
     handle: SocketHandle,
 }
 
+/// Bounds on `connect`'s and `read_to_end`'s own wait loops — this
+/// kernel's established rule (see `disk/ata.rs`'s `POLL_LIMIT`, or
+/// `myos_userlib::wait`'s own retry cap) that nothing here waits on an
+/// external event forever. A real, reproduced hang motivated this one:
+/// a second sequential TLS/TCP fetch on the same host (`net/http.rs`
+/// fetching a linked stylesheet right after the page body) sat waiting
+/// indefinitely — plausibly the peer or an intermediate connection-reuse
+/// path never actually closing/establishing cleanly. Whatever the exact
+/// cause, an unbounded `loop { ...; net_tick().await }` had no way to
+/// ever give up, so a caller (`net::http::render_page`) that needed to
+/// abandon a slow/stuck stylesheet and move on had no way to.
+const CONNECT_TICK_LIMIT: u32 = 200_000;
+const READ_TICK_LIMIT: u32 = 200_000;
+
 impl TcpStream {
     pub async fn connect(ip: IpAddress, port: u16) -> Result<Self, &'static str> {
         let handle = stack::with_stack(|s| {
@@ -35,7 +49,7 @@ impl TcpStream {
                 .map_err(|_| "tcp connect failed")
         })?;
 
-        loop {
+        for _ in 0..CONNECT_TICK_LIMIT {
             let state =
                 stack::with_stack(|s| s.sockets.get::<tcp::Socket>(handle).state());
             match state {
@@ -46,6 +60,8 @@ impl TcpStream {
                 _ => net_tick().await,
             }
         }
+        stack::with_stack(|s| s.sockets.remove(handle));
+        Err("tcp connect timed out")
     }
 
     /// Reads everything left to read (until the peer closes its side),
@@ -79,7 +95,12 @@ impl ErrorType for TcpStream {
 
 impl Read for TcpStream {
     async fn read(&mut self, buf: &mut [u8]) -> Result<usize, ErrorKind> {
-        loop {
+        // This is the innermost of the two loops `CONNECT_TICK_LIMIT`'s
+        // doc comment describes — the one actually reproduced hanging:
+        // a peer that stops sending without ever closing its side
+        // (`may_recv` staying true) spins here forever with nothing to
+        // ever break it out. Bounded the same way.
+        for _ in 0..READ_TICK_LIMIT {
             let (n, may_recv) = stack::with_stack(|s| {
                 let socket = s.sockets.get_mut::<tcp::Socket>(self.handle);
                 let n = socket.recv_slice(buf).unwrap_or(0);
@@ -93,12 +114,13 @@ impl Read for TcpStream {
             }
             net_tick().await;
         }
+        Err(ErrorKind::TimedOut)
     }
 }
 
 impl Write for TcpStream {
     async fn write(&mut self, buf: &[u8]) -> Result<usize, ErrorKind> {
-        loop {
+        for _ in 0..READ_TICK_LIMIT {
             let n = stack::with_stack(|s| {
                 let socket = s.sockets.get_mut::<tcp::Socket>(self.handle);
                 if socket.can_send() {
@@ -115,6 +137,7 @@ impl Write for TcpStream {
                 n => return Ok(n),
             }
         }
+        Err(ErrorKind::TimedOut)
     }
 
     async fn flush(&mut self) -> Result<(), ErrorKind> {

@@ -6,7 +6,9 @@
 //! walks to draw glyphs.
 
 use bootloader_api::info::{FrameBufferInfo, PixelFormat};
-use noto_sans_mono_bitmap::{get_raster, FontWeight, RasterHeight};
+pub use noto_sans_mono_bitmap::FontWeight;
+pub use noto_sans_mono_bitmap::RasterHeight as FontSize;
+use noto_sans_mono_bitmap::{get_raster, RasterHeight};
 use spin::Mutex;
 
 pub static SCREEN: Mutex<Option<Framebuffer>> = Mutex::new(None);
@@ -20,8 +22,6 @@ pub struct Framebuffer {
 pub struct Color(pub u8, pub u8, pub u8);
 
 pub const BLACK: Color = Color(0x18, 0x18, 0x1c);
-pub const WHITE: Color = Color(0xea, 0xea, 0xea);
-pub const BLUE: Color = Color(0x5a, 0x9c, 0xf5);
 pub const GRAY: Color = Color(0x90, 0x90, 0x98);
 
 impl Framebuffer {
@@ -85,8 +85,8 @@ impl Framebuffer {
         );
     }
 
-    fn draw_char(&mut self, x: usize, y: usize, c: char, color: Color, bg: Color, size: RasterHeight) {
-        let Some(raster) = get_raster(c, FontWeight::Regular, size) else {
+    fn draw_char_weighted(&mut self, x: usize, y: usize, c: char, color: Color, bg: Color, size: RasterHeight, weight: FontWeight) {
+        let Some(raster) = get_raster(c, weight, size) else {
             return;
         };
         for (row, line) in raster.raster().iter().enumerate() {
@@ -101,18 +101,10 @@ impl Framebuffer {
     /// anything fancier here) to fit within `max_w` if it's wider than
     /// that. Returns the y-coordinate just below the drawn image.
     pub fn draw_bitmap(&mut self, bitmap: &crate::img::Bitmap, x0: usize, y0: usize, max_w: usize) -> usize {
-        if bitmap.width == 0 || bitmap.height == 0 {
-            return y0;
-        }
-        let scale = if bitmap.width > max_w {
-            max_w as f32 / bitmap.width as f32
-        } else {
-            1.0
+        let (draw_w, draw_h) = match bitmap_draw_size(bitmap, max_w) {
+            Some(size) => size,
+            None => return y0,
         };
-        let draw_w = ((bitmap.width as f32) * scale) as usize;
-        let draw_h = ((bitmap.height as f32) * scale) as usize;
-        let draw_w = draw_w.max(1);
-        let draw_h = draw_h.max(1);
 
         for y in 0..draw_h {
             let src_y = (y * bitmap.height) / draw_h;
@@ -132,13 +124,30 @@ impl Framebuffer {
         &mut self,
         text: &str,
         x0: usize,
-        mut y: usize,
+        y: usize,
         max_x: usize,
         color: Color,
         bg: Color,
         size: RasterHeight,
     ) -> usize {
-        let char_w = noto_sans_mono_bitmap::get_raster_width(FontWeight::Regular, size);
+        self.draw_wrapped_styled(text, x0, y, max_x, color, bg, size, FontWeight::Regular)
+    }
+
+    /// Same as `draw_wrapped`, plus a `weight` — what `layout.rs` uses for
+    /// everything (headings bold, body regular) instead of `draw_wrapped`,
+    /// which stays around only for callers happy with always-regular text.
+    pub fn draw_wrapped_styled(
+        &mut self,
+        text: &str,
+        x0: usize,
+        mut y: usize,
+        max_x: usize,
+        color: Color,
+        bg: Color,
+        size: RasterHeight,
+        weight: FontWeight,
+    ) -> usize {
+        let char_w = noto_sans_mono_bitmap::get_raster_width(weight, size);
         let line_h = size.val() + 2;
         let mut x = x0;
 
@@ -156,7 +165,7 @@ impl Framebuffer {
                     x = x0;
                     y += line_h;
                 }
-                self.draw_char(x, y, c, color, bg, size);
+                self.draw_char_weighted(x, y, c, color, bg, size, weight);
                 x += char_w;
             }
             // trailing space after the word
@@ -169,4 +178,72 @@ impl Framebuffer {
         }
         y + line_h
     }
+
+    /// Fills an axis-aligned rectangle — used for a paragraph's own
+    /// `background-color` box (see `net/http.rs`'s draw loop), drawn
+    /// before the text so the glyphs' alpha-blending has the right `bg`
+    /// to blend against.
+    pub fn fill_rect(&mut self, x0: usize, y0: usize, w: usize, h: usize, color: Color) {
+        for y in y0..y0.saturating_add(h) {
+            for x in x0..x0.saturating_add(w) {
+                self.put_pixel(x, y, color);
+            }
+        }
+    }
+}
+
+/// The `(width, height)` `draw_bitmap` will actually draw at, given the
+/// same `max_w` constraint — exposed so a caller (`net/http.rs`'s
+/// scrolling redraw) can compute an image's on-screen height without
+/// drawing it, the same reason `measure_wrapped_height` exists for text.
+pub fn bitmap_draw_size(bitmap: &crate::img::Bitmap, max_w: usize) -> Option<(usize, usize)> {
+    if bitmap.width == 0 || bitmap.height == 0 {
+        return None;
+    }
+    let scale = if bitmap.width > max_w {
+        max_w as f32 / bitmap.width as f32
+    } else {
+        1.0
+    };
+    let draw_w = (((bitmap.width as f32) * scale) as usize).max(1);
+    let draw_h = (((bitmap.height as f32) * scale) as usize).max(1);
+    Some((draw_w, draw_h))
+}
+
+/// Same wrapping arithmetic as `draw_wrapped_styled`, but touches no
+/// pixels — just the final height, so a caller (`net/http.rs`'s draw
+/// loop) can fill a background rect sized to the text BEFORE drawing the
+/// text on top of it. Must stay in exact lockstep with
+/// `draw_wrapped_styled`'s own line-breaking logic, or the measured
+/// height won't match what actually gets drawn.
+pub fn measure_wrapped_height(text: &str, x0: usize, max_x: usize, size: RasterHeight, weight: FontWeight) -> usize {
+    let char_w = noto_sans_mono_bitmap::get_raster_width(weight, size);
+    let line_h = size.val() + 2;
+    let mut x = x0;
+    let mut y = 0usize;
+
+    for word in text.split(' ') {
+        if word.is_empty() {
+            continue;
+        }
+        let word_w = word.chars().count() * char_w;
+        if x != x0 && x + word_w > max_x {
+            x = x0;
+            y += line_h;
+        }
+        for _ in word.chars() {
+            if x + char_w > max_x {
+                x = x0;
+                y += line_h;
+            }
+            x += char_w;
+        }
+        if x + char_w <= max_x {
+            x += char_w;
+        } else {
+            x = x0;
+            y += line_h;
+        }
+    }
+    y + line_h
 }

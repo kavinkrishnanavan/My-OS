@@ -78,6 +78,19 @@ const SET1_TO_ASCII: [u8; 128] = {
     table
 };
 
+/// Non-ASCII key codes `pop_key` can return, for keys `SET1_TO_ASCII`
+/// has no mapping for at all (extended/`0xE0`-prefixed scancodes).
+/// Chosen well above ASCII's 0-127 range so a caller can always tell
+/// "real typed character" from "navigation key" by comparing against
+/// 128, with no ambiguity against any Latin-1-supplement byte either
+/// (only reachable via keys this driver doesn't decode from raw bytes
+/// anyway — those come from `dead-key`/IME composition this driver
+/// doesn't implement).
+pub const KEY_UP: u8 = 200;
+pub const KEY_DOWN: u8 = 201;
+pub const KEY_PAGE_UP: u8 = 202;
+pub const KEY_PAGE_DOWN: u8 = 203;
+
 struct KeyBuffer {
     buf: [u8; KEY_BUFFER_CAPACITY],
     head: usize,
@@ -118,11 +131,41 @@ impl KeyBuffer {
 
 static KEY_BUFFER: Mutex<KeyBuffer> = Mutex::new(KeyBuffer::new());
 
+/// Set by the previous call to `on_irq` when it read the `0xE0` prefix
+/// byte — Set 1 sends extended keys (arrows, Page Up/Down, the right-side
+/// Ctrl/Alt, etc.) as two bytes, `0xE0` followed by a code that overlaps
+/// the *non-extended* table's own values (e.g. plain `0x48` is `SET1_TO_ASCII`'s
+/// unmapped numpad-8, but `E0 48` is the Up arrow) — so this has to persist
+/// across the two separate `on_irq` calls that make up one extended key
+/// event. `AtomicBool` rather than plain state since it's touched only
+/// from `on_irq` (always the same, single, interrupt context) — no real
+/// concurrency, just a convenient `Sync` static.
+static PENDING_EXTENDED: core::sync::atomic::AtomicBool = core::sync::atomic::AtomicBool::new(false);
+
 pub fn on_irq() {
+    use core::sync::atomic::Ordering;
     let mut port: Port<u8> = Port::new(DATA_PORT);
     let scancode = unsafe { port.read() };
 
+    if scancode == 0xE0 {
+        PENDING_EXTENDED.store(true, Ordering::Relaxed);
+        return;
+    }
+    let extended = PENDING_EXTENDED.swap(false, Ordering::Relaxed);
+
     if scancode & 0x80 != 0 {
+        return; // release code — never produces a key
+    }
+
+    if extended {
+        let code = match scancode {
+            0x48 => KEY_UP,
+            0x50 => KEY_DOWN,
+            0x49 => KEY_PAGE_UP,
+            0x51 => KEY_PAGE_DOWN,
+            _ => return, // other extended keys (right Ctrl/Alt, etc.) — not supported
+        };
+        KEY_BUFFER.lock().push(code);
         return;
     }
 

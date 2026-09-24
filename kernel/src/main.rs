@@ -17,16 +17,18 @@
 extern crate alloc;
 
 mod allocator;
+mod css;
 mod disk;
+mod dom;
 mod elf;
 mod fpu;
 mod fs;
 mod gdt;
 mod gfx;
-mod html;
 mod img;
 mod interrupts;
 mod keyboard;
+mod layout;
 mod memory;
 mod mmap;
 mod net;
@@ -132,7 +134,7 @@ fn kernel_main(boot_info: &'static mut BootInfo) -> ! {
     let mut executor = Executor::new();
     executor.spawn(Task::new(net_poll_loop()));
     executor.spawn(Task::new(spawn_userland_network_demo_when_online()));
-    executor.spawn(Task::new(net::http::fetch("https://en.wikipedia.org/api/rest_v1/page/mobile-html/PNG")));
+    executor.spawn(Task::new(net::http::fetch("https://en.wikipedia.org/wiki/PNG")));
     executor.run();
 }
 

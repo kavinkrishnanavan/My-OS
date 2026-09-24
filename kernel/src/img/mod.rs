@@ -1,9 +1,10 @@
 //! Decodes downloaded image bytes into a plain RGB bitmap the framebuffer
-//! can blit. PNG only for now (see `png.rs`) — enough to show most icons
-//! and simple web graphics; JPEG/WebP/GIF are out of scope (each is its
-//! own decoder the size of `png.rs` or bigger) and are silently skipped,
-//! same as any other unsupported format.
+//! can blit. PNG (`png.rs`) and baseline JPEG (`jpeg.rs`) — between them,
+//! enough to show most real web images (progressive JPEG, WebP, GIF,
+//! and SVG are out of scope, each its own decoder of comparable size)
+//! and are silently skipped, same as any other unsupported format.
 
+mod jpeg;
 mod png;
 
 use crate::gfx::Color;
@@ -21,10 +22,14 @@ pub struct Bitmap {
 /// Sniffs `bytes` for a known image signature and decodes it. Returns
 /// `None` for anything unrecognized, truncated, or using a feature this
 /// decoder doesn't handle (interlacing, >8-bit channels, absurd
-/// dimensions) — callers treat that exactly like a failed fetch.
+/// dimensions, progressive JPEG) — callers treat that exactly like a
+/// failed fetch.
 pub fn decode(bytes: &[u8]) -> Option<Bitmap> {
     if bytes.starts_with(&png::SIGNATURE) {
         return png::decode(bytes);
+    }
+    if bytes.starts_with(&jpeg::SIGNATURE) {
+        return jpeg::decode(bytes);
     }
     None
 }
