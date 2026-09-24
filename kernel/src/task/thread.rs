@@ -448,6 +448,29 @@ fn finish_spawn_isolated(cr3_frame: PhysFrame<Size4KiB>, entry_point: u64, stack
     id
 }
 
+/// The kernel side of `SYS_GETPID`: no args, no failure mode — every
+/// thread is always registered under some `ThreadId` for the entire time
+/// it can be running this syscall.
+pub fn sys_getpid() -> u64 {
+    let guard = SCHEDULER.lock();
+    guard.as_ref().expect("scheduler not initialized").current.0
+}
+
+/// The kernel side of `SYS_YIELD`: forces `on_timer_tick`'s own
+/// slice-expired switch path to run immediately instead of waiting for
+/// `TICKS_PER_SLICE` more real PIT ticks, by presetting the counter it
+/// checks. A no-op (returns the same frame) if nothing else is ready —
+/// same as an expired slice finding an empty ready queue.
+pub fn sys_yield(gpr_rsp: u64) -> u64 {
+    {
+        let mut guard = SCHEDULER.lock();
+        if let Some(sched) = guard.as_mut() {
+            sched.ticks_since_switch = TICKS_PER_SLICE;
+        }
+    }
+    on_timer_tick(gpr_rsp)
+}
+
 /// Called from the timer trampoline on every PIT tick, with
 /// `current_gpr_rsp` = where the currently-running thread's register
 /// frame now lives on its own stack (valid only for this one call).

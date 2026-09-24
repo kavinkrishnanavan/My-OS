@@ -9,8 +9,10 @@
 //! the victim itself; finally sleeps for a measured interval to prove
 //! `sleep_ms`'s spin-wait against `uptime_ms` (PIT-tick-counted,
 //! kernel-side) actually tracks real elapsed wall-clock time and isn't
-//! just a fixed-iteration busy loop pretending to be one; finally calls
-//! `SYS_MEMINFO` and prints the kernel's live heap/frame counters.
+//! just a fixed-iteration busy loop pretending to be one; calls
+//! `SYS_MEMINFO` and prints the kernel's live heap/frame counters; and
+//! finally proves `SYS_GETPID`/`SYS_YIELD` by printing its own pid and
+//! confirming it's unchanged after voluntarily yielding.
 
 #![no_std]
 #![no_main]
@@ -59,6 +61,11 @@ pub extern "C" fn _start() -> ! {
         "spawner: meminfo heap_used={} heap_free={} frames_used={} frames_free={}",
         mem.heap_bytes_used, mem.heap_bytes_free, mem.frames_allocated_total, mem.frames_currently_free
     );
+
+    let pid = myos_userlib::getpid();
+    let _ = writeln!(Writer, "spawner: getpid()={pid}");
+    myos_userlib::yield_now();
+    let _ = writeln!(Writer, "spawner: yield_now() returned, still pid={}", myos_userlib::getpid());
 
     myos_userlib::exit(0);
 }

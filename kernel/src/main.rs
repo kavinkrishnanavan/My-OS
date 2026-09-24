@@ -35,6 +35,7 @@ mod rng;
 mod rtc;
 mod serial;
 mod task;
+mod tsc;
 
 use bootloader_api::config::{BootloaderConfig, Mapping};
 use bootloader_api::{entry_point, BootInfo};
@@ -75,6 +76,7 @@ fn kernel_main(boot_info: &'static mut BootInfo) -> ! {
     interrupts::init();
     task::time::init();
     task::thread::init();
+    tsc::init();
     serial_println!("cpu: GDT/IDT/PIT/FPU online, interrupts enabled");
 
     // Temporary: prove preemption is real (not just cooperative
@@ -264,7 +266,7 @@ fn spawn_userland_demos() {
     // That makes two independent `hello` instances running concurrently
     // by the time both have started: this one, spawned here the normal
     // way, and whichever one spawner's own SYS_SPAWN call produces.
-    for name in ["HELLO.ELF", "COUNTER.ELF", "SPAWNER.ELF", "PIPEDEMO.ELF", "KEYDEMO.ELF", "RTCDEMO.ELF"] {
+    for name in ["HELLO.ELF", "COUNTER.ELF", "SPAWNER.ELF", "PIPEDEMO.ELF", "KEYDEMO.ELF", "RTCDEMO.ELF", "TSCDEMO.ELF"] {
         match fs::read(name) {
             Ok(bytes) => {
                 if let Err(e) = task::thread::spawn_elf(&bytes, &[]) {

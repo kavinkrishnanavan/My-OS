@@ -381,6 +381,9 @@ const SYS_MEMINFO: u64 = 17;
 const SYS_PIPE: u64 = 18;
 const SYS_READ_KEY: u64 = 19;
 const SYS_RTC_NOW: u64 = 20;
+const SYS_GETPID: u64 = 21;
+const SYS_YIELD: u64 = 22;
+const SYS_NOW_NS: u64 = 23;
 
 /// Upper bound on one `SYS_WRITE` call — it reads directly out of user
 /// memory with no length-vs-actual-mapping validation (see the handler's
@@ -578,6 +581,24 @@ extern "C" fn syscall_handler(_frame: *const RawInterruptFrame, gprs: *mut Saved
                 out.add(5).write(t.second as u32);
             }
             g.rax = 0;
+            gprs_addr
+        }
+        // No args. Returns this thread's own `ThreadId` — always succeeds.
+        SYS_GETPID => {
+            g.rax = crate::task::thread::sys_getpid();
+            gprs_addr
+        }
+        // No args. Forces an immediate scheduler switch instead of
+        // waiting out the rest of this thread's timeslice — a no-op if
+        // nothing else is ready. Returns the `gpr_rsp` to resume from,
+        // same convention as `SYS_EXIT`/`SYS_WAIT`: not necessarily this
+        // thread's own frame if a switch actually happened.
+        SYS_YIELD => crate::task::thread::sys_yield(gprs_addr),
+        // No args. Nanoseconds since boot-time TSC calibration
+        // (`tsc::init`, called from `main.rs` right after the PIT/thread
+        // scheduler come up) — always succeeds.
+        SYS_NOW_NS => {
+            g.rax = crate::tsc::now_ns();
             gprs_addr
         }
         other => {

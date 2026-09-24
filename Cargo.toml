@@ -11,6 +11,7 @@ members = [
     "userland/pipedemo",
     "userland/keydemo",
     "userland/rtcdemo",
+    "userland/tscdemo",
 ]
 
 # The builder runs on the HOST (Windows/Linux/macOS, normal std Rust) and

@@ -42,6 +42,9 @@ const SYS_MEMINFO: u64 = 17;
 const SYS_PIPE: u64 = 18;
 const SYS_READ_KEY: u64 = 19;
 const SYS_RTC_NOW: u64 = 20;
+const SYS_GETPID: u64 = 21;
+const SYS_YIELD: u64 = 22;
+const SYS_NOW_NS: u64 = 23;
 
 /// The stdout convention `write_fd`'s callers (and `Writer`) use —
 /// `interrupts.rs`'s `SYS_WRITE` handler special-cases this straight to
@@ -410,6 +413,44 @@ pub fn uptime_ms() -> u64 {
         );
     }
     ms
+}
+
+/// Nanoseconds since boot-time TSC calibration (see `kernel/src/tsc.rs`) —
+/// higher resolution than `uptime_ms()`, monotonic, not wall-clock.
+pub fn now_ns() -> u64 {
+    let ns: u64;
+    unsafe {
+        asm!(
+            "int 0x80",
+            inout("rax") SYS_NOW_NS => ns,
+        );
+    }
+    ns
+}
+
+/// This thread's own `ThreadId`, as a plain `u64` (the same value
+/// `SYS_SPAWN`/`SYS_WAIT`/`SYS_KILL` hand around as a "pid" elsewhere).
+pub fn getpid() -> u64 {
+    let pid: u64;
+    unsafe {
+        asm!(
+            "int 0x80",
+            inout("rax") SYS_GETPID => pid,
+        );
+    }
+    pid
+}
+
+/// Gives up the rest of this thread's current timeslice voluntarily,
+/// instead of waiting for the PIT to preempt it — a no-op if nothing else
+/// is currently ready to run.
+pub fn yield_now() {
+    unsafe {
+        asm!(
+            "int 0x80",
+            inout("rax") SYS_YIELD => _,
+        );
+    }
 }
 
 /// Blocks the calling thread for at least `ms` milliseconds — a spin-wait
