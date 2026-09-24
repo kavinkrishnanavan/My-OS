@@ -17,7 +17,7 @@
 //! restore the registers, `iretq`. Stable naked functions
 //! (`#[unsafe(naked)]` + `naked_asm!`) make this workable without nightly.
 
-use crate::{gdt, net, pci, serial_println, task::time};
+use crate::{gdt, keyboard, net, pci, rtc, serial_println, task::time};
 use core::arch::naked_asm;
 use lazy_static::lazy_static;
 use pic8259::ChainedPics;
@@ -184,6 +184,7 @@ extern "C" fn timer_trampoline() {
 }
 
 trampoline_return!(nic_trampoline, nic_interrupt_handler);
+trampoline_return!(keyboard_trampoline, keyboard_interrupt_handler);
 trampoline_return!(breakpoint_trampoline, breakpoint_handler);
 trampoline_diverging_errcode!(double_fault_trampoline, double_fault_handler);
 trampoline_diverging_errcode!(page_fault_trampoline, page_fault_handler);
@@ -268,6 +269,12 @@ lazy_static! {
                 idt[PIC_1_OFFSET + irq].set_handler_addr(fn_addr(nic_trampoline));
             }
             idt[PIC_1_OFFSET].set_handler_addr(fn_addr(timer_trampoline));
+            // IRQ1: the legacy PS/2 keyboard controller — a fixed line on
+            // real hardware and every PC emulator (unlike the NIC, which
+            // needs a PCI scan to know which of several possible lines
+            // it's on), so this is unmasked unconditionally in `init()`
+            // rather than waiting for a driver's own init call.
+            idt[PIC_1_OFFSET + 1].set_handler_addr(fn_addr(keyboard_trampoline));
             // DPL 3: without this, ring-3 code executing `int 0x80` gets
             // an immediate #GP instead of reaching our handler — IDT
             // gates default to DPL 0, i.e. "only the kernel may invoke
@@ -292,6 +299,7 @@ pub fn init() {
     // actually own once they've registered their handler.
     unsafe { PICS.lock().write_masks(0xFF, 0xFF) };
     x86_64::instructions::interrupts::enable();
+    unmask_irq(1); // keyboard — always present, unlike the NIC's PCI-scanned line
 }
 
 /// Must run with interrupts disabled for its duration: it holds the
@@ -371,6 +379,8 @@ const SYS_KILL: u64 = 15;
 const SYS_UPTIME_MS: u64 = 16;
 const SYS_MEMINFO: u64 = 17;
 const SYS_PIPE: u64 = 18;
+const SYS_READ_KEY: u64 = 19;
+const SYS_RTC_NOW: u64 = 20;
 
 /// Upper bound on one `SYS_WRITE` call — it reads directly out of user
 /// memory with no length-vs-actual-mapping validation (see the handler's
@@ -541,6 +551,35 @@ extern "C" fn syscall_handler(_frame: *const RawInterruptFrame, gprs: *mut Saved
             g.rax = crate::task::thread::sys_pipe(g.rdi);
             gprs_addr
         }
+        // No args. Returns the next buffered keypress as an ASCII byte in
+        // `rax`, or `u64::MAX` if none is currently buffered — see
+        // `keyboard::pop_key`'s own doc comment for why this can never
+        // block waiting for a real keypress.
+        SYS_READ_KEY => {
+            g.rax = match keyboard::pop_key() {
+                Some(byte) => byte as u64,
+                None => u64::MAX,
+            };
+            gprs_addr
+        }
+        // `rdi` = ptr to a caller-owned buffer of 6 consecutive `u32`s (24
+        // bytes): `[year, month, day, hour, minute, second]`. Always
+        // succeeds (`rax` = 0) — same direct-user-pointer trust as
+        // `SYS_MEMINFO`/`SYS_GETARG`.
+        SYS_RTC_NOW => {
+            let t = rtc::now();
+            let out = g.rdi as *mut u32;
+            unsafe {
+                out.write(t.year);
+                out.add(1).write(t.month as u32);
+                out.add(2).write(t.day as u32);
+                out.add(3).write(t.hour as u32);
+                out.add(4).write(t.minute as u32);
+                out.add(5).write(t.second as u32);
+            }
+            g.rax = 0;
+            gprs_addr
+        }
         other => {
             serial_println!("syscall: unknown number {other}");
             gprs_addr
@@ -572,6 +611,13 @@ extern "C" fn nic_interrupt_handler(_frame: *const RawInterruptFrame) {
         // exact IRQ line from ever firing again after the first packet.
         PICS.lock()
             .notify_end_of_interrupt(PIC_1_OFFSET + CANDIDATE_NIC_IRQS[0]);
+    }
+}
+
+extern "C" fn keyboard_interrupt_handler(_frame: *const RawInterruptFrame) {
+    keyboard::on_irq();
+    unsafe {
+        PICS.lock().notify_end_of_interrupt(PIC_1_OFFSET + 1);
     }
 }
 

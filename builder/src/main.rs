@@ -91,6 +91,8 @@ fn main() {
         ("spawner", "spawner", "spawner.elf"),
         ("httpget", "httpget", "httpget.elf"),
         ("pipedemo", "pipedemo", "pipedemo.elf"),
+        ("keydemo", "keydemo", "keydemo.elf"),
+        ("rtcdemo", "rtcdemo", "rtcdemo.elf"),
     ];
 
     let target_root = std::env::var_os("CARGO_TARGET_DIR")

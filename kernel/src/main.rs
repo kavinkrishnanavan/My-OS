@@ -26,11 +26,13 @@ mod gfx;
 mod html;
 mod img;
 mod interrupts;
+mod keyboard;
 mod memory;
 mod net;
 mod pci;
 mod pipe;
 mod rng;
+mod rtc;
 mod serial;
 mod task;
 
@@ -262,7 +264,7 @@ fn spawn_userland_demos() {
     // That makes two independent `hello` instances running concurrently
     // by the time both have started: this one, spawned here the normal
     // way, and whichever one spawner's own SYS_SPAWN call produces.
-    for name in ["HELLO.ELF", "COUNTER.ELF", "SPAWNER.ELF", "PIPEDEMO.ELF"] {
+    for name in ["HELLO.ELF", "COUNTER.ELF", "SPAWNER.ELF", "PIPEDEMO.ELF", "KEYDEMO.ELF", "RTCDEMO.ELF"] {
         match fs::read(name) {
             Ok(bytes) => {
                 if let Err(e) = task::thread::spawn_elf(&bytes, &[]) {

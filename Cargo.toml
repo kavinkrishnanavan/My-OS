@@ -9,6 +9,8 @@ members = [
     "userland/spawner",
     "userland/httpget",
     "userland/pipedemo",
+    "userland/keydemo",
+    "userland/rtcdemo",
 ]
 
 # The builder runs on the HOST (Windows/Linux/macOS, normal std Rust) and

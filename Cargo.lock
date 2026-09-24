@@ -693,6 +693,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "keydemo-user"
+version = "0.1.0"
+dependencies = [
+ "myos-userlib",
+]
+
+[[package]]
 name = "lazy_static"
 version = "1.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -934,6 +941,13 @@ checksum = "f8dd2a808d456c4a54e300a23e9f5a67e122c3024119acbfd73e3bf664491cb2"
 dependencies = [
  "hmac",
  "subtle",
+]
+
+[[package]]
+name = "rtcdemo-user"
+version = "0.1.0"
+dependencies = [
+ "myos-userlib",
 ]
 
 [[package]]

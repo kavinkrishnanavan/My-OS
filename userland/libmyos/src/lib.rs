@@ -40,6 +40,8 @@ const SYS_KILL: u64 = 15;
 const SYS_UPTIME_MS: u64 = 16;
 const SYS_MEMINFO: u64 = 17;
 const SYS_PIPE: u64 = 18;
+const SYS_READ_KEY: u64 = 19;
+const SYS_RTC_NOW: u64 = 20;
 
 /// The stdout convention `write_fd`'s callers (and `Writer`) use —
 /// `interrupts.rs`'s `SYS_WRITE` handler special-cases this straight to
@@ -425,6 +427,62 @@ pub fn sleep_ms(ms: u64) {
         for _ in 0..50_000 {
             core::hint::spin_loop();
         }
+    }
+}
+
+/// Returns the next buffered keypress as an ASCII byte, or `None` if
+/// nothing is currently buffered — non-blocking, always returns
+/// immediately (there's no way to block in a syscall handler in this
+/// kernel, so a caller wanting to wait for a keypress must retry in a
+/// loop itself, the same "userland does the spinning" shape as
+/// `wait`/`connect_blocking`).
+pub fn read_key() -> Option<u8> {
+    let key: u64;
+    unsafe {
+        asm!(
+            "int 0x80",
+            inout("rax") SYS_READ_KEY => key,
+        );
+    }
+    if key == u64::MAX {
+        None
+    } else {
+        Some(key as u8)
+    }
+}
+
+/// Wall-clock time read from the kernel's CMOS RTC driver, as of the
+/// moment of the call.
+pub struct RtcTime {
+    pub year: u32,
+    pub month: u32,
+    pub day: u32,
+    pub hour: u32,
+    pub minute: u32,
+    pub second: u32,
+}
+
+/// Reads the current wall-clock time from the kernel's CMOS RTC driver.
+/// The kernel writes six `u32`s into a caller-owned buffer in one syscall
+/// (the same "write through a pointer" shape as `meminfo`/`get_arg`)
+/// rather than packing them into `rax`. Always succeeds (no `u64::MAX`
+/// sentinel for this one).
+pub fn rtc_now() -> RtcTime {
+    let mut buf = [0u32; 6];
+    unsafe {
+        asm!(
+            "int 0x80",
+            in("rax") SYS_RTC_NOW,
+            in("rdi") buf.as_mut_ptr() as u64,
+        );
+    }
+    RtcTime {
+        year: buf[0],
+        month: buf[1],
+        day: buf[2],
+        hour: buf[3],
+        minute: buf[4],
+        second: buf[5],
     }
 }
 
