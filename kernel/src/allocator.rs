@@ -93,12 +93,20 @@ impl BootInfoFrameAllocator {
     }
 }
 
-unsafe impl FrameAllocator<Size4KiB> for BootInfoFrameAllocator {
-    fn allocate_frame(&mut self) -> Option<PhysFrame> {
-        if let Some(frame) = self.freed.pop() {
-            self.allocated_total += 1;
-            return Some(frame);
-        }
+impl BootInfoFrameAllocator {
+    /// Like `allocate_frame`, but never serves a frame out of `freed`: a
+    /// reused frame's physical address is whatever some earlier, unrelated
+    /// allocation happened to get, with no relationship to the bump
+    /// cursor's next address, so satisfying a *contiguous* multi-frame
+    /// request (`memory::alloc_dma_region`) out of `freed` breaks its
+    /// contiguity guarantee immediately — reproduced in practice: once a
+    /// killed process's page-table teardown (`memory::free_address_space`)
+    /// populated `freed` during boot, `alloc_dma_region`'s very next call
+    /// could silently pop one of those frames instead of advancing the
+    /// cursor, tripping its own `assert_eq!` deterministically. DMA is the
+    /// only caller with a contiguity requirement, so this bypass is scoped
+    /// to it rather than changing `allocate_frame`'s general reuse policy.
+    pub(crate) fn allocate_bump_frame(&mut self) -> Option<PhysFrame> {
         self.enter_current_region();
         if self.region_idx >= self.regions.len() {
             return None;
@@ -107,6 +115,16 @@ unsafe impl FrameAllocator<Size4KiB> for BootInfoFrameAllocator {
         self.next_addr += 4096;
         self.allocated_total += 1;
         Some(PhysFrame::containing_address(PhysAddr::new(addr)))
+    }
+}
+
+unsafe impl FrameAllocator<Size4KiB> for BootInfoFrameAllocator {
+    fn allocate_frame(&mut self) -> Option<PhysFrame> {
+        if let Some(frame) = self.freed.pop() {
+            self.allocated_total += 1;
+            return Some(frame);
+        }
+        self.allocate_bump_frame()
     }
 }
 

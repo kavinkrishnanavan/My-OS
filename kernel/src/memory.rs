@@ -297,13 +297,14 @@ pub fn frame_stats() -> (u64, u64) {
 }
 
 /// Allocates one physical 4 KiB frame for DMA use (NIC descriptor rings
-/// and packet buffers) and returns its physical address.
+/// and packet buffers) and returns its physical address. Always a fresh
+/// bump-cursor frame, never one out of `freed` — see
+/// `BootInfoFrameAllocator::allocate_bump_frame`'s doc comment for why a
+/// reused frame can't be allowed here.
 pub fn alloc_dma_frame() -> u64 {
     let mut guard = FRAME_ALLOCATOR.lock();
     let allocator = guard.as_mut().expect("frame allocator not initialized");
-    let frame: x86_64::structures::paging::PhysFrame<Size4KiB> = allocator
-        .allocate_frame()
-        .expect("out of physical memory for DMA buffer");
+    let frame = allocator.allocate_bump_frame().expect("out of physical memory for DMA buffer");
     frame.start_address().as_u64()
 }
 
@@ -315,22 +316,34 @@ pub fn alloc_dma_frame() -> u64 {
 /// Our frame allocator is a simple bump allocator over each usable
 /// memory-map region in ascending address order, so consecutive calls
 /// return physically adjacent frames as long as nothing else allocates
-/// in between — true here since this only runs once, during driver init,
-/// before interrupts are unmasked. We assert that invariant rather than
-/// silently handing the NIC a broken ring.
+/// in between. By the time this runs (`net::rtl8139::init`, called from
+/// `main.rs` after the kernel-thread/ring-3/ELF-loader demos are already
+/// spawned) interrupts are unmasked and other threads are genuinely
+/// runnable, so the PIT tick can preempt this function between two of its
+/// own `alloc_dma_frame` calls and let another thread's own frame
+/// allocation (e.g. `new_address_space`'s page-table clone for a freshly
+/// spawned process) land in between, breaking contiguity — this was a
+/// real, reproduced panic here (`assert_eq!` below), not a hypothetical
+/// one, once enough concurrent boot-time ELF spawns widened the race
+/// window. `without_interrupts` makes the *whole* multi-frame allocation
+/// atomic with respect to this kernel's only source of preemption (the
+/// timer interrupt), which is what the contiguity assumption actually
+/// requires — not "runs once during driver init", which nothing enforced.
 pub fn alloc_dma_region(bytes: usize) -> u64 {
-    let frames = bytes.div_ceil(4096);
-    let base = alloc_dma_frame();
-    let mut expected = base + 4096;
-    for _ in 1..frames {
-        let next = alloc_dma_frame();
-        assert_eq!(
-            next, expected,
-            "DMA region not physically contiguous — frame allocator invariant broken"
-        );
-        expected += 4096;
-    }
-    base
+    without_interrupts(|| {
+        let frames = bytes.div_ceil(4096);
+        let base = alloc_dma_frame();
+        let mut expected = base + 4096;
+        for _ in 1..frames {
+            let next = alloc_dma_frame();
+            assert_eq!(
+                next, expected,
+                "DMA region not physically contiguous — frame allocator invariant broken"
+            );
+            expected += 4096;
+        }
+        base
+    })
 }
 
 /// # Safety
