@@ -12,6 +12,8 @@ members = [
     "userland/keydemo",
     "userland/rtcdemo",
     "userland/tscdemo",
+    "userland/fsdemo",
+    "userland/mmapdemo",
 ]
 
 # The builder runs on the HOST (Windows/Linux/macOS, normal std Rust) and

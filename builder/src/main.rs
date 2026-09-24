@@ -94,6 +94,8 @@ fn main() {
         ("keydemo", "keydemo", "keydemo.elf"),
         ("rtcdemo", "rtcdemo", "rtcdemo.elf"),
         ("tscdemo", "tscdemo", "tscdemo.elf"),
+        ("fsdemo", "fsdemo", "fsdemo.elf"),
+        ("mmapdemo", "mmapdemo", "mmapdemo.elf"),
     ];
 
     let target_root = std::env::var_os("CARGO_TARGET_DIR")

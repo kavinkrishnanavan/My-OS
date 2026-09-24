@@ -95,6 +95,24 @@ pub fn write(id: PipeId, buf: &[u8]) -> Result<usize, PipeError> {
     Ok(n)
 }
 
+/// Backs `SYS_DUP`/`SYS_DUP2` on a pipe read-end fd: another fd now
+/// refers to the same pipe, so its close must be accounted for
+/// independently — increments `readers` without touching the buffer.
+/// A no-op if the pipe's already gone (both ends already closed
+/// elsewhere), matching `close_read_end`'s own missing-id tolerance.
+pub fn dup_read_end(id: PipeId) {
+    if let Some(state) = PIPES.lock().get_mut(&id.0) {
+        state.readers += 1;
+    }
+}
+
+/// Same as `dup_read_end`, for the write end.
+pub fn dup_write_end(id: PipeId) {
+    if let Some(state) = PIPES.lock().get_mut(&id.0) {
+        state.writers += 1;
+    }
+}
+
 pub fn close_read_end(id: PipeId) {
     let mut pipes = PIPES.lock();
     if let Some(state) = pipes.get_mut(&id.0) {

@@ -130,6 +130,11 @@ struct Thread {
     /// `Some`); see `sbrk`'s own doc comment for why non-isolated ones
     /// aren't supported.
     heap_next: u64,
+    /// Same idea as `heap_next`, for the independent `mmap`/`munmap`
+    /// arena (`crate::mmap`) — a separate cursor so the two never
+    /// collide, initialized to `crate::mmap::MMAP_BASE` for isolated
+    /// threads and unused (`0`) otherwise, same convention as `heap_next`.
+    mmap_next: u64,
     /// This thread's open files (`sys_open`/`sys_read`/`sys_close`),
     /// keyed by file descriptor. Whole-file, not streamed — `fs::read`
     /// itself only ever reads a complete file at once (see its own doc
@@ -220,7 +225,7 @@ static SCHEDULER: Mutex<Option<Scheduler>> = Mutex::new(None);
 pub fn init() {
     without_interrupts(|| {
         let mut threads = BTreeMap::new();
-        threads.insert(ThreadId(0), Thread { saved_gpr_rsp: 0, _stack: None, frame_buf: None, cr3: None, heap_next: 0, open_files: BTreeMap::new(), next_fd: FIRST_REAL_FD, owned_frames: alloc::vec::Vec::new(), arg: alloc::vec::Vec::new() });
+        threads.insert(ThreadId(0), Thread { saved_gpr_rsp: 0, _stack: None, frame_buf: None, cr3: None, heap_next: 0, mmap_next: 0, open_files: BTreeMap::new(), next_fd: FIRST_REAL_FD, owned_frames: alloc::vec::Vec::new(), arg: alloc::vec::Vec::new() });
         *SCHEDULER.lock() = Some(Scheduler {
             threads,
             ready: VecDeque::new(),
@@ -279,7 +284,7 @@ pub fn spawn(entry: extern "C" fn() -> !) -> ThreadId {
     without_interrupts(|| {
         let mut guard = SCHEDULER.lock();
         let sched = guard.as_mut().expect("task::thread::init() must run before spawn()");
-        sched.threads.insert(id, Thread { saved_gpr_rsp: gpr_rsp, _stack: Some(stack), frame_buf: None, cr3: None, heap_next: 0, open_files: BTreeMap::new(), next_fd: FIRST_REAL_FD, owned_frames: alloc::vec::Vec::new(), arg: alloc::vec::Vec::new() });
+        sched.threads.insert(id, Thread { saved_gpr_rsp: gpr_rsp, _stack: Some(stack), frame_buf: None, cr3: None, heap_next: 0, mmap_next: 0, open_files: BTreeMap::new(), next_fd: FIRST_REAL_FD, owned_frames: alloc::vec::Vec::new(), arg: alloc::vec::Vec::new() });
         sched.ready.push_back(id);
     });
 
@@ -339,7 +344,7 @@ pub fn spawn_user(payload: &[u8]) -> Result<ThreadId, &'static str> {
     without_interrupts(|| {
         let mut guard = SCHEDULER.lock();
         let sched = guard.as_mut().expect("task::thread::init() must run before spawn_user()");
-        sched.threads.insert(id, Thread { saved_gpr_rsp: gpr_rsp, _stack: None, frame_buf: Some(frame_buf), cr3: None, heap_next: 0, open_files: BTreeMap::new(), next_fd: FIRST_REAL_FD, owned_frames: alloc::vec::Vec::new(), arg: alloc::vec::Vec::new() });
+        sched.threads.insert(id, Thread { saved_gpr_rsp: gpr_rsp, _stack: None, frame_buf: Some(frame_buf), cr3: None, heap_next: 0, mmap_next: 0, open_files: BTreeMap::new(), next_fd: FIRST_REAL_FD, owned_frames: alloc::vec::Vec::new(), arg: alloc::vec::Vec::new() });
         sched.ready.push_back(id);
     });
 
@@ -441,7 +446,7 @@ fn finish_spawn_isolated(cr3_frame: PhysFrame<Size4KiB>, entry_point: u64, stack
         let sched = guard.as_mut().expect("task::thread::init() must run before spawning an isolated thread");
         sched
             .threads
-            .insert(id, Thread { saved_gpr_rsp: gpr_rsp, _stack: None, frame_buf: Some(frame_buf), cr3: Some(cr3_frame), heap_next: HEAP_BASE, open_files: BTreeMap::new(), next_fd: FIRST_REAL_FD, owned_frames, arg });
+            .insert(id, Thread { saved_gpr_rsp: gpr_rsp, _stack: None, frame_buf: Some(frame_buf), cr3: Some(cr3_frame), heap_next: HEAP_BASE, mmap_next: crate::mmap::MMAP_BASE, open_files: BTreeMap::new(), next_fd: FIRST_REAL_FD, owned_frames, arg });
         sched.ready.push_back(id);
     });
 
@@ -694,6 +699,59 @@ pub fn sbrk(increment: i64) -> u64 {
     thread.heap_next = new_break;
     thread.owned_frames.extend(new_frames);
     old_break
+}
+
+/// The kernel side of `SYS_MMAP_ANON`: same isolated-threads-only
+/// restriction as `sbrk` (see its doc comment) — `FD_ERROR` for a
+/// non-isolated thread, since there's no per-thread `mmap_next` cursor
+/// worth having when the address space is shared. `prot` bit 0 =
+/// writable, bit 1 = executable (`myos_userlib::PROT_WRITE`/`PROT_EXEC`).
+pub fn sys_mmap_anon(bytes: u64, prot: u64) -> u64 {
+    let mut guard = SCHEDULER.lock();
+    let sched = guard.as_mut().expect("scheduler not initialized");
+    let id = sched.current;
+    let thread = sched.threads.get_mut(&id).expect("current thread must be registered");
+    let Some(cr3) = thread.cr3 else {
+        return FD_ERROR;
+    };
+
+    let mut mapper = memory::mapper_for(cr3);
+    let writable = prot & 0b01 != 0;
+    let executable = prot & 0b10 != 0;
+    match crate::mmap::map_anon(&mut mapper, &mut thread.mmap_next, bytes as usize, writable, executable) {
+        Ok((addr, frames)) => {
+            thread.owned_frames.extend(frames);
+            addr
+        }
+        Err(_) => FD_ERROR,
+    }
+}
+
+/// The kernel side of `SYS_MUNMAP`: `addr`/`bytes` must exactly match the
+/// most recent `SYS_MMAP_ANON` call (see `mmap::unmap_anon`'s doc
+/// comment for the LIFO-only restriction). Removes the freed frames from
+/// `owned_frames` *before* handing them to `memory::free_frames` — see
+/// `mmap::unmap_anon`'s doc comment for why doing that in the other order
+/// (or not at all) would double-free them when this process eventually
+/// exits and `exit_current` frees whatever's left in `owned_frames`.
+pub fn sys_munmap(addr: u64, bytes: u64) -> u64 {
+    let mut guard = SCHEDULER.lock();
+    let sched = guard.as_mut().expect("scheduler not initialized");
+    let id = sched.current;
+    let thread = sched.threads.get_mut(&id).expect("current thread must be registered");
+    let Some(cr3) = thread.cr3 else {
+        return FD_ERROR;
+    };
+
+    let mut mapper = memory::mapper_for(cr3);
+    match crate::mmap::unmap_anon(&mut mapper, &mut thread.mmap_next, addr, bytes as usize) {
+        Ok(freed) => {
+            thread.owned_frames.retain(|f| !freed.contains(f));
+            memory::free_frames(&freed);
+            0
+        }
+        Err(_) => FD_ERROR,
+    }
 }
 
 /// A sentinel, not a real fd — every syscall below uses `u64::MAX` for
@@ -1013,6 +1071,140 @@ pub fn sys_resolve_status(fd: u64) -> u64 {
             }
         }
     }
+}
+
+/// The kernel side of `SYS_LSEEK`: only meaningful for a `Read` fd
+/// (`SYS_OPEN` mode 0) — the whole file already sits in memory (see
+/// `OpenFile::Read`'s doc comment), so seeking is just moving `pos`.
+/// `whence` follows the classic convention: `0` = from start (`offset`
+/// must be non-negative), `1` = from current `pos`, `2` = from end.
+/// Clamps the result into `[0, data.len()]` rather than erroring on an
+/// out-of-range request — the same permissive posture `sbrk` already
+/// takes for a bad `increment`. Any other fd kind (`Write`/`Socket`/
+/// `Pipe*`/`Resolve` — none of which have a seekable position) returns
+/// `FD_ERROR`. Returns the new absolute position, or `FD_ERROR`.
+pub fn sys_lseek(fd: u64, offset: i64, whence: u64) -> u64 {
+    let mut guard = SCHEDULER.lock();
+    let sched = guard.as_mut().expect("scheduler not initialized");
+    let id = sched.current;
+    let thread = sched.threads.get_mut(&id).expect("current thread must be registered");
+    match thread.open_files.get_mut(&(fd as u32)) {
+        Some(OpenFile::Read { data, pos }) => {
+            let base: i64 = match whence {
+                0 => 0,
+                1 => *pos as i64,
+                2 => data.len() as i64,
+                _ => return FD_ERROR,
+            };
+            let new_pos = (base + offset).clamp(0, data.len() as i64);
+            *pos = new_pos as usize;
+            new_pos as u64
+        }
+        _ => FD_ERROR,
+    }
+}
+
+/// The kernel side of `SYS_DUP`: makes a second fd in the *same* thread
+/// refer to the same underlying resource as `fd`, picking the new fd
+/// number itself (like POSIX `dup`, as opposed to `SYS_DUP2` picking a
+/// caller-chosen one). Only meaningful for kinds that actually have a
+/// notion of shared state to duplicate: a `Pipe*` fd increments the
+/// pipe's own refcount (see `crate::pipe`) so both fds' `SYS_CLOSE` are
+/// independently accounted for; a `Read` fd gets its own independent copy
+/// of the buffered file data and its *current* `pos` (not a truly shared
+/// position the way a real OS's duplicated file description would be —
+/// documented simplification, not a bug: this kernel's `Read` fd is
+/// already a whole-file snapshot with no underlying open file description
+/// to share, unlike a real kernel's). `Write`/`Socket`/`Resolve` fds have
+/// no sensible duplicate (an in-progress DNS query in particular can't be
+/// duplicated at all — see `OpenFile::Resolve`'s doc comment on why it's
+/// consumed on first read) and return `FD_ERROR`.
+pub fn sys_dup(fd: u64) -> u64 {
+    dup_to(fd, None)
+}
+
+/// The kernel side of `SYS_DUP2`: like `sys_dup`, but the caller picks
+/// the destination fd (`new_fd`) instead of getting whatever's next. If
+/// `new_fd` was already open, its previous resource is torn down first
+/// (same `finalize_open_file` teardown `SYS_CLOSE` uses) exactly like
+/// POSIX `dup2`. A `new_fd == fd` no-op still succeeds (matching POSIX),
+/// short-circuiting before any of that.
+pub fn sys_dup2(fd: u64, new_fd: u64) -> u64 {
+    if fd == new_fd {
+        let guard = SCHEDULER.lock();
+        let sched = guard.as_ref().expect("scheduler not initialized");
+        let thread = sched.threads.get(&sched.current).expect("current thread must be registered");
+        return if thread.open_files.contains_key(&(fd as u32)) { new_fd } else { FD_ERROR };
+    }
+    dup_to(fd, Some(new_fd as u32))
+}
+
+/// Shared implementation: duplicates `fd`'s resource into `dest` (a
+/// specific fd number) or, if `None`, into a fresh one from `next_fd`.
+fn dup_to(fd: u64, dest: Option<u32>) -> u64 {
+    let mut guard = SCHEDULER.lock();
+    let sched = guard.as_mut().expect("scheduler not initialized");
+    let id = sched.current;
+    let thread = sched.threads.get_mut(&id).expect("current thread must be registered");
+
+    let duplicated = match thread.open_files.get(&(fd as u32)) {
+        Some(OpenFile::Read { data, pos }) => OpenFile::Read { data: data.clone(), pos: *pos },
+        Some(OpenFile::PipeRead { id }) => {
+            let id = *id;
+            crate::pipe::dup_read_end(id);
+            OpenFile::PipeRead { id }
+        }
+        Some(OpenFile::PipeWrite { id }) => {
+            let id = *id;
+            crate::pipe::dup_write_end(id);
+            OpenFile::PipeWrite { id }
+        }
+        _ => return FD_ERROR,
+    };
+
+    let new_fd = match dest {
+        Some(explicit) => {
+            if let Some(old) = thread.open_files.insert(explicit, duplicated) {
+                drop(guard);
+                finalize_open_file(old);
+                return explicit as u64;
+            }
+            explicit
+        }
+        None => {
+            let allocated = thread.next_fd;
+            thread.next_fd += 1;
+            thread.open_files.insert(allocated, duplicated);
+            allocated
+        }
+    };
+    new_fd as u64
+}
+
+/// The kernel side of `SYS_CLOCK_GETTIME`: `rdi` = ptr to a caller-owned
+/// buffer of 7 consecutive `u32`s (28 bytes) — `[year, month, day, hour,
+/// minute, second, nanos_within_second]`. The first six come from
+/// `crate::rtc::now()` (the CMOS wall clock, whole-second resolution);
+/// `nanos_within_second` comes from `crate::tsc::now_ns()` modulo one
+/// second, giving sub-second precision *within* whatever second the RTC
+/// read landed in — not a true fused reading (the two clocks are read
+/// back to back, not atomically), but close enough for this kernel's own
+/// demos, and documented rather than presented as more precise than it
+/// is. Always succeeds.
+pub fn sys_clock_gettime(out_ptr: u64) -> u64 {
+    let t = crate::rtc::now();
+    let ns = crate::tsc::now_ns() % 1_000_000_000;
+    let out = out_ptr as *mut u32;
+    unsafe {
+        out.write(t.year);
+        out.add(1).write(t.month as u32);
+        out.add(2).write(t.day as u32);
+        out.add(3).write(t.hour as u32);
+        out.add(4).write(t.minute as u32);
+        out.add(5).write(t.second as u32);
+        out.add(6).write(ns as u32);
+    }
+    0
 }
 
 /// The kernel side of `SYS_READ`: copies up to `len` bytes from `fd`'s

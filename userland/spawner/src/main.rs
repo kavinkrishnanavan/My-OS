@@ -67,6 +67,47 @@ pub extern "C" fn _start() -> ! {
     myos_userlib::yield_now();
     let _ = writeln!(Writer, "spawner: yield_now() returned, still pid={}", myos_userlib::getpid());
 
+    // Proves SYS_LSEEK/SYS_DUP/SYS_DUP2: open the same kernel.txt main.rs
+    // already wrote+read-back at boot, seek to its exact midpoint, read
+    // the second half, then seek back to the start via a *duplicated* fd
+    // (dup2's target) and confirm it reads the same bytes from the top.
+    let fd = myos_userlib::open("kernel.txt", myos_userlib::O_READ);
+    if fd != u64::MAX {
+        let end = myos_userlib::lseek(fd, 0, myos_userlib::SEEK_END);
+        let mid = end / 2;
+        let new_pos = myos_userlib::lseek(fd, mid as i64, myos_userlib::SEEK_SET);
+        let mut second_half = [0u8; 64];
+        let n = myos_userlib::read(fd, &mut second_half[..(end - mid) as usize]);
+
+        let dup_fd = myos_userlib::dup(fd);
+        let dup2_fd = 50; // an arbitrary unused fd number for dup2's explicit target
+        let dup2_result = myos_userlib::dup2(fd, dup2_fd);
+        let _ = myos_userlib::lseek(dup2_fd, 0, myos_userlib::SEEK_SET);
+        let mut first_half = [0u8; 64];
+        let n2 = myos_userlib::read(dup2_fd, &mut first_half[..mid as usize]);
+
+        let _ = writeln!(
+            Writer,
+            "spawner: lseek end={end} mid_seek_to={new_pos} read_second_half={n}B dup_fd={dup_fd} dup2_result={dup2_result} read_via_dup2={n2}B fd_still_independent={}",
+            myos_userlib::lseek(fd, 0, myos_userlib::SEEK_CUR) == end
+        );
+
+        myos_userlib::close(dup_fd);
+        myos_userlib::close(dup2_fd);
+        myos_userlib::close(fd);
+    } else {
+        let _ = writeln!(Writer, "spawner: lseek/dup demo skipped - kernel.txt not open-able");
+    }
+
+    // Proves SYS_CLOCK_GETTIME: sub-second-resolution time alongside the
+    // whole-second SYS_RTC_NOW rtcdemo already proved.
+    let ct = myos_userlib::clock_gettime();
+    let _ = writeln!(
+        Writer,
+        "spawner: clock_gettime {:04}-{:02}-{:02} {:02}:{:02}:{:02}.{:09}",
+        ct.year, ct.month, ct.day, ct.hour, ct.minute, ct.second, ct.nanos
+    );
+
     myos_userlib::exit(0);
 }
 

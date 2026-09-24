@@ -45,6 +45,16 @@ const SYS_RTC_NOW: u64 = 20;
 const SYS_GETPID: u64 = 21;
 const SYS_YIELD: u64 = 22;
 const SYS_NOW_NS: u64 = 23;
+const SYS_LSEEK: u64 = 24;
+const SYS_DUP: u64 = 25;
+const SYS_DUP2: u64 = 26;
+const SYS_CLOCK_GETTIME: u64 = 27;
+const SYS_MKDIR: u64 = 28;
+const SYS_UNLINK: u64 = 29;
+const SYS_RENAME: u64 = 30;
+const SYS_STAT: u64 = 31;
+const SYS_MMAP_ANON: u64 = 32;
+const SYS_MUNMAP: u64 = 33;
 
 /// The stdout convention `write_fd`'s callers (and `Writer`) use —
 /// `interrupts.rs`'s `SYS_WRITE` handler special-cases this straight to
@@ -122,6 +132,52 @@ pub fn sbrk(increment: i64) -> *mut u8 {
     old_break as *mut u8
 }
 
+/// `mmap_anon`'s `prot` argument: the mapped region is writable.
+pub const PROT_WRITE: u64 = 1;
+/// `mmap_anon`'s `prot` argument: the mapped region is executable.
+pub const PROT_EXEC: u64 = 2;
+
+/// Maps a fresh anonymous region of at least `bytes` bytes, with `prot`
+/// (`PROT_WRITE`/`PROT_EXEC`, bitwise-or'd) controlling its permissions.
+/// Returns the region's virtual address, or `None` on failure (out of
+/// memory). This is a bump arena kernel-side, not a general-purpose VMA
+/// map — see `munmap`'s doc comment for the LIFO-only unmap restriction
+/// that implies.
+pub fn mmap_anon(bytes: usize, prot: u64) -> Option<*mut u8> {
+    let addr: u64;
+    unsafe {
+        asm!(
+            "int 0x80",
+            inout("rax") SYS_MMAP_ANON => addr,
+            in("rdi") bytes as u64,
+            in("rsi") prot,
+        );
+    }
+    if addr == u64::MAX {
+        None
+    } else {
+        Some(addr as *mut u8)
+    }
+}
+
+/// Unmaps a region previously returned by `mmap_anon`. `addr`/`bytes`
+/// must be exactly that call's result and size — the kernel-side arena
+/// is a bump allocator that can only reclaim its most recent allocation
+/// (LIFO-only unmap, not general-purpose), so unmapping anything else
+/// fails. Returns `true` on success.
+pub fn munmap(addr: *mut u8, bytes: usize) -> bool {
+    let result: u64;
+    unsafe {
+        asm!(
+            "int 0x80",
+            inout("rax") SYS_MUNMAP => result,
+            in("rdi") addr as u64,
+            in("rsi") bytes as u64,
+        );
+    }
+    result == 0
+}
+
 /// Opens `path` (`O_READ` or `O_WRITE` — see their own doc comments),
 /// returning a file descriptor (`u64::MAX` on failure).
 pub fn open(path: &str, mode: u64) -> u64 {
@@ -136,6 +192,82 @@ pub fn open(path: &str, mode: u64) -> u64 {
         );
     }
     fd
+}
+
+/// Creates a directory at `path`. Returns `0` success, `u64::MAX` failure.
+pub fn mkdir(path: &str) -> u64 {
+    let result: u64;
+    unsafe {
+        asm!(
+            "int 0x80",
+            inout("rax") SYS_MKDIR => result,
+            in("rdi") path.as_ptr() as u64,
+            in("rsi") path.len() as u64,
+        );
+    }
+    result
+}
+
+/// Removes the file at `path`. Returns `0` success, `u64::MAX` failure.
+pub fn unlink(path: &str) -> u64 {
+    let result: u64;
+    unsafe {
+        asm!(
+            "int 0x80",
+            inout("rax") SYS_UNLINK => result,
+            in("rdi") path.as_ptr() as u64,
+            in("rsi") path.len() as u64,
+        );
+    }
+    result
+}
+
+/// Renames/moves `old_path` to `new_path`. Returns `0` success, `u64::MAX`
+/// failure.
+pub fn rename(old_path: &str, new_path: &str) -> u64 {
+    let result: u64;
+    unsafe {
+        asm!(
+            "int 0x80",
+            inout("rax") SYS_RENAME => result,
+            in("rdi") old_path.as_ptr() as u64,
+            in("rsi") old_path.len() as u64,
+            in("rdx") new_path.as_ptr() as u64,
+            in("r8") new_path.len() as u64,
+        );
+    }
+    result
+}
+
+/// Result of `stat`: whether `path` exists, whether it's a directory, and
+/// its size in bytes (`0` for a directory, or for a nonexistent path).
+pub struct Stat {
+    pub exists: bool,
+    pub is_dir: bool,
+    pub size: u64,
+}
+
+/// Looks up `path` without opening it. The kernel writes three `u64`s
+/// (`[exists, is_dir, size]`) into a caller-owned buffer, the same
+/// "write through a pointer" shape as `meminfo`/`get_arg`. Always
+/// returns successfully — check the returned `Stat::exists` for whether
+/// `path` actually existed, not a `u64::MAX` sentinel.
+pub fn stat(path: &str) -> Stat {
+    let mut buf = [0u64; 3];
+    unsafe {
+        asm!(
+            "int 0x80",
+            in("rax") SYS_STAT,
+            in("rdi") path.as_ptr() as u64,
+            in("rsi") path.len() as u64,
+            in("rdx") buf.as_mut_ptr() as u64,
+        );
+    }
+    Stat {
+        exists: buf[0] != 0,
+        is_dir: buf[1] != 0,
+        size: buf[2],
+    }
 }
 
 /// Reads up to `buf.len()` bytes from `fd` into `buf`, returning how
@@ -169,6 +301,58 @@ pub fn close(fd: u64) -> u64 {
             "int 0x80",
             inout("rax") SYS_CLOSE => result,
             in("rdi") fd,
+        );
+    }
+    result
+}
+
+pub const SEEK_SET: u64 = 0;
+pub const SEEK_CUR: u64 = 1;
+pub const SEEK_END: u64 = 2;
+
+/// Moves an `O_READ` `fd`'s position (`whence` is one of the `SEEK_*`
+/// constants). Returns the new absolute position, or `u64::MAX` for a
+/// non-seekable fd.
+pub fn lseek(fd: u64, offset: i64, whence: u64) -> u64 {
+    let pos: u64;
+    unsafe {
+        asm!(
+            "int 0x80",
+            inout("rax") SYS_LSEEK => pos,
+            in("rdi") fd,
+            in("rsi") offset,
+            in("rdx") whence,
+        );
+    }
+    pos
+}
+
+/// Duplicates `fd` into a fresh fd number. Returns `u64::MAX` for a kind
+/// with no sensible duplicate (see `kernel/src/task/thread.rs`'s
+/// `sys_dup` doc comment for exactly which fd kinds support this).
+pub fn dup(fd: u64) -> u64 {
+    let new_fd: u64;
+    unsafe {
+        asm!(
+            "int 0x80",
+            inout("rax") SYS_DUP => new_fd,
+            in("rdi") fd,
+        );
+    }
+    new_fd
+}
+
+/// Duplicates `fd` into the caller-chosen `new_fd`, closing whatever
+/// `new_fd` previously held first. Returns `new_fd` on success,
+/// `u64::MAX` on failure.
+pub fn dup2(fd: u64, new_fd: u64) -> u64 {
+    let result: u64;
+    unsafe {
+        asm!(
+            "int 0x80",
+            inout("rax") SYS_DUP2 => result,
+            in("rdi") fd,
+            in("rsi") new_fd,
         );
     }
     result
@@ -524,6 +708,42 @@ pub fn rtc_now() -> RtcTime {
         hour: buf[3],
         minute: buf[4],
         second: buf[5],
+    }
+}
+
+/// Wall-clock time with sub-second resolution: the CMOS RTC's six fields
+/// plus `nanos` (0..1_000_000_000) filled in from the TSC clock — see
+/// `kernel/src/task/thread.rs`'s `sys_clock_gettime` doc comment for the
+/// precision caveat (the two clocks are read back to back, not fused
+/// atomically).
+pub struct ClockTime {
+    pub year: u32,
+    pub month: u32,
+    pub day: u32,
+    pub hour: u32,
+    pub minute: u32,
+    pub second: u32,
+    pub nanos: u32,
+}
+
+/// Reads `ClockTime` in one syscall. Always succeeds.
+pub fn clock_gettime() -> ClockTime {
+    let mut buf = [0u32; 7];
+    unsafe {
+        asm!(
+            "int 0x80",
+            in("rax") SYS_CLOCK_GETTIME,
+            in("rdi") buf.as_mut_ptr() as u64,
+        );
+    }
+    ClockTime {
+        year: buf[0],
+        month: buf[1],
+        day: buf[2],
+        hour: buf[3],
+        minute: buf[4],
+        second: buf[5],
+        nanos: buf[6],
     }
 }
 

@@ -384,6 +384,16 @@ const SYS_RTC_NOW: u64 = 20;
 const SYS_GETPID: u64 = 21;
 const SYS_YIELD: u64 = 22;
 const SYS_NOW_NS: u64 = 23;
+const SYS_LSEEK: u64 = 24;
+const SYS_DUP: u64 = 25;
+const SYS_DUP2: u64 = 26;
+const SYS_CLOCK_GETTIME: u64 = 27;
+const SYS_MKDIR: u64 = 28;
+const SYS_UNLINK: u64 = 29;
+const SYS_RENAME: u64 = 30;
+const SYS_STAT: u64 = 31;
+const SYS_MMAP_ANON: u64 = 32;
+const SYS_MUNMAP: u64 = 33;
 
 /// Upper bound on one `SYS_WRITE` call — it reads directly out of user
 /// memory with no length-vs-actual-mapping validation (see the handler's
@@ -601,6 +611,93 @@ extern "C" fn syscall_handler(_frame: *const RawInterruptFrame, gprs: *mut Saved
             g.rax = crate::tsc::now_ns();
             gprs_addr
         }
+        // `rdi` = fd, `rsi` = offset (as i64, reinterpreted from the u64
+        // register), `rdx` = whence (0 start, 1 current, 2 end). Returns
+        // the new absolute position, or `FD_ERROR` for a non-seekable fd.
+        SYS_LSEEK => {
+            g.rax = crate::task::thread::sys_lseek(g.rdi, g.rsi as i64, g.rdx);
+            gprs_addr
+        }
+        // `rdi` = fd to duplicate. Returns the new fd, or `u64::MAX`.
+        SYS_DUP => {
+            g.rax = crate::task::thread::sys_dup(g.rdi);
+            gprs_addr
+        }
+        // `rdi` = fd to duplicate, `rsi` = the destination fd number.
+        SYS_DUP2 => {
+            g.rax = crate::task::thread::sys_dup2(g.rdi, g.rsi);
+            gprs_addr
+        }
+        // `rdi` = ptr to a caller-owned buffer of 7 consecutive `u32`s (28
+        // bytes): `[year, month, day, hour, minute, second, nanos]`.
+        // Always succeeds — see `sys_clock_gettime`'s own doc comment for
+        // the RTC+TSC fusion and its precision caveat.
+        SYS_CLOCK_GETTIME => {
+            g.rax = crate::task::thread::sys_clock_gettime(g.rdi);
+            gprs_addr
+        }
+        // `rdi`/`rsi` = path ptr/len. `0` success, `u64::MAX` failure.
+        SYS_MKDIR => {
+            g.rax = match str_arg(g.rdi, g.rsi) {
+                Some(path) => match crate::fs::mkdir(path) {
+                    Ok(()) => 0,
+                    Err(_) => u64::MAX,
+                },
+                None => u64::MAX,
+            };
+            gprs_addr
+        }
+        SYS_UNLINK => {
+            g.rax = match str_arg(g.rdi, g.rsi) {
+                Some(path) => match crate::fs::unlink(path) {
+                    Ok(()) => 0,
+                    Err(_) => u64::MAX,
+                },
+                None => u64::MAX,
+            };
+            gprs_addr
+        }
+        // `rdi`/`rsi` = old path ptr/len, `rdx`/`r8` = new path ptr/len.
+        SYS_RENAME => {
+            g.rax = match (str_arg(g.rdi, g.rsi), str_arg(g.rdx, g.r8)) {
+                (Some(old_path), Some(new_path)) => match crate::fs::rename(old_path, new_path) {
+                    Ok(()) => 0,
+                    Err(_) => u64::MAX,
+                },
+                _ => u64::MAX,
+            };
+            gprs_addr
+        }
+        // `rdi`/`rsi` = path ptr/len, `rdx` = ptr to a caller-owned
+        // buffer of 3 consecutive `u64`s: `[exists, is_dir, size]`.
+        // Always returns 0 — check `buf[0]`, not `rax`, for whether the
+        // path existed (matches `myos_userlib::stat`'s own contract).
+        SYS_STAT => {
+            let stat = match str_arg(g.rdi, g.rsi) {
+                Some(path) => crate::fs::stat(path),
+                None => crate::fs::Stat { exists: false, is_dir: false, size: 0 },
+            };
+            let out = g.rdx as *mut u64;
+            unsafe {
+                out.write(stat.exists as u64);
+                out.add(1).write(stat.is_dir as u64);
+                out.add(2).write(stat.size);
+            }
+            g.rax = 0;
+            gprs_addr
+        }
+        // `rdi` = size in bytes, `rsi` = prot flags (bit0 writable, bit1
+        // executable). Returns the mapped address, or `FD_ERROR`.
+        SYS_MMAP_ANON => {
+            g.rax = crate::task::thread::sys_mmap_anon(g.rdi, g.rsi);
+            gprs_addr
+        }
+        // `rdi` = address, `rsi` = size in bytes — must exactly match the
+        // most recent `SYS_MMAP_ANON` call (LIFO-only arena).
+        SYS_MUNMAP => {
+            g.rax = crate::task::thread::sys_munmap(g.rdi, g.rsi);
+            gprs_addr
+        }
         other => {
             serial_println!("syscall: unknown number {other}");
             gprs_addr
@@ -633,6 +730,16 @@ extern "C" fn nic_interrupt_handler(_frame: *const RawInterruptFrame) {
         PICS.lock()
             .notify_end_of_interrupt(PIC_1_OFFSET + CANDIDATE_NIC_IRQS[0]);
     }
+}
+
+/// Reads `len` bytes at `ptr` (user memory, valid to dereference directly
+/// here for the same reason `task::thread::sys_open`'s own path-reading
+/// does — the syscall handler runs with the caller's `CR3` still active)
+/// as UTF-8. Shared by the filesystem syscalls below that take a path
+/// argument directly in `interrupts.rs` rather than through `task::thread`.
+fn str_arg<'a>(ptr: u64, len: u64) -> Option<&'a str> {
+    let bytes = unsafe { core::slice::from_raw_parts(ptr as *const u8, len as usize) };
+    core::str::from_utf8(bytes).ok()
 }
 
 extern "C" fn keyboard_interrupt_handler(_frame: *const RawInterruptFrame) {
