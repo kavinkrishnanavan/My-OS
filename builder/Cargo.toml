@@ -1,0 +1,13 @@
+[package]
+name = "builder"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+bootloader = "0.11"
+
+# Formats the kernel's data disk image (dist/myos-data.img) as FAT32 at
+# build time, so the kernel-side `fatfs` (see kernel/Cargo.toml) has a
+# real filesystem to mount on first boot without needing host `mkfs`
+# tooling as a build dependency.
+fatfs = "0.3"

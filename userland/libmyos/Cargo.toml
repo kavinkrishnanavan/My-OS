@@ -1,0 +1,17 @@
+[package]
+name = "myos-userlib"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "myos_userlib"
+path = "src/lib.rs"
+
+# panic = "abort" comes from the workspace root's [profile.release] —
+# cargo requires profile settings live only there, not in member crates.
+# No target/.cargo/config.toml here, deliberately: this is a library, not
+# a binary — whichever program depends on it (userland/hello,
+# userland/counter) picks the target via its own .cargo/config.toml, and
+# cargo builds this crate for that same target as part of the dependency
+# graph. Nothing about *this* crate needs a linker script either, for
+# the same reason: it never gets linked on its own.

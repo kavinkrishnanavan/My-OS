@@ -1,0 +1,14 @@
+C:\Users\Kavin\Downloads\MY OWN Os\myos\target-codex\release\build\serde/5e12d17409b1028e\out\serde-5e12d17409b1028e.d: C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.229\src\lib.rs C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.229\src\integer128.rs C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.229\src\private\mod.rs C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.229\src\private\de.rs C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.229\src\private\ser.rs C:\Users\Kavin\Downloads\MY\ OWN\ Os\myos\target-codex\release\build\serde/dcc745938238ff56\out/private.rs
+
+C:\Users\Kavin\Downloads\MY OWN Os\myos\target-codex\release\build\serde/5e12d17409b1028e\out\libserde-5e12d17409b1028e.rlib: C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.229\src\lib.rs C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.229\src\integer128.rs C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.229\src\private\mod.rs C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.229\src\private\de.rs C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.229\src\private\ser.rs C:\Users\Kavin\Downloads\MY\ OWN\ Os\myos\target-codex\release\build\serde/dcc745938238ff56\out/private.rs
+
+C:\Users\Kavin\Downloads\MY OWN Os\myos\target-codex\release\build\serde/5e12d17409b1028e\out\libserde-5e12d17409b1028e.rmeta: C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.229\src\lib.rs C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.229\src\integer128.rs C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.229\src\private\mod.rs C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.229\src\private\de.rs C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.229\src\private\ser.rs C:\Users\Kavin\Downloads\MY\ OWN\ Os\myos\target-codex\release\build\serde/dcc745938238ff56\out/private.rs
+
+C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.229\src\lib.rs:
+C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.229\src\integer128.rs:
+C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.229\src\private\mod.rs:
+C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.229\src\private\de.rs:
+C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.229\src\private\ser.rs:
+C:\Users\Kavin\Downloads\MY\ OWN\ Os\myos\target-codex\release\build\serde/dcc745938238ff56\out/private.rs:
+
+# env-dep:OUT_DIR=C:\\Users\\Kavin\\Downloads\\MY OWN Os\\myos\\target-codex\\release\\build\\serde/dcc745938238ff56\\out

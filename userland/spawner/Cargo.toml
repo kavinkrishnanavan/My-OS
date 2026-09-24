@@ -1,0 +1,16 @@
+[package]
+name = "spawner-user"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "spawner"
+path = "src/main.rs"
+test = false
+bench = false
+
+[dependencies]
+myos-userlib = { path = "../libmyos" }
+
+# panic = "abort" comes from the workspace root's [profile.release] —
+# cargo requires profile settings live only there, not in member crates.

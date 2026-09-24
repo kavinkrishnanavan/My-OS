@@ -1,0 +1,11 @@
+[build]
+target = "x86_64-unknown-none"
+
+[target.x86_64-unknown-none]
+rustflags = [
+    "-C", "relocation-model=static",
+    # The actual -T link.ld arg comes from build.rs (an absolute path,
+    # via CARGO_MANIFEST_DIR) — the linker's cwd here isn't reliably
+    # this crate's directory, so a bare relative "link.ld" doesn't
+    # resolve.
+]

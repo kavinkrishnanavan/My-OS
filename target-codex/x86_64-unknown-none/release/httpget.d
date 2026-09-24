@@ -1,0 +1,1 @@
+C:\Users\Kavin\Downloads\MY\ OWN\ Os\myos\target-codex\x86_64-unknown-none\release\httpget: C:\Users\Kavin\Downloads\MY\ OWN\ Os\myos\userland\httpget\build.rs C:\Users\Kavin\Downloads\MY\ OWN\ Os\myos\userland\httpget\link.ld C:\Users\Kavin\Downloads\MY\ OWN\ Os\myos\userland\httpget\src\main.rs C:\Users\Kavin\Downloads\MY\ OWN\ Os\myos\userland\libmyos\src\lib.rs

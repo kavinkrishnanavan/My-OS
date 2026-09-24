@@ -1,0 +1,97 @@
+[package]
+name = "myos-kernel"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "myos-kernel"
+path = "src/main.rs"
+test = false
+bench = false
+
+[dependencies]
+# Boot protocol: the `bootloader` crate hands us a physical memory offset,
+# memory map and framebuffer info instead of us hand-writing a BIOS
+# bootloader (paging/long-mode setup) from scratch.
+bootloader_api = "0.11"
+
+# CPU/segmentation/paging primitives. Default features pull in `nightly`
+# (step_trait/abi_x86_interrupt/asm_const, all needing an unstable
+# compiler) — we only need port I/O and segment/IDT/paging structures.
+# IDT entries are wired to naked-function trampolines (see
+# interrupts.rs) instead of the nightly-only `x86-interrupt` ABI.
+x86_64 = { version = "0.15", default-features = false, features = ["instructions"] }
+
+# Legacy 8259 PIC so NIC interrupts reach our IDT.
+pic8259 = "0.11"
+
+# Heap allocator backing `alloc` (needed by smoltcp's socket buffers and
+# our async task queue).
+linked_list_allocator = "0.10"
+
+# Spinlocks — the only synchronization primitive available with no OS
+# underneath us.
+spin = "0.9"
+
+# `static ref` for the GDT/IDT, which can't be built in a `const fn`.
+lazy_static = { version = "1.5", features = ["spin_no_std"] }
+
+# Lock-free, fixed-capacity queue the executor's ready-list lives in —
+# `push` never allocates, so it's safe to call from interrupt context.
+crossbeam-queue = { version = "0.3", default-features = false, features = ["alloc"] }
+
+# The actual TCP/IP stack: ARP, IPv4, TCP, DNS. This is what turns raw
+# Ethernet frames from the NIC driver into "fetch a URL".
+smoltcp = { version = "0.11", default-features = false, features = [
+    "alloc",
+    "medium-ethernet",
+    "proto-ipv4",
+    "proto-dns",
+    "socket-raw",
+    "socket-icmp",
+    "socket-udp",
+    "socket-tcp",
+    "socket-dns",
+    "socket-dhcpv4",
+    "proto-dhcpv4",
+] }
+
+# Pre-rasterized bitmap font for drawing fetched-page text onto the
+# bootloader's linear framebuffer — no_std, no floating point (we have no
+# FPU/SSE state saved across interrupts, so anything that needs one is
+# out), zero allocations.
+noto-sans-mono-bitmap = { version = "0.3", default-features = false, features = [
+    "regular",
+    "bold",
+    "size_16",
+    "size_24",
+    "unicode-basic-latin",
+    "unicode-latin-1-supplement",
+] }
+
+# TLS 1.3 client, no_std and allocation-free by design — what makes
+# `https://` fetches possible at all. We use it with `UnsecureProvider`
+# (no certificate-chain validation: the crate itself notes real
+# certificate verification only works with `std` today), so the session
+# is encrypted but not authenticated — see net/tls.rs and the README's
+# security notes.
+embedded-tls = { version = "0.19", default-features = false }
+embedded-io = { version = "0.7", default-features = false }
+embedded-io-async = { version = "0.7", default-features = false }
+
+# Exact major version `embedded-tls` 0.19 pins for its RNG bound — our
+# own RDRAND-backed `Rng` (rng.rs) implements these traits.
+rand_core = { version = "0.6", default-features = false }
+
+# DEFLATE/zlib inflate for decoding PNG `IDAT` chunks — pure Rust,
+# no_std-with-alloc capable (no filesystem/threading needed), so it
+# drops straight into a kernel with no OS underneath.
+miniz_oxide = { version = "0.8", default-features = false, features = ["with-alloc"] }
+
+# FAT32 filesystem over our own ATA PIO driver (disk/ata.rs) — natively
+# no_std (embedded-focused), unlike `fatfs` (used host-side only, by
+# builder/, to format the disk image: its no_std path depends on the
+# unmaintained `core_io` shim, which doesn't build under a current
+# compiler). Both read/write the same on-disk FAT32 format, so the two
+# only need to agree on that, not on which crate either side uses.
+embedded-sdmmc = { version = "0.8", default-features = false }

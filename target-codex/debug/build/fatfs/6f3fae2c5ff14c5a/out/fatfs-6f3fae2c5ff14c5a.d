@@ -1,0 +1,12 @@
+C:\Users\Kavin\Downloads\MY OWN Os\myos\target-codex\debug\build\fatfs/6f3fae2c5ff14c5a\out\fatfs-6f3fae2c5ff14c5a.d: C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\fatfs-0.3.6\src\lib.rs C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\fatfs-0.3.6\src\boot_sector.rs C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\fatfs-0.3.6\src\dir.rs C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\fatfs-0.3.6\src\dir_entry.rs C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\fatfs-0.3.6\src\file.rs C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\fatfs-0.3.6\src\fs.rs C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\fatfs-0.3.6\src\table.rs C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\fatfs-0.3.6\src\time.rs
+
+C:\Users\Kavin\Downloads\MY OWN Os\myos\target-codex\debug\build\fatfs/6f3fae2c5ff14c5a\out\libfatfs-6f3fae2c5ff14c5a.rmeta: C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\fatfs-0.3.6\src\lib.rs C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\fatfs-0.3.6\src\boot_sector.rs C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\fatfs-0.3.6\src\dir.rs C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\fatfs-0.3.6\src\dir_entry.rs C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\fatfs-0.3.6\src\file.rs C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\fatfs-0.3.6\src\fs.rs C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\fatfs-0.3.6\src\table.rs C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\fatfs-0.3.6\src\time.rs
+
+C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\fatfs-0.3.6\src\lib.rs:
+C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\fatfs-0.3.6\src\boot_sector.rs:
+C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\fatfs-0.3.6\src\dir.rs:
+C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\fatfs-0.3.6\src\dir_entry.rs:
+C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\fatfs-0.3.6\src\file.rs:
+C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\fatfs-0.3.6\src\fs.rs:
+C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\fatfs-0.3.6\src\table.rs:
+C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\fatfs-0.3.6\src\time.rs:

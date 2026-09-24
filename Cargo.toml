@@ -1,0 +1,25 @@
+[workspace]
+resolver = "2"
+members = [
+    "kernel",
+    "builder",
+    "userland/libmyos",
+    "userland/hello",
+    "userland/counter",
+    "userland/spawner",
+    "userland/httpget",
+    "userland/pipedemo",
+]
+
+# The builder runs on the HOST (Windows/Linux/macOS, normal std Rust) and
+# stitches the kernel ELF together with the `bootloader` crate to produce
+# a bootable BIOS/UEFI disk image. The kernel itself is a separate no_std
+# crate built for a bare-metal x86_64 target — see kernel/Cargo.toml and
+# kernel/.cargo/config.toml.
+
+[profile.dev]
+panic = "abort"
+
+[profile.release]
+panic = "abort"
+lto = true

@@ -1,0 +1,1 @@
+C:\Users\Kavin\Downloads\MY\ OWN\ Os\myos\target-codex\x86_64-unknown-none\release\spawner: C:\Users\Kavin\Downloads\MY\ OWN\ Os\myos\userland\libmyos\src\lib.rs C:\Users\Kavin\Downloads\MY\ OWN\ Os\myos\userland\spawner\build.rs C:\Users\Kavin\Downloads\MY\ OWN\ Os\myos\userland\spawner\link.ld C:\Users\Kavin\Downloads\MY\ OWN\ Os\myos\userland\spawner\src\main.rs

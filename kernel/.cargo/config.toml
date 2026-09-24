@@ -1,0 +1,14 @@
+[build]
+target = "x86_64-unknown-none"
+
+[target.x86_64-unknown-none]
+rustflags = [
+    "-C", "relocation-model=static",
+    # No red zone: an interrupt can land while the code it preempted was
+    # a leaf function using its 128-byte red zone for scratch data. Our
+    # interrupt trampolines (interrupts.rs) push registers at [rsp] and
+    # below without adjusting rsp first-thing, which would stomp on that
+    # scratch data if the compiler were allowed to rely on the red zone
+    # existing anywhere in kernel code.
+    "-C", "no-redzone=yes",
+]

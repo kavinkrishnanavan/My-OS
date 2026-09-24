@@ -1,0 +1,11 @@
+C:\Users\Kavin\Downloads\MY OWN Os\myos\target-codex\x86_64-unknown-none\release\deps\managed-b58b059842557be5.d: C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\managed-0.8.0\src\lib.rs C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\managed-0.8.0\src\object.rs C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\managed-0.8.0\src\slice.rs C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\managed-0.8.0\src\slotmap.rs C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\managed-0.8.0\src\map.rs
+
+C:\Users\Kavin\Downloads\MY OWN Os\myos\target-codex\x86_64-unknown-none\release\deps\libmanaged-b58b059842557be5.rlib: C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\managed-0.8.0\src\lib.rs C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\managed-0.8.0\src\object.rs C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\managed-0.8.0\src\slice.rs C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\managed-0.8.0\src\slotmap.rs C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\managed-0.8.0\src\map.rs
+
+C:\Users\Kavin\Downloads\MY OWN Os\myos\target-codex\x86_64-unknown-none\release\deps\libmanaged-b58b059842557be5.rmeta: C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\managed-0.8.0\src\lib.rs C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\managed-0.8.0\src\object.rs C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\managed-0.8.0\src\slice.rs C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\managed-0.8.0\src\slotmap.rs C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\managed-0.8.0\src\map.rs
+
+C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\managed-0.8.0\src\lib.rs:
+C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\managed-0.8.0\src\object.rs:
+C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\managed-0.8.0\src\slice.rs:
+C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\managed-0.8.0\src\slotmap.rs:
+C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\managed-0.8.0\src\map.rs:

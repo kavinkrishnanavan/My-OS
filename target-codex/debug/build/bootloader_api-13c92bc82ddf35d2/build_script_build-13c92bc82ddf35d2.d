@@ -1,0 +1,10 @@
+C:\Users\Kavin\Downloads\MY OWN Os\myos\target-codex\debug\build\bootloader_api-13c92bc82ddf35d2\build_script_build-13c92bc82ddf35d2.d: C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bootloader_api-0.11.17\build.rs
+
+C:\Users\Kavin\Downloads\MY OWN Os\myos\target-codex\debug\build\bootloader_api-13c92bc82ddf35d2\build_script_build-13c92bc82ddf35d2.exe: C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bootloader_api-0.11.17\build.rs
+
+C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bootloader_api-0.11.17\build.rs:
+
+# env-dep:CARGO_PKG_VERSION_MAJOR=0
+# env-dep:CARGO_PKG_VERSION_MINOR=11
+# env-dep:CARGO_PKG_VERSION_PATCH=17
+# env-dep:CARGO_PKG_VERSION_PRE=

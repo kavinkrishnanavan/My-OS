@@ -1,0 +1,2 @@
+cargo:rustc-link-arg=-TC:\Users\Kavin\Downloads\MY OWN Os\myos\userland\spawner/link.ld
+cargo:rerun-if-changed=link.ld

@@ -1,0 +1,1 @@
+C:\Users\Kavin\Downloads\MY\ OWN\ Os\myos\target-codex\x86_64-unknown-none\release\hello: C:\Users\Kavin\Downloads\MY\ OWN\ Os\myos\userland\hello\build.rs C:\Users\Kavin\Downloads\MY\ OWN\ Os\myos\userland\hello\link.ld C:\Users\Kavin\Downloads\MY\ OWN\ Os\myos\userland\hello\src\main.rs C:\Users\Kavin\Downloads\MY\ OWN\ Os\myos\userland\libmyos\src\lib.rs

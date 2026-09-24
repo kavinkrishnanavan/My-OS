@@ -1,0 +1,3041 @@
+    Blocking waiting for file lock on package cache (C:\Users\Kavin\.cargo\.package-cache)
+    Blocking waiting for file lock on package cache
+    Updating crates.io index
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on package cache
+  Installing bootloader-x86_64-uefi v0.11.17
+    Blocking waiting for file lock on package cache (C:\Users\Kavin\.cargo\.package-cache)
+    Updating crates.io index
+    Blocking waiting for file lock on package cache
+  Installing bootloader-x86_64-bios-stage-3 v0.11.17
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on package cache
+    Updating crates.io index
+    Blocking waiting for file lock on package cache (C:\Users\Kavin\.cargo\.package-cache)
+    Updating crates.io index
+    Updating crates.io index
+  Installing bootloader-x86_64-bios-stage-2 v0.11.17
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on package cache
+    Updating crates.io index
+    Updating crates.io index
+  Installing bootloader-x86_64-bios-stage-4 v0.11.17
+    Blocking waiting for file lock on package cache
+  Installing bootloader-x86_64-bios-boot-sector v0.11.17
+    Blocking waiting for file lock on package cache
+warning: package `spin v0.9.8` in Cargo.lock is yanked in registry `crates-io`
+    Updating crates.io index
+    Blocking waiting for file lock on package cache
+    Updating crates.io index
+    Blocking waiting for file lock on package cache (C:\Users\Kavin\.cargo\.package-cache)
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on package cache
+    Updating crates.io index
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on package cache (C:\Users\Kavin\.cargo\.package-cache)
+    Updating crates.io index
+    Blocking waiting for file lock on package cache
+warning: package `spin v0.9.8` in Cargo.lock is yanked in registry `crates-io`
+    Updating crates.io index
+    Updating crates.io index
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on package cache (C:\Users\Kavin\.cargo\.package-cache)
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on package cache (C:\Users\Kavin\.cargo\.package-cache)
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on package cache
+    Updating crates.io index
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on package cache (C:\Users\Kavin\.cargo\.package-cache)
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on package cache
+    Updating crates.io index
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on package cache (C:\Users\Kavin\.cargo\.package-cache)
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on package cache
+    Finished `stage-2` profile [optimized] target(s) in 2.17s
+  Installing C:\Users\Kavin\Downloads\MY OWN Os\myos\target-codex\release\build\bootloader\f2ad5edd650d72b1\out\bin\bootloader-x86_64-bios-stage-2
+   Installed package `bootloader-x86_64-bios-stage-2 v0.11.17` (executable `bootloader-x86_64-bios-stage-2`)
+warning: be sure to add `C:\Users\Kavin\Downloads\MY OWN Os\myos\target-codex\release\build\bootloader\f2ad5edd650d72b1\out\bin` to your PATH to be able to run the installed binaries
+    Finished `stage-1` profile [optimized] target(s) in 2.18s
+  Installing C:\Users\Kavin\Downloads\MY OWN Os\myos\target-codex\release\build\bootloader\f2ad5edd650d72b1\out\bin\bootloader-x86_64-bios-boot-sector
+   Installed package `bootloader-x86_64-bios-boot-sector v0.11.17` (executable `bootloader-x86_64-bios-boot-sector`)
+warning: be sure to add `C:\Users\Kavin\Downloads\MY OWN Os\myos\target-codex\release\build\bootloader\f2ad5edd650d72b1\out\bin` to your PATH to be able to run the installed binaries
+       Fresh core v0.0.0 (C:\Users\Kavin\.rustup\toolchains\nightly-x86_64-pc-windows-msvc\lib\rustlib\src\rust\library\core)
+    Finished `stage-3` profile [optimized + debuginfo] target(s) in 2.27s
+warning: the following packages contain code that will be rejected by a future version of Rust: core v0.0.0 (C:\Users\Kavin\.rustup\toolchains\nightly-x86_64-pc-windows-msvc\lib\rustlib\src\rust\library\core)
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 2`
+       Fresh unicode-ident v1.0.10
+       Fresh compiler_builtins v0.1.160 (C:\Users\Kavin\.rustup\toolchains\nightly-x86_64-pc-windows-msvc\lib\rustlib\src\rust\library\compiler-builtins\compiler-builtins)
+       Fresh autocfg v1.1.0
+  Installing C:\Users\Kavin\Downloads\MY OWN Os\myos\target-codex\release\build\bootloader\f2ad5edd650d72b1\out\bin\bootloader-x86_64-bios-stage-3
+   Installed package `bootloader-x86_64-bios-stage-3 v0.11.17` (executable `bootloader-x86_64-bios-stage-3`)
+warning: be sure to add `C:\Users\Kavin\Downloads\MY OWN Os\myos\target-codex\release\build\bootloader\f2ad5edd650d72b1\out\bin` to your PATH to be able to run the installed binaries
+       Fresh proc-macro2 v1.0.106
+       Fresh scopeguard v1.1.0
+       Fresh bit_field v0.10.2
+       Fresh bitflags v2.11.1
+       Fresh bitflags v1.3.2
+       Fresh quote v1.0.45
+       Fresh semver v1.0.17
+warning: unexpected `cfg` condition name: `doc_cfg`
+  --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\semver-1.0.17\src\lib.rs:64:13
+   |
+64 | #![cfg_attr(doc_cfg, feature(doc_cfg))]
+   |             ^^^^^^^
+   |
+   = help: expected names are: `docsrs`, `feature`, and `test` and 34 more
+   = help: consider using a Cargo feature instead
+   = help: or consider adding in `Cargo.toml` the `check-cfg` lint config for the lint:
+            [lints.rust]
+            unexpected_cfgs = { level = "warn", check-cfg = ['cfg(doc_cfg)'] }
+   = help: or consider adding `println!("cargo::rustc-check-cfg=cfg(doc_cfg)");` to the top of the `build.rs`
+   = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+   = note: `#[warn(unexpected_cfgs)]` on by default
+
+warning: unexpected `cfg` condition name: `no_alloc_crate`
+  --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\semver-1.0.17\src\lib.rs:65:43
+   |
+65 | #![cfg_attr(all(not(feature = "std"), not(no_alloc_crate)), no_std)]
+   |                                           ^^^^^^^^^^^^^^
+   |
+   = help: consider using a Cargo feature instead
+   = help: or consider adding in `Cargo.toml` the `check-cfg` lint config for the lint:
+            [lints.rust]
+            unexpected_cfgs = { level = "warn", check-cfg = ['cfg(no_alloc_crate)'] }
+   = help: or consider adding `println!("cargo::rustc-check-cfg=cfg(no_alloc_crate)");` to the top of the `build.rs`
+   = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition name: `no_unsafe_op_in_unsafe_fn_lint`
+  --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\semver-1.0.17\src\lib.rs:66:17
+   |
+66 | #![cfg_attr(not(no_unsafe_op_in_unsafe_fn_lint), deny(unsafe_op_in_unsafe_fn))]
+   |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = help: consider using a Cargo feature instead
+   = help: or consider adding in `Cargo.toml` the `check-cfg` lint config for the lint:
+            [lints.rust]
+            unexpected_cfgs = { level = "warn", check-cfg = ['cfg(no_unsafe_op_in_unsafe_fn_lint)'] }
+   = help: or consider adding `println!("cargo::rustc-check-cfg=cfg(no_unsafe_op_in_unsafe_fn_lint)");` to the top of the `build.rs`
+   = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition name: `no_unsafe_op_in_unsafe_fn_lint`
+  --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\semver-1.0.17\src\lib.rs:67:13
+   |
+67 | #![cfg_attr(no_unsafe_op_in_unsafe_fn_lint, allow(unused_unsafe))]
+   |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = help: consider using a Cargo feature instead
+   = help: or consider adding in `Cargo.toml` the `check-cfg` lint config for the lint:
+            [lints.rust]
+            unexpected_cfgs = { level = "warn", check-cfg = ['cfg(no_unsafe_op_in_unsafe_fn_lint)'] }
+   = help: or consider adding `println!("cargo::rustc-check-cfg=cfg(no_unsafe_op_in_unsafe_fn_lint)");` to the top of the `build.rs`
+   = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition name: `no_str_strip_prefix`
+  --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\semver-1.0.17\src\lib.rs:68:13
+   |
+68 | #![cfg_attr(no_str_strip_prefix, allow(unstable_name_collisions))]
+   |             ^^^^^^^^^^^^^^^^^^^
+   |
+   = help: consider using a Cargo feature instead
+   = help: or consider adding in `Cargo.toml` the `check-cfg` lint config for the lint:
+            [lints.rust]
+            unexpected_cfgs = { level = "warn", check-cfg = ['cfg(no_str_strip_prefix)'] }
+   = help: or consider adding `println!("cargo::rustc-check-cfg=cfg(no_str_strip_prefix)");` to the top of the `build.rs`
+   = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition name: `no_alloc_crate`
+  --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\semver-1.0.17\src\lib.rs:89:11
+   |
+89 | #[cfg(not(no_alloc_crate))]
+   |           ^^^^^^^^^^^^^^
+   |
+   = help: consider using a Cargo feature instead
+   = help: or consider adding in `Cargo.toml` the `check-cfg` lint config for the lint:
+            [lints.rust]
+            unexpected_cfgs = { level = "warn", check-cfg = ['cfg(no_alloc_crate)'] }
+   = help: or consider adding `println!("cargo::rustc-check-cfg=cfg(no_alloc_crate)");` to the top of the `build.rs`
+   = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition name: `no_const_vec_new`
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\semver-1.0.17\src\lib.rs:188:12
+    |
+188 | #[cfg_attr(no_const_vec_new, derive(Default))]
+    |            ^^^^^^^^^^^^^^^^
+    |
+    = help: consider using a Cargo feature instead
+    = help: or consider adding in `Cargo.toml` the `check-cfg` lint config for the lint:
+             [lints.rust]
+             unexpected_cfgs = { level = "warn", check-cfg = ['cfg(no_const_vec_new)'] }
+    = help: or consider adding `println!("cargo::rustc-check-cfg=cfg(no_const_vec_new)");` to the top of the `build.rs`
+    = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition name: `no_non_exhaustive`
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\semver-1.0.17\src\lib.rs:252:16
+    |
+252 | #[cfg_attr(not(no_non_exhaustive), non_exhaustive)]
+    |                ^^^^^^^^^^^^^^^^^
+    |
+    = help: consider using a Cargo feature instead
+    = help: or consider adding in `Cargo.toml` the `check-cfg` lint config for the lint:
+             [lints.rust]
+             unexpected_cfgs = { level = "warn", check-cfg = ['cfg(no_non_exhaustive)'] }
+    = help: or consider adding `println!("cargo::rustc-check-cfg=cfg(no_non_exhaustive)");` to the top of the `build.rs`
+    = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition name: `no_const_vec_new`
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\semver-1.0.17\src\lib.rs:482:11
+    |
+482 | #[cfg(not(no_const_vec_new))]
+    |           ^^^^^^^^^^^^^^^^
+    |
+    = help: consider using a Cargo feature instead
+    = help: or consider adding in `Cargo.toml` the `check-cfg` lint config for the lint:
+             [lints.rust]
+             unexpected_cfgs = { level = "warn", check-cfg = ['cfg(no_const_vec_new)'] }
+    = help: or consider adding `println!("cargo::rustc-check-cfg=cfg(no_const_vec_new)");` to the top of the `build.rs`
+    = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition name: `no_non_exhaustive`
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\semver-1.0.17\src\lib.rs:263:11
+    |
+263 |     #[cfg(no_non_exhaustive)] // rustc <1.40
+    |           ^^^^^^^^^^^^^^^^^
+    |
+    = help: consider using a Cargo feature instead
+    = help: or consider adding in `Cargo.toml` the `check-cfg` lint config for the lint:
+             [lints.rust]
+             unexpected_cfgs = { level = "warn", check-cfg = ['cfg(no_non_exhaustive)'] }
+    = help: or consider adding `println!("cargo::rustc-check-cfg=cfg(no_non_exhaustive)");` to the top of the `build.rs`
+    = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition name: `no_str_strip_prefix`
+ --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\semver-1.0.17\src\backport.rs:1:7
+  |
+1 | #[cfg(no_str_strip_prefix)] // rustc <1.45
+  |       ^^^^^^^^^^^^^^^^^^^
+  |
+  = help: consider using a Cargo feature instead
+  = help: or consider adding in `Cargo.toml` the `check-cfg` lint config for the lint:
+           [lints.rust]
+           unexpected_cfgs = { level = "warn", check-cfg = ['cfg(no_str_strip_prefix)'] }
+  = help: or consider adding `println!("cargo::rustc-check-cfg=cfg(no_str_strip_prefix)");` to the top of the `build.rs`
+  = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition name: `no_str_strip_prefix`
+ --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\semver-1.0.17\src\backport.rs:6:7
+  |
+6 | #[cfg(no_str_strip_prefix)]
+  |       ^^^^^^^^^^^^^^^^^^^
+  |
+  = help: consider using a Cargo feature instead
+  = help: or consider adding in `Cargo.toml` the `check-cfg` lint config for the lint:
+           [lints.rust]
+           unexpected_cfgs = { level = "warn", check-cfg = ['cfg(no_str_strip_prefix)'] }
+  = help: or consider adding `println!("cargo::rustc-check-cfg=cfg(no_str_strip_prefix)");` to the top of the `build.rs`
+  = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition name: `no_alloc_crate`
+  --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\semver-1.0.17\src\backport.rs:19:7
+   |
+19 | #[cfg(no_alloc_crate)] // rustc <1.36
+   |       ^^^^^^^^^^^^^^
+   |
+   = help: consider using a Cargo feature instead
+   = help: or consider adding in `Cargo.toml` the `check-cfg` lint config for the lint:
+            [lints.rust]
+            unexpected_cfgs = { level = "warn", check-cfg = ['cfg(no_alloc_crate)'] }
+   = help: or consider adding `println!("cargo::rustc-check-cfg=cfg(no_alloc_crate)");` to the top of the `build.rs`
+   = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition name: `no_non_exhaustive`
+  --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\semver-1.0.17\src\display.rs:59:19
+   |
+59 |             #[cfg(no_non_exhaustive)]
+   |                   ^^^^^^^^^^^^^^^^^
+   |
+   = help: consider using a Cargo feature instead
+   = help: or consider adding in `Cargo.toml` the `check-cfg` lint config for the lint:
+            [lints.rust]
+            unexpected_cfgs = { level = "warn", check-cfg = ['cfg(no_non_exhaustive)'] }
+   = help: or consider adding `println!("cargo::rustc-check-cfg=cfg(no_non_exhaustive)");` to the top of the `build.rs`
+   = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition name: `doc_cfg`
+  --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\semver-1.0.17\src\error.rs:29:12
+   |
+29 | #[cfg_attr(doc_cfg, doc(cfg(feature = "std")))]
+   |            ^^^^^^^
+   |
+   = help: consider using a Cargo feature instead
+   = help: or consider adding in `Cargo.toml` the `check-cfg` lint config for the lint:
+            [lints.rust]
+            unexpected_cfgs = { level = "warn", check-cfg = ['cfg(doc_cfg)'] }
+   = help: or consider adding `println!("cargo::rustc-check-cfg=cfg(doc_cfg)");` to the top of the `build.rs`
+   = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition name: `no_non_exhaustive`
+  --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\semver-1.0.17\src\eval.rs:39:15
+   |
+39 |         #[cfg(no_non_exhaustive)]
+   |               ^^^^^^^^^^^^^^^^^
+   |
+   = help: consider using a Cargo feature instead
+   = help: or consider adding in `Cargo.toml` the `check-cfg` lint config for the lint:
+            [lints.rust]
+            unexpected_cfgs = { level = "warn", check-cfg = ['cfg(no_non_exhaustive)'] }
+   = help: or consider adding `println!("cargo::rustc-check-cfg=cfg(no_non_exhaustive)");` to the top of the `build.rs`
+   = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition name: `no_exhaustive_int_match`
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\semver-1.0.17\src\identifier.rs:166:19
+    |
+166 |             #[cfg(no_exhaustive_int_match)] // rustc <1.33
+    |                   ^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = help: consider using a Cargo feature instead
+    = help: or consider adding in `Cargo.toml` the `check-cfg` lint config for the lint:
+             [lints.rust]
+             unexpected_cfgs = { level = "warn", check-cfg = ['cfg(no_exhaustive_int_match)'] }
+    = help: or consider adding `println!("cargo::rustc-check-cfg=cfg(no_exhaustive_int_match)");` to the top of the `build.rs`
+    = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition name: `no_nonzero_bitscan`
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\semver-1.0.17\src\identifier.rs:327:11
+    |
+327 |     #[cfg(no_nonzero_bitscan)]
+    |           ^^^^^^^^^^^^^^^^^^
+    |
+    = help: consider using a Cargo feature instead
+    = help: or consider adding in `Cargo.toml` the `check-cfg` lint config for the lint:
+             [lints.rust]
+             unexpected_cfgs = { level = "warn", check-cfg = ['cfg(no_nonzero_bitscan)'] }
+    = help: or consider adding `println!("cargo::rustc-check-cfg=cfg(no_nonzero_bitscan)");` to the top of the `build.rs`
+    = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition name: `no_nonzero_bitscan`
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\semver-1.0.17\src\identifier.rs:416:11
+    |
+416 |     #[cfg(no_nonzero_bitscan)] // rustc <1.53
+    |           ^^^^^^^^^^^^^^^^^^
+    |
+    = help: consider using a Cargo feature instead
+    = help: or consider adding in `Cargo.toml` the `check-cfg` lint config for the lint:
+             [lints.rust]
+             unexpected_cfgs = { level = "warn", check-cfg = ['cfg(no_nonzero_bitscan)'] }
+    = help: or consider adding `println!("cargo::rustc-check-cfg=cfg(no_nonzero_bitscan)");` to the top of the `build.rs`
+    = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition name: `no_const_vec_new`
+  --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\semver-1.0.17\src\parse.rs:92:27
+   |
+92 |                 #[cfg(not(no_const_vec_new))]
+   |                           ^^^^^^^^^^^^^^^^
+   |
+   = help: consider using a Cargo feature instead
+   = help: or consider adding in `Cargo.toml` the `check-cfg` lint config for the lint:
+            [lints.rust]
+            unexpected_cfgs = { level = "warn", check-cfg = ['cfg(no_const_vec_new)'] }
+   = help: or consider adding `println!("cargo::rustc-check-cfg=cfg(no_const_vec_new)");` to the top of the `build.rs`
+   = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition name: `no_const_vec_new`
+  --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\semver-1.0.17\src\parse.rs:94:23
+   |
+94 |                 #[cfg(no_const_vec_new)] // rustc <1.39
+   |                       ^^^^^^^^^^^^^^^^
+   |
+   = help: consider using a Cargo feature instead
+   = help: or consider adding in `Cargo.toml` the `check-cfg` lint config for the lint:
+            [lints.rust]
+            unexpected_cfgs = { level = "warn", check-cfg = ['cfg(no_const_vec_new)'] }
+   = help: or consider adding `println!("cargo::rustc-check-cfg=cfg(no_const_vec_new)");` to the top of the `build.rs`
+   = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition name: `no_const_vec_new`
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\semver-1.0.17\src\lib.rs:450:15
+    |
+450 |     #[cfg(not(no_const_vec_new))] // rustc <1.39
+    |               ^^^^^^^^^^^^^^^^
+    |
+    = help: consider using a Cargo feature instead
+    = help: or consider adding in `Cargo.toml` the `check-cfg` lint config for the lint:
+             [lints.rust]
+             unexpected_cfgs = { level = "warn", check-cfg = ['cfg(no_const_vec_new)'] }
+    = help: or consider adding `println!("cargo::rustc-check-cfg=cfg(no_const_vec_new)");` to the top of the `build.rs`
+    = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: use of deprecated module `std::isize`: all constants in this module replaced by associated constants on the type
+  --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\semver-1.0.17\src\identifier.rs:70:11
+   |
+70 | use core::isize;
+   |           ^^^^^
+   |
+   = note: `#[warn(deprecated)]` on by default
+
+warning: use of deprecated module `std::usize`: all constants in this module replaced by associated constants on the type
+  --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\semver-1.0.17\src\identifier.rs:76:11
+   |
+76 | use core::usize;
+   |           ^^^^^
+
+warning: use of deprecated constant `std::isize::MAX`: replaced by the `MAX` associated constant on this type
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\semver-1.0.17\src\identifier.rs:108:37
+    |
+108 |         debug_assert!(len <= isize::MAX as usize);
+    |                                     ^^^
+
+warning: use of deprecated constant `std::usize::MAX`: replaced by the `MAX` associated constant on this type
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\semver-1.0.17\src\identifier.rs:134:44
+    |
+134 |                     let max_alloc = usize::MAX / 2 - align;
+    |                                            ^^^
+
+       Fresh serde_core v1.0.228
+       Fresh rustversion v1.0.13
+warning: unexpected `cfg` condition name: `cfg_macro_not_allowed`
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\rustversion-1.0.13\src\lib.rs:235:11
+    |
+235 | #[cfg(not(cfg_macro_not_allowed))]
+    |           ^^^^^^^^^^^^^^^^^^^^^
+    |
+    = help: expected names are: `docsrs`, `feature`, and `test` and 34 more
+    = help: consider using a Cargo feature instead
+    = help: or consider adding in `Cargo.toml` the `check-cfg` lint config for the lint:
+             [lints.rust]
+             unexpected_cfgs = { level = "warn", check-cfg = ['cfg(cfg_macro_not_allowed)'] }
+    = help: or consider adding `println!("cargo::rustc-check-cfg=cfg(cfg_macro_not_allowed)");` to the top of the `build.rs`
+    = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+    = note: `#[warn(unexpected_cfgs)]` on by default
+
+       Fresh raw-cpuid v10.7.0
+warning: unused import: `core::ops`
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\raw-cpuid-10.7.0\src\lib.rs:115:13
+    |
+115 |     pub use core::ops;
+    |             ^^^^^^^^^
+    |
+    = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `core::option`
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\raw-cpuid-10.7.0\src\lib.rs:116:13
+    |
+116 |     pub use core::option;
+    |             ^^^^^^^^^^^^
+
+warning: unnecessary `unsafe` block
+  --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\raw-cpuid-10.7.0\src\lib.rs:95:22
+   |
+95 |         let result = unsafe { self::arch::__cpuid_count(a, c) };
+   |                      ^^^^^^ unnecessary `unsafe` block
+   |
+   = note: `#[warn(unused_unsafe)]` (part of `#[warn(unused)]`) on by default
+
+       Fresh rand_core v0.6.4
+warning: unexpected `cfg` condition name: `doc_cfg`
+  --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\rand_core-0.6.4\src\lib.rs:38:13
+   |
+38 | #![cfg_attr(doc_cfg, feature(doc_cfg))]
+   |             ^^^^^^^
+   |
+   = help: expected names are: `docsrs`, `feature`, and `test` and 34 more
+   = help: consider using a Cargo feature instead
+   = help: or consider adding in `Cargo.toml` the `check-cfg` lint config for the lint:
+            [lints.rust]
+            unexpected_cfgs = { level = "warn", check-cfg = ['cfg(doc_cfg)'] }
+   = help: or consider adding `println!("cargo::rustc-check-cfg=cfg(doc_cfg)");` to the top of the `build.rs`
+   = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+   = note: `#[warn(unexpected_cfgs)]` on by default
+
+       Fresh byteorder v1.4.3
+warning: `semver` (lib) generated 26 warnings
+warning: `rustversion` (lib) generated 1 warning
+warning: `raw-cpuid` (lib) generated 3 warnings
+warning: `rand_core` (lib) generated 1 warning
+       Fresh syn v2.0.117
+warning: lint `repr_transparent_non_zst_fields` has been removed: converted into hard error, see <https://github.com/rust-lang/rust/issues/78586> for more information
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\syn-2.0.117\src\token.rs:146:28
+    |
+146 |     #[allow(unknown_lints, repr_transparent_non_zst_fields)] // False positive: https://github.com/rust-lang/rust/issues/115922
+    |                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(renamed_and_removed_lints)]` on by default
+
+warning: lint `repr_transparent_non_zst_fields` has been removed: converted into hard error, see <https://github.com/rust-lang/rust/issues/78586> for more information
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\syn-2.0.117\src\token.rs:327:36
+    |
+323 |   macro_rules! define_punctuation_structs {
+...
+327 |               #[allow(unknown_lints, repr_transparent_non_zst_fields)] // False positive: https://github.com/rust-lang/rust/issues/...
+    |                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+...
+521 | / define_punctuation_structs! {
+522 | |     "_" pub struct Underscore/1 /// wildcard patterns, inferred types, unnamed items in constants, extern crates, use declaration...
+523 | | }
+    | |_- in this macro invocation
+
+warning: lint `repr_transparent_non_zst_fields` has been removed: converted into hard error, see <https://github.com/rust-lang/rust/issues/78586> for more information
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\syn-2.0.117\src\token.rs:327:36
+    |
+323 | / macro_rules! define_punctuation_structs {
+324 | |     ($($token:literal pub struct $name:ident/$len:tt #[doc = $usage:literal])*) => {
+325 | |         $(
+326 | |             #[cfg_attr(not(doc), repr(transparent))]
+327 | |             #[allow(unknown_lints, repr_transparent_non_zst_fields)] // False positive: https://github.com/rust-lang/rust/issues/...
+    | |                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+...   |
+397 | |     };
+398 | | }
+    | |_- this warning originates in the macro `define_punctuation_structs` which comes from the expansion of the macro `define_punctuation`
+...
+748 | / define_punctuation! {
+749 | |     "&"           pub struct And/1        /// bitwise and logical AND, borrow, references, reference patterns
+750 | |     "&&"          pub struct AndAnd/2     /// lazy AND, borrow, references, reference patterns
+751 | |     "&="          pub struct AndEq/2      /// bitwise AND assignment
+...   |
+794 | |     "~"           pub struct Tilde/1      /// unused since before Rust 1.0
+795 | | }
+    | |_- in this macro invocation
+
+       Fresh lock_api v0.4.10
+warning: unexpected `cfg` condition name: `has_const_fn_trait_bound`
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\lock_api-0.4.10\src\mutex.rs:152:11
+    |
+152 |     #[cfg(has_const_fn_trait_bound)]
+    |           ^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = help: expected names are: `docsrs`, `feature`, and `test` and 34 more
+    = help: consider using a Cargo feature instead
+    = help: or consider adding in `Cargo.toml` the `check-cfg` lint config for the lint:
+             [lints.rust]
+             unexpected_cfgs = { level = "warn", check-cfg = ['cfg(has_const_fn_trait_bound)'] }
+    = help: or consider adding `println!("cargo::rustc-check-cfg=cfg(has_const_fn_trait_bound)");` to the top of the `build.rs`
+    = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+    = note: `#[warn(unexpected_cfgs)]` on by default
+
+warning: unexpected `cfg` condition name: `has_const_fn_trait_bound`
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\lock_api-0.4.10\src\mutex.rs:162:15
+    |
+162 |     #[cfg(not(has_const_fn_trait_bound))]
+    |               ^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = help: consider using a Cargo feature instead
+    = help: or consider adding in `Cargo.toml` the `check-cfg` lint config for the lint:
+             [lints.rust]
+             unexpected_cfgs = { level = "warn", check-cfg = ['cfg(has_const_fn_trait_bound)'] }
+    = help: or consider adding `println!("cargo::rustc-check-cfg=cfg(has_const_fn_trait_bound)");` to the top of the `build.rs`
+    = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition name: `has_const_fn_trait_bound`
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\lock_api-0.4.10\src\remutex.rs:233:11
+    |
+233 |     #[cfg(has_const_fn_trait_bound)]
+    |           ^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = help: consider using a Cargo feature instead
+    = help: or consider adding in `Cargo.toml` the `check-cfg` lint config for the lint:
+             [lints.rust]
+             unexpected_cfgs = { level = "warn", check-cfg = ['cfg(has_const_fn_trait_bound)'] }
+    = help: or consider adding `println!("cargo::rustc-check-cfg=cfg(has_const_fn_trait_bound)");` to the top of the `build.rs`
+    = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition name: `has_const_fn_trait_bound`
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\lock_api-0.4.10\src\remutex.rs:248:15
+    |
+248 |     #[cfg(not(has_const_fn_trait_bound))]
+    |               ^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = help: consider using a Cargo feature instead
+    = help: or consider adding in `Cargo.toml` the `check-cfg` lint config for the lint:
+             [lints.rust]
+             unexpected_cfgs = { level = "warn", check-cfg = ['cfg(has_const_fn_trait_bound)'] }
+    = help: or consider adding `println!("cargo::rustc-check-cfg=cfg(has_const_fn_trait_bound)");` to the top of the `build.rs`
+    = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition name: `has_const_fn_trait_bound`
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\lock_api-0.4.10\src\rwlock.rs:369:11
+    |
+369 |     #[cfg(has_const_fn_trait_bound)]
+    |           ^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = help: consider using a Cargo feature instead
+    = help: or consider adding in `Cargo.toml` the `check-cfg` lint config for the lint:
+             [lints.rust]
+             unexpected_cfgs = { level = "warn", check-cfg = ['cfg(has_const_fn_trait_bound)'] }
+    = help: or consider adding `println!("cargo::rustc-check-cfg=cfg(has_const_fn_trait_bound)");` to the top of the `build.rs`
+    = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition name: `has_const_fn_trait_bound`
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\lock_api-0.4.10\src\rwlock.rs:379:15
+    |
+379 |     #[cfg(not(has_const_fn_trait_bound))]
+    |               ^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = help: consider using a Cargo feature instead
+    = help: or consider adding in `Cargo.toml` the `check-cfg` lint config for the lint:
+             [lints.rust]
+             unexpected_cfgs = { level = "warn", check-cfg = ['cfg(has_const_fn_trait_bound)'] }
+    = help: or consider adding `println!("cargo::rustc-check-cfg=cfg(has_const_fn_trait_bound)");` to the top of the `build.rs`
+    = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: field `0` is never read
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\lock_api-0.4.10\src\lib.rs:103:24
+    |
+103 | pub struct GuardNoSend(*mut ());
+    |            ----------- ^^^^^^^
+    |            |
+    |            field in this struct
+    |
+    = help: consider removing this field
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+       Fresh rustc_version v0.4.0
+       Fresh hash32 v0.2.1
+warning: unnecessary transmute
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\hash32-0.2.1\src\lib.rs:210:39
+    |
+203 | macro_rules! int {
+...
+210 |                 unsafe { state.write(&mem::transmute::<$ty, [u8; mem::size_of::<$ty>()]>(*self)) }
+    |                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+...
+225 | int!(i16);
+    | --------- in this macro invocation
+    |
+    = help: there's also `to_le_bytes` and `to_be_bytes` if you expect a particular byte order
+note: the lint level is defined here
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\hash32-0.2.1\src\lib.rs:67:9
+    |
+ 67 | #![deny(warnings)]
+    |         ^^^^^^^^
+    = note: `#[warn(unnecessary_transmutes)]` implied by `#[warn(warnings)]`
+help: replace this with
+    |
+210 -                 unsafe { state.write(&mem::transmute::<$ty, [u8; mem::size_of::<$ty>()]>(*self)) }
+210 +                 unsafe { state.write(&i16::to_ne_bytes(*self)) }
+    |
+
+warning: unnecessary transmute
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\hash32-0.2.1\src\lib.rs:210:39
+    |
+203 | macro_rules! int {
+...
+210 |                 unsafe { state.write(&mem::transmute::<$ty, [u8; mem::size_of::<$ty>()]>(*self)) }
+    |                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+...
+226 | int!(i32);
+    | --------- in this macro invocation
+    |
+    = help: there's also `to_le_bytes` and `to_be_bytes` if you expect a particular byte order
+help: replace this with
+    |
+210 -                 unsafe { state.write(&mem::transmute::<$ty, [u8; mem::size_of::<$ty>()]>(*self)) }
+210 +                 unsafe { state.write(&i32::to_ne_bytes(*self)) }
+    |
+
+warning: unnecessary transmute
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\hash32-0.2.1\src\lib.rs:210:39
+    |
+203 | macro_rules! int {
+...
+210 |                 unsafe { state.write(&mem::transmute::<$ty, [u8; mem::size_of::<$ty>()]>(*self)) }
+    |                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+...
+227 | int!(i64);
+    | --------- in this macro invocation
+    |
+    = help: there's also `to_le_bytes` and `to_be_bytes` if you expect a particular byte order
+help: replace this with
+    |
+210 -                 unsafe { state.write(&mem::transmute::<$ty, [u8; mem::size_of::<$ty>()]>(*self)) }
+210 +                 unsafe { state.write(&i64::to_ne_bytes(*self)) }
+    |
+
+warning: unnecessary transmute
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\hash32-0.2.1\src\lib.rs:210:39
+    |
+203 | macro_rules! int {
+...
+210 |                 unsafe { state.write(&mem::transmute::<$ty, [u8; mem::size_of::<$ty>()]>(*self)) }
+    |                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+...
+228 | int!(i8);
+    | -------- in this macro invocation
+    |
+    = help: there's also `to_le_bytes` and `to_be_bytes` if you expect a particular byte order
+help: replace this with
+    |
+210 -                 unsafe { state.write(&mem::transmute::<$ty, [u8; mem::size_of::<$ty>()]>(*self)) }
+210 +                 unsafe { state.write(&i8::to_ne_bytes(*self)) }
+    |
+
+warning: unnecessary transmute
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\hash32-0.2.1\src\lib.rs:210:39
+    |
+203 | macro_rules! int {
+...
+210 |                 unsafe { state.write(&mem::transmute::<$ty, [u8; mem::size_of::<$ty>()]>(*self)) }
+    |                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+...
+229 | int!(isize);
+    | ----------- in this macro invocation
+    |
+    = help: there's also `to_le_bytes` and `to_be_bytes` if you expect a particular byte order
+help: replace this with
+    |
+210 -                 unsafe { state.write(&mem::transmute::<$ty, [u8; mem::size_of::<$ty>()]>(*self)) }
+210 +                 unsafe { state.write(&isize::to_ne_bytes(*self)) }
+    |
+
+warning: unnecessary transmute
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\hash32-0.2.1\src\lib.rs:210:39
+    |
+203 | macro_rules! int {
+...
+210 |                 unsafe { state.write(&mem::transmute::<$ty, [u8; mem::size_of::<$ty>()]>(*self)) }
+    |                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+...
+230 | int!(u16);
+    | --------- in this macro invocation
+    |
+    = help: there's also `to_le_bytes` and `to_be_bytes` if you expect a particular byte order
+help: replace this with
+    |
+210 -                 unsafe { state.write(&mem::transmute::<$ty, [u8; mem::size_of::<$ty>()]>(*self)) }
+210 +                 unsafe { state.write(&u16::to_ne_bytes(*self)) }
+    |
+
+warning: unnecessary transmute
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\hash32-0.2.1\src\lib.rs:210:39
+    |
+203 | macro_rules! int {
+...
+210 |                 unsafe { state.write(&mem::transmute::<$ty, [u8; mem::size_of::<$ty>()]>(*self)) }
+    |                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+...
+231 | int!(u32);
+    | --------- in this macro invocation
+    |
+    = help: there's also `to_le_bytes` and `to_be_bytes` if you expect a particular byte order
+help: replace this with
+    |
+210 -                 unsafe { state.write(&mem::transmute::<$ty, [u8; mem::size_of::<$ty>()]>(*self)) }
+210 +                 unsafe { state.write(&u32::to_ne_bytes(*self)) }
+    |
+
+warning: unnecessary transmute
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\hash32-0.2.1\src\lib.rs:210:39
+    |
+203 | macro_rules! int {
+...
+210 |                 unsafe { state.write(&mem::transmute::<$ty, [u8; mem::size_of::<$ty>()]>(*self)) }
+    |                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+...
+232 | int!(u64);
+    | --------- in this macro invocation
+    |
+    = help: there's also `to_le_bytes` and `to_be_bytes` if you expect a particular byte order
+help: replace this with
+    |
+210 -                 unsafe { state.write(&mem::transmute::<$ty, [u8; mem::size_of::<$ty>()]>(*self)) }
+210 +                 unsafe { state.write(&u64::to_ne_bytes(*self)) }
+    |
+
+warning: unnecessary transmute
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\hash32-0.2.1\src\lib.rs:210:39
+    |
+203 | macro_rules! int {
+...
+210 |                 unsafe { state.write(&mem::transmute::<$ty, [u8; mem::size_of::<$ty>()]>(*self)) }
+    |                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+...
+233 | int!(u8);
+    | -------- in this macro invocation
+    |
+    = help: there's also `to_le_bytes` and `to_be_bytes` if you expect a particular byte order
+help: replace this with
+    |
+210 -                 unsafe { state.write(&mem::transmute::<$ty, [u8; mem::size_of::<$ty>()]>(*self)) }
+210 +                 unsafe { state.write(&u8::to_ne_bytes(*self)) }
+    |
+
+warning: unnecessary transmute
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\hash32-0.2.1\src\lib.rs:210:39
+    |
+203 | macro_rules! int {
+...
+210 |                 unsafe { state.write(&mem::transmute::<$ty, [u8; mem::size_of::<$ty>()]>(*self)) }
+    |                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+...
+234 | int!(usize);
+    | ----------- in this macro invocation
+    |
+    = help: there's also `to_le_bytes` and `to_be_bytes` if you expect a particular byte order
+help: replace this with
+    |
+210 -                 unsafe { state.write(&mem::transmute::<$ty, [u8; mem::size_of::<$ty>()]>(*self)) }
+210 +                 unsafe { state.write(&usize::to_ne_bytes(*self)) }
+    |
+
+warning: the type `Buffer` does not permit being left uninitialized
+  --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\hash32-0.2.1\src\murmur3.rs:71:27
+   |
+71 |             buf: unsafe { mem::uninitialized() },
+   |                           ^^^^^^^^^^^^^^^^^^^^
+   |                           |
+   |                           this code causes undefined behavior when executed
+   |                           help: use `MaybeUninit<T>` instead, and only call `assume_init` after initialization is done
+   |
+note: integers must be initialized (in this struct field)
+  --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\hash32-0.2.1\src\murmur3.rs:18:5
+   |
+18 |     bytes: [u8; 4],
+   |     ^^^^^^^^^^^^^^
+   = note: `#[warn(invalid_value)]` implied by `#[warn(warnings)]`
+
+       Fresh x86 v0.52.0
+warning: unused import: `core::fmt`
+  --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\x86-0.52.0\src\lib.rs:57:13
+   |
+57 |     pub use core::fmt;
+   |             ^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `core::ops`
+  --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\x86-0.52.0\src\lib.rs:58:13
+   |
+58 |     pub use core::ops;
+   |             ^^^^^^^^^
+
+warning: unused import: `core::option`
+  --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\x86-0.52.0\src\lib.rs:59:13
+   |
+59 |     pub use core::option;
+   |             ^^^^^^^^^^^^
+
+warning: field `0` is never read
+    --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\x86-0.52.0\src\bits32\paging.rs:1037:17
+     |
+1037 | pub struct Page([u8; BASE_PAGE_SIZE]);
+     |            ---- ^^^^^^^^^^^^^^^^^^^^
+     |            |
+     |            field in this struct
+     |
+     = help: consider removing this field
+     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: field `0` is never read
+    --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\x86-0.52.0\src\bits32\paging.rs:1040:22
+     |
+1040 | pub struct LargePage([u8; LARGE_PAGE_SIZE]);
+     |            --------- ^^^^^^^^^^^^^^^^^^^^^
+     |            |
+     |            field in this struct
+     |
+     = help: consider removing this field
+
+warning: field `0` is never read
+    --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\x86-0.52.0\src\bits64\paging.rs:1145:17
+     |
+1145 | pub struct Page([u8; BASE_PAGE_SIZE]);
+     |            ---- ^^^^^^^^^^^^^^^^^^^^
+     |            |
+     |            field in this struct
+     |
+     = help: consider removing this field
+
+warning: field `0` is never read
+    --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\x86-0.52.0\src\bits64\paging.rs:1148:22
+     |
+1148 | pub struct LargePage([u8; LARGE_PAGE_SIZE]);
+     |            --------- ^^^^^^^^^^^^^^^^^^^^^
+     |            |
+     |            field in this struct
+     |
+     = help: consider removing this field
+
+warning: field `0` is never read
+    --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\x86-0.52.0\src\bits64\paging.rs:1151:21
+     |
+1151 | pub struct HugePage([u8; HUGE_PAGE_SIZE]);
+     |            -------- ^^^^^^^^^^^^^^^^^^^^
+     |            |
+     |            field in this struct
+     |
+     = help: consider removing this field
+
+       Fresh const_fn v0.4.12
+       Fresh conquer-util v0.3.0
+warning: use of deprecated function `core::sync::atomic::spin_loop_hint`: use hint::spin_loop instead
+  --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\conquer-util-0.3.0\src\backoff.rs:60:17
+   |
+60 |         atomic::spin_loop_hint();
+   |                 ^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(deprecated)]` on by default
+
+       Fresh volatile v0.4.6
+warning: eliding a lifetime that's named elsewhere is confusing
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\volatile-0.4.6\src\lib.rs:470:65
+    |
+470 |     pub fn index_mut<'a, I>(&'a mut self, index: I) -> Volatile<&mut I::Output, A>
+    |                              -- the lifetime is named here      ^^^^^^^^^^^^^^ the same lifetime is elided here
+    |
+    = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+    = note: `#[warn(mismatched_lifetime_syntaxes)]` on by default
+help: consistently use `'a`
+    |
+470 |     pub fn index_mut<'a, I>(&'a mut self, index: I) -> Volatile<&'a mut I::Output, A>
+    |                                                                  ++
+
+       Fresh zero v0.1.3
+warning: hiding a lifetime that's elided elsewhere is confusing
+  --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\zero-0.1.3\src\lib.rs:70:33
+   |
+70 | pub fn read_strs_to_null(input: &[u8]) -> StrReaderIterator {
+   |                                 ^^^^^     ^^^^^^^^^^^^^^^^^ the same lifetime is hidden here
+   |                                 |
+   |                                 the lifetime is elided here
+   |
+   = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+   = note: `#[warn(mismatched_lifetime_syntaxes)]` on by default
+help: use `'_` for type paths
+   |
+70 | pub fn read_strs_to_null(input: &[u8]) -> StrReaderIterator<'_> {
+   |                                                            ++++
+
+warning: `syn` (lib) generated 48 warnings (45 duplicates)
+warning: `lock_api` (lib) generated 7 warnings
+warning: `hash32` (lib) generated 11 warnings
+warning: `x86` (lib) generated 8 warnings
+warning: `conquer-util` (lib) generated 1 warning
+warning: `volatile` (lib) generated 1 warning
+warning: `zero` (lib) generated 1 warning
+       Fresh serde_derive v1.0.228
+       Fresh spin v0.9.8
+warning: unexpected `cfg` condition value: `lock_api1`
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\spin-0.9.8\src\rwlock.rs:916:7
+    |
+916 | #[cfg(feature = "lock_api1")]
+    |       ^^^^^^^^^^-----------
+    |                 |
+    |                 help: there is a expected value with a similar name: `"lock_api"`
+    |
+    = note: expected values for `feature` are: `barrier`, `default`, `fair_mutex`, `lazy`, `lock_api`, `lock_api_crate`, `mutex`, `once`, `portable-atomic`, `portable_atomic`, `rwlock`, `spin_mutex`, `std`, `ticket_mutex`, and `use_ticket_mutex`
+    = help: consider adding `lock_api1` as a feature in `Cargo.toml`
+    = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+    = note: `#[warn(unexpected_cfgs)]` on by default
+
+warning: use of deprecated constant `core::usize::MAX`: replaced by the `MAX` associated constant on this type
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\spin-0.9.8\src\rwlock.rs:263:49
+    |
+263 |         const MAX_READERS: usize = core::usize::MAX / READER / 2;
+    |                                                 ^^^
+    |
+    = note: `#[warn(deprecated)]` on by default
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\spin-0.9.8\src\mutex.rs:184:17
+    |
+184 |     pub fn lock(&self) -> MutexGuard<T> {
+    |                 ^^^^^     ^^^^^^^^^^^^^ the same lifetime is hidden here
+    |                 |
+    |                 the lifetime is elided here
+    |
+    = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+    = note: `#[warn(mismatched_lifetime_syntaxes)]` on by default
+help: use `'_` for type paths
+    |
+184 |     pub fn lock(&self) -> MutexGuard<'_, T> {
+    |                                      +++
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\spin-0.9.8\src\mutex.rs:230:21
+    |
+230 |     pub fn try_lock(&self) -> Option<MutexGuard<T>> {
+    |                     ^^^^^            ^^^^^^^^^^^^^ the same lifetime is hidden here
+    |                     |
+    |                     the lifetime is elided here
+    |
+    = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+help: use `'_` for type paths
+    |
+230 |     pub fn try_lock(&self) -> Option<MutexGuard<'_, T>> {
+    |                                                 +++
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\spin-0.9.8\src\mutex\spin.rs:177:17
+    |
+177 |     pub fn lock(&self) -> SpinMutexGuard<T> {
+    |                 ^^^^^     ^^^^^^^^^^^^^^^^^ the same lifetime is hidden here
+    |                 |
+    |                 the lifetime is elided here
+    |
+    = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+help: use `'_` for type paths
+    |
+177 |     pub fn lock(&self) -> SpinMutexGuard<'_, T> {
+    |                                          +++
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\spin-0.9.8\src\mutex\spin.rs:237:21
+    |
+237 |     pub fn try_lock(&self) -> Option<SpinMutexGuard<T>> {
+    |                     ^^^^^            ^^^^^^^^^^^^^^^^^ the same lifetime is hidden here
+    |                     |
+    |                     the lifetime is elided here
+    |
+    = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+help: use `'_` for type paths
+    |
+237 |     pub fn try_lock(&self) -> Option<SpinMutexGuard<'_, T>> {
+    |                                                     +++
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\spin-0.9.8\src\rwlock.rs:209:17
+    |
+209 |     pub fn read(&self) -> RwLockReadGuard<T> {
+    |                 ^^^^^     ^^^^^^^^^^^^^^^^^^ the same lifetime is hidden here
+    |                 |
+    |                 the lifetime is elided here
+    |
+    = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+help: use `'_` for type paths
+    |
+209 |     pub fn read(&self) -> RwLockReadGuard<'_, T> {
+    |                                           +++
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\spin-0.9.8\src\rwlock.rs:237:18
+    |
+237 |     pub fn write(&self) -> RwLockWriteGuard<T, R> {
+    |                  ^^^^^     ^^^^^^^^^^^^^^^^^^^^^^ the same lifetime is hidden here
+    |                  |
+    |                  the lifetime is elided here
+    |
+    = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+help: use `'_` for type paths
+    |
+237 |     pub fn write(&self) -> RwLockWriteGuard<'_, T, R> {
+    |                                             +++
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\spin-0.9.8\src\rwlock.rs:249:29
+    |
+249 |     pub fn upgradeable_read(&self) -> RwLockUpgradableGuard<T, R> {
+    |                             ^^^^^     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ the same lifetime is hidden here
+    |                             |
+    |                             the lifetime is elided here
+    |
+    = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+help: use `'_` for type paths
+    |
+249 |     pub fn upgradeable_read(&self) -> RwLockUpgradableGuard<'_, T, R> {
+    |                                                             +++
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\spin-0.9.8\src\rwlock.rs:298:21
+    |
+298 |     pub fn try_read(&self) -> Option<RwLockReadGuard<T>> {
+    |                     ^^^^^            ^^^^^^^^^^^^^^^^^^ the same lifetime is hidden here
+    |                     |
+    |                     the lifetime is elided here
+    |
+    = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+help: use `'_` for type paths
+    |
+298 |     pub fn try_read(&self) -> Option<RwLockReadGuard<'_, T>> {
+    |                                                      +++
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\spin-0.9.8\src\rwlock.rs:367:27
+    |
+367 |     fn try_write_internal(&self, strong: bool) -> Option<RwLockWriteGuard<T, R>> {
+    |                           ^^^^^                          ^^^^^^^^^^^^^^^^^^^^^^ the same lifetime is hidden here
+    |                           |
+    |                           the lifetime is elided here
+    |
+    = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+help: use `'_` for type paths
+    |
+367 |     fn try_write_internal(&self, strong: bool) -> Option<RwLockWriteGuard<'_, T, R>> {
+    |                                                                           +++
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\spin-0.9.8\src\rwlock.rs:408:22
+    |
+408 |     pub fn try_write(&self) -> Option<RwLockWriteGuard<T, R>> {
+    |                      ^^^^^            ^^^^^^^^^^^^^^^^^^^^^^ the same lifetime is hidden here
+    |                      |
+    |                      the lifetime is elided here
+    |
+    = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+help: use `'_` for type paths
+    |
+408 |     pub fn try_write(&self) -> Option<RwLockWriteGuard<'_, T, R>> {
+    |                                                        +++
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\spin-0.9.8\src\rwlock.rs:414:33
+    |
+414 |     pub fn try_upgradeable_read(&self) -> Option<RwLockUpgradableGuard<T, R>> {
+    |                                 ^^^^^            ^^^^^^^^^^^^^^^^^^^^^^^^^^^ the same lifetime is hidden here
+    |                                 |
+    |                                 the lifetime is elided here
+    |
+    = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+help: use `'_` for type paths
+    |
+414 |     pub fn try_upgradeable_read(&self) -> Option<RwLockUpgradableGuard<'_, T, R>> {
+    |                                                                        +++
+
+       Fresh ptr_meta_derive v0.3.1
+       Fresh uguid v2.2.1
+       Fresh stable_deref_trait v1.2.0
+       Fresh log v0.4.19
+warning: unexpected `cfg` condition name: `rustbuild`
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\log-0.4.19\src\lib.rs:329:13
+    |
+329 | #![cfg_attr(rustbuild, feature(staged_api, rustc_private))]
+    |             ^^^^^^^^^
+    |
+    = help: expected names are: `docsrs`, `feature`, and `test` and 34 more
+    = help: consider using a Cargo feature instead
+    = help: or consider adding in `Cargo.toml` the `check-cfg` lint config for the lint:
+             [lints.rust]
+             unexpected_cfgs = { level = "warn", check-cfg = ['cfg(rustbuild)'] }
+    = help: or consider adding `println!("cargo::rustc-check-cfg=cfg(rustbuild)");` to the top of the `build.rs`
+    = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+    = note: `#[warn(unexpected_cfgs)]` on by default
+
+warning: unexpected `cfg` condition name: `rustbuild`
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\log-0.4.19\src\lib.rs:330:13
+    |
+330 | #![cfg_attr(rustbuild, unstable(feature = "rustc_private", issue = "27812"))]
+    |             ^^^^^^^^^
+    |
+    = help: consider using a Cargo feature instead
+    = help: or consider adding in `Cargo.toml` the `check-cfg` lint config for the lint:
+             [lints.rust]
+             unexpected_cfgs = { level = "warn", check-cfg = ['cfg(rustbuild)'] }
+    = help: or consider adding `println!("cargo::rustc-check-cfg=cfg(rustbuild)");` to the top of the `build.rs`
+    = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+       Fresh spinning_top v0.2.5
+       Fresh uart_16550 v0.3.2
+warning: `spin` (lib) generated 13 warnings
+warning: `log` (lib) generated 2 warnings
+       Fresh serde v1.0.228
+       Fresh uefi-raw v0.15.0
+       Fresh bootloader_api v0.11.17
+       Fresh ptr_meta v0.3.1
+       Fresh conquer-once v0.3.2
+warning: use of deprecated function `core::sync::atomic::spin_loop_hint`: use hint::spin_loop instead
+ --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\conquer-once-0.3.2\src\spin.rs:4:26
+  |
+4 | use core::sync::atomic::{spin_loop_hint, Ordering};
+  |                          ^^^^^^^^^^^^^^
+  |
+  = note: `#[warn(deprecated)]` on by default
+
+warning: use of deprecated function `core::sync::atomic::spin_loop_hint`: use hint::spin_loop instead
+  --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\conquer-once-0.3.2\src\spin.rs:81:13
+   |
+81 |             spin_loop_hint()
+   |             ^^^^^^^^^^^^^^
+
+warning: panic message is not a string literal
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\conquer-once-0.3.2\src\cell.rs:220:47
+    |
+220 |             Err(_) if !ignore_panic => panic!(POISON_PANIC_MSG),
+    |                                               ^^^^^^^^^^^^^^^^
+    |
+    = note: this usage of `panic!()` is deprecated; it will be a hard error in Rust 2021
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2021/panic-macro-consistency.html>
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2021/panic-macro-consistency.html>
+    = note: `#[warn(non_fmt_panics)]` (part of `#[warn(rust_2021_compatibility)]`) on by default
+help: add a "{}" format string to `Display` the message
+    |
+220 |             Err(_) if !ignore_panic => panic!("{}", POISON_PANIC_MSG),
+    |                                               +++++
+
+       Fresh uefi-macros v0.19.0
+       Fresh x86_64 v0.15.5
+       Fresh xmas-elf v0.8.0
+warning: lint `box_pointers` has been removed: it does not detect other kinds of allocations, and existed only for historical reasons
+ --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\xmas-elf-0.8.0\src\lib.rs:2:9
+  |
+2 | #![warn(box_pointers, missing_copy_implementations, missing_debug_implementations)]
+  |         ^^^^^^^^^^^^
+  |
+  = note: `#[warn(renamed_and_removed_lints)]` on by default
+
+warning: unnecessary qualification
+ --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\xmas-elf-0.8.0\src\header.rs:9:20
+  |
+9 |     let size_pt1 = mem::size_of::<HeaderPt1>();
+  |                    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  |
+note: the lint level is defined here
+ --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\xmas-elf-0.8.0\src\lib.rs:3:53
+  |
+3 | #![warn(unused_extern_crates, unused_import_braces, unused_qualifications, unused_results)]
+  |                                                     ^^^^^^^^^^^^^^^^^^^^^
+help: remove the unnecessary path segments
+  |
+9 -     let size_pt1 = mem::size_of::<HeaderPt1>();
+9 +     let size_pt1 = size_of::<HeaderPt1>();
+  |
+
+warning: unnecessary qualification
+  --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\xmas-elf-0.8.0\src\header.rs:22:28
+   |
+22 |             let size_pt2 = mem::size_of::<HeaderPt2_<P32>>();
+   |                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+22 -             let size_pt2 = mem::size_of::<HeaderPt2_<P32>>();
+22 +             let size_pt2 = size_of::<HeaderPt2_<P32>>();
+   |
+
+warning: unnecessary qualification
+  --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\xmas-elf-0.8.0\src\header.rs:27:50
+   |
+27 |                 read(&input[size_pt1..size_pt1 + mem::size_of::<HeaderPt2_<P32>>()]);
+   |                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+27 -                 read(&input[size_pt1..size_pt1 + mem::size_of::<HeaderPt2_<P32>>()]);
+27 +                 read(&input[size_pt1..size_pt1 + size_of::<HeaderPt2_<P32>>()]);
+   |
+
+warning: unnecessary qualification
+  --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\xmas-elf-0.8.0\src\header.rs:31:28
+   |
+31 |             let size_pt2 = mem::size_of::<HeaderPt2_<P64>>();
+   |                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+31 -             let size_pt2 = mem::size_of::<HeaderPt2_<P64>>();
+31 +             let size_pt2 = size_of::<HeaderPt2_<P64>>();
+   |
+
+warning: unnecessary qualification
+  --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\xmas-elf-0.8.0\src\header.rs:36:50
+   |
+36 |                 read(&input[size_pt1..size_pt1 + mem::size_of::<HeaderPt2_<P64>>()]);
+   |                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+36 -                 read(&input[size_pt1..size_pt1 + mem::size_of::<HeaderPt2_<P64>>()]);
+36 +                 read(&input[size_pt1..size_pt1 + size_of::<HeaderPt2_<P64>>()]);
+   |
+
+warning: unnecessary qualification
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\xmas-elf-0.8.0\src\header.rs:124:39
+    |
+124 |             HeaderPt2::Header32(_) => mem::size_of::<HeaderPt2_<P32>>(),
+    |                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+124 -             HeaderPt2::Header32(_) => mem::size_of::<HeaderPt2_<P32>>(),
+124 +             HeaderPt2::Header32(_) => size_of::<HeaderPt2_<P32>>(),
+    |
+
+warning: unnecessary qualification
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\xmas-elf-0.8.0\src\header.rs:125:39
+    |
+125 |             HeaderPt2::Header64(_) => mem::size_of::<HeaderPt2_<P64>>(),
+    |                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+125 -             HeaderPt2::Header64(_) => mem::size_of::<HeaderPt2_<P64>>(),
+125 +             HeaderPt2::Header64(_) => size_of::<HeaderPt2_<P64>>(),
+    |
+
+warning: unnecessary qualification
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\xmas-elf-0.8.0\src\header.rs:433:12
+    |
+433 |     check!(mem::size_of::<HeaderPt1>() == 16);
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+433 -     check!(mem::size_of::<HeaderPt1>() == 16);
+433 +     check!(size_of::<HeaderPt1>() == 16);
+    |
+
+warning: unnecessary qualification
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\xmas-elf-0.8.0\src\header.rs:436:12
+    |
+436 |     check!(mem::size_of::<HeaderPt1>() + pt2.size() == pt2.header_size() as usize,
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+436 -     check!(mem::size_of::<HeaderPt1>() + pt2.size() == pt2.header_size() as usize,
+436 +     check!(size_of::<HeaderPt1>() + pt2.size() == pt2.header_size() as usize,
+    |
+
+warning: unnecessary qualification
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\xmas-elf-0.8.0\src\program.rs:309:20
+    |
+309 |             check!(mem::size_of_val(ph) == header.pt2.ph_entry_size() as usize,
+    |                    ^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+309 -             check!(mem::size_of_val(ph) == header.pt2.ph_entry_size() as usize,
+309 +             check!(size_of_val(ph) == header.pt2.ph_entry_size() as usize,
+    |
+
+warning: unnecessary qualification
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\xmas-elf-0.8.0\src\program.rs:320:20
+    |
+320 |             check!(mem::size_of_val(ph) == header.pt2.ph_entry_size() as usize,
+    |                    ^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+320 -             check!(mem::size_of_val(ph) == header.pt2.ph_entry_size() as usize,
+320 +             check!(size_of_val(ph) == header.pt2.ph_entry_size() as usize,
+    |
+
+       Fresh rand_hc v0.3.2
+warning: `conquer-once` (lib) generated 3 warnings
+warning: `xmas-elf` (lib) generated 12 warnings
+       Fresh bootloader-boot-config v0.11.17
+       Fresh heapless v0.7.17
+warning: unexpected `cfg` condition name: `has_cas`
+  --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\heapless-0.7.17\src\lib.rs:82:11
+   |
+82 | #[cfg(all(has_cas, feature = "cas"))]
+   |           ^^^^^^^
+   |
+   = help: expected names are: `docsrs`, `feature`, and `test` and 34 more
+   = help: consider using a Cargo feature instead
+   = help: or consider adding in `Cargo.toml` the `check-cfg` lint config for the lint:
+            [lints.rust]
+            unexpected_cfgs = { level = "warn", check-cfg = ['cfg(has_cas)'] }
+   = help: or consider adding `println!("cargo::rustc-check-cfg=cfg(has_cas)");` to the top of the `build.rs`
+   = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+note: the lint level is defined here
+  --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\heapless-0.7.17\src\lib.rs:74:9
+   |
+74 | #![deny(warnings)]
+   |         ^^^^^^^^
+   = note: `#[warn(unexpected_cfgs)]` implied by `#[warn(warnings)]`
+
+warning: unexpected `cfg` condition name: `has_cas`
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\heapless-0.7.17\src\lib.rs:107:11
+    |
+107 | #[cfg(all(has_cas, feature = "cas"))]
+    |           ^^^^^^^
+    |
+    = help: consider using a Cargo feature instead
+    = help: or consider adding in `Cargo.toml` the `check-cfg` lint config for the lint:
+             [lints.rust]
+             unexpected_cfgs = { level = "warn", check-cfg = ['cfg(has_cas)'] }
+    = help: or consider adding `println!("cargo::rustc-check-cfg=cfg(has_cas)");` to the top of the `build.rs`
+    = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition name: `has_cas`
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\heapless-0.7.17\src\lib.rs:109:11
+    |
+109 | #[cfg(all(has_cas, feature = "cas"))]
+    |           ^^^^^^^
+    |
+    = help: consider using a Cargo feature instead
+    = help: or consider adding in `Cargo.toml` the `check-cfg` lint config for the lint:
+             [lints.rust]
+             unexpected_cfgs = { level = "warn", check-cfg = ['cfg(has_cas)'] }
+    = help: or consider adding `println!("cargo::rustc-check-cfg=cfg(has_cas)");` to the top of the `build.rs`
+    = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition name: `has_atomics`
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\heapless-0.7.17\src\lib.rs:112:7
+    |
+112 | #[cfg(has_atomics)]
+    |       ^^^^^^^^^^^
+    |
+    = help: consider using a Cargo feature instead
+    = help: or consider adding in `Cargo.toml` the `check-cfg` lint config for the lint:
+             [lints.rust]
+             unexpected_cfgs = { level = "warn", check-cfg = ['cfg(has_atomics)'] }
+    = help: or consider adding `println!("cargo::rustc-check-cfg=cfg(has_atomics)");` to the top of the `build.rs`
+    = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition name: `cas_atomic_polyfill`
+  --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\heapless-0.7.17\src\mpmc.rs:93:39
+   |
+93 | #[cfg(all(feature = "mpmc_large", not(cas_atomic_polyfill)))]
+   |                                       ^^^^^^^^^^^^^^^^^^^
+   |
+   = help: consider using a Cargo feature instead
+   = help: or consider adding in `Cargo.toml` the `check-cfg` lint config for the lint:
+            [lints.rust]
+            unexpected_cfgs = { level = "warn", check-cfg = ['cfg(cas_atomic_polyfill)'] }
+   = help: or consider adding `println!("cargo::rustc-check-cfg=cfg(cas_atomic_polyfill)");` to the top of the `build.rs`
+   = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition name: `cas_atomic_polyfill`
+  --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\heapless-0.7.17\src\mpmc.rs:95:35
+   |
+95 | #[cfg(all(feature = "mpmc_large", cas_atomic_polyfill))]
+   |                                   ^^^^^^^^^^^^^^^^^^^
+   |
+   = help: consider using a Cargo feature instead
+   = help: or consider adding in `Cargo.toml` the `check-cfg` lint config for the lint:
+            [lints.rust]
+            unexpected_cfgs = { level = "warn", check-cfg = ['cfg(cas_atomic_polyfill)'] }
+   = help: or consider adding `println!("cargo::rustc-check-cfg=cfg(cas_atomic_polyfill)");` to the top of the `build.rs`
+   = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition name: `cas_atomic_polyfill`
+  --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\heapless-0.7.17\src\mpmc.rs:97:44
+   |
+97 | #[cfg(all(not(feature = "mpmc_large"), not(cas_atomic_polyfill)))]
+   |                                            ^^^^^^^^^^^^^^^^^^^
+   |
+   = help: consider using a Cargo feature instead
+   = help: or consider adding in `Cargo.toml` the `check-cfg` lint config for the lint:
+            [lints.rust]
+            unexpected_cfgs = { level = "warn", check-cfg = ['cfg(cas_atomic_polyfill)'] }
+   = help: or consider adding `println!("cargo::rustc-check-cfg=cfg(cas_atomic_polyfill)");` to the top of the `build.rs`
+   = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition name: `cas_atomic_polyfill`
+  --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\heapless-0.7.17\src\mpmc.rs:99:40
+   |
+99 | #[cfg(all(not(feature = "mpmc_large"), cas_atomic_polyfill))]
+   |                                        ^^^^^^^^^^^^^^^^^^^
+   |
+   = help: consider using a Cargo feature instead
+   = help: or consider adding in `Cargo.toml` the `check-cfg` lint config for the lint:
+            [lints.rust]
+            unexpected_cfgs = { level = "warn", check-cfg = ['cfg(cas_atomic_polyfill)'] }
+   = help: or consider adding `println!("cargo::rustc-check-cfg=cfg(cas_atomic_polyfill)");` to the top of the `build.rs`
+   = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition name: `cas_atomic_polyfill`
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\heapless-0.7.17\src\mpmc.rs:102:11
+    |
+102 | #[cfg(not(cas_atomic_polyfill))]
+    |           ^^^^^^^^^^^^^^^^^^^
+    |
+    = help: consider using a Cargo feature instead
+    = help: or consider adding in `Cargo.toml` the `check-cfg` lint config for the lint:
+             [lints.rust]
+             unexpected_cfgs = { level = "warn", check-cfg = ['cfg(cas_atomic_polyfill)'] }
+    = help: or consider adding `println!("cargo::rustc-check-cfg=cfg(cas_atomic_polyfill)");` to the top of the `build.rs`
+    = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition name: `cas_atomic_polyfill`
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\heapless-0.7.17\src\mpmc.rs:104:7
+    |
+104 | #[cfg(cas_atomic_polyfill)]
+    |       ^^^^^^^^^^^^^^^^^^^
+    |
+    = help: consider using a Cargo feature instead
+    = help: or consider adding in `Cargo.toml` the `check-cfg` lint config for the lint:
+             [lints.rust]
+             unexpected_cfgs = { level = "warn", check-cfg = ['cfg(cas_atomic_polyfill)'] }
+    = help: or consider adding `println!("cargo::rustc-check-cfg=cfg(cas_atomic_polyfill)");` to the top of the `build.rs`
+    = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition name: `armv6m`
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\heapless-0.7.17\src\pool\mod.rs:276:5
+    |
+276 |     armv6m,
+    |     ^^^^^^
+    |
+    = help: consider using a Cargo feature instead
+    = help: or consider adding in `Cargo.toml` the `check-cfg` lint config for the lint:
+             [lints.rust]
+             unexpected_cfgs = { level = "warn", check-cfg = ['cfg(armv6m)'] }
+    = help: or consider adding `println!("cargo::rustc-check-cfg=cfg(armv6m)");` to the top of the `build.rs`
+    = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition name: `armv7a`
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\heapless-0.7.17\src\pool\mod.rs:277:5
+    |
+277 |     armv7a,
+    |     ^^^^^^
+    |
+    = help: consider using a Cargo feature instead
+    = help: or consider adding in `Cargo.toml` the `check-cfg` lint config for the lint:
+             [lints.rust]
+             unexpected_cfgs = { level = "warn", check-cfg = ['cfg(armv7a)'] }
+    = help: or consider adding `println!("cargo::rustc-check-cfg=cfg(armv7a)");` to the top of the `build.rs`
+    = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition name: `armv7r`
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\heapless-0.7.17\src\pool\mod.rs:278:5
+    |
+278 |     armv7r,
+    |     ^^^^^^
+    |
+    = help: consider using a Cargo feature instead
+    = help: or consider adding in `Cargo.toml` the `check-cfg` lint config for the lint:
+             [lints.rust]
+             unexpected_cfgs = { level = "warn", check-cfg = ['cfg(armv7r)'] }
+    = help: or consider adding `println!("cargo::rustc-check-cfg=cfg(armv7r)");` to the top of the `build.rs`
+    = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition name: `armv7m`
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\heapless-0.7.17\src\pool\mod.rs:279:5
+    |
+279 |     armv7m,
+    |     ^^^^^^
+    |
+    = help: consider using a Cargo feature instead
+    = help: or consider adding in `Cargo.toml` the `check-cfg` lint config for the lint:
+             [lints.rust]
+             unexpected_cfgs = { level = "warn", check-cfg = ['cfg(armv7m)'] }
+    = help: or consider adding `println!("cargo::rustc-check-cfg=cfg(armv7m)");` to the top of the `build.rs`
+    = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition name: `armv8m_main`
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\heapless-0.7.17\src\pool\mod.rs:280:5
+    |
+280 |     armv8m_main,
+    |     ^^^^^^^^^^^
+    |
+    = help: consider using a Cargo feature instead
+    = help: or consider adding in `Cargo.toml` the `check-cfg` lint config for the lint:
+             [lints.rust]
+             unexpected_cfgs = { level = "warn", check-cfg = ['cfg(armv8m_main)'] }
+    = help: or consider adding `println!("cargo::rustc-check-cfg=cfg(armv8m_main)");` to the top of the `build.rs`
+    = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition name: `armv6m`
+  --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\heapless-0.7.17\src\pool\singleton.rs:20:5
+   |
+20 |     armv6m,
+   |     ^^^^^^
+   |
+   = help: consider using a Cargo feature instead
+   = help: or consider adding in `Cargo.toml` the `check-cfg` lint config for the lint:
+            [lints.rust]
+            unexpected_cfgs = { level = "warn", check-cfg = ['cfg(armv6m)'] }
+   = help: or consider adding `println!("cargo::rustc-check-cfg=cfg(armv6m)");` to the top of the `build.rs`
+   = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition name: `armv7a`
+  --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\heapless-0.7.17\src\pool\singleton.rs:21:5
+   |
+21 |     armv7a,
+   |     ^^^^^^
+   |
+   = help: consider using a Cargo feature instead
+   = help: or consider adding in `Cargo.toml` the `check-cfg` lint config for the lint:
+            [lints.rust]
+            unexpected_cfgs = { level = "warn", check-cfg = ['cfg(armv7a)'] }
+   = help: or consider adding `println!("cargo::rustc-check-cfg=cfg(armv7a)");` to the top of the `build.rs`
+   = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition name: `armv7r`
+  --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\heapless-0.7.17\src\pool\singleton.rs:22:5
+   |
+22 |     armv7r,
+   |     ^^^^^^
+   |
+   = help: consider using a Cargo feature instead
+   = help: or consider adding in `Cargo.toml` the `check-cfg` lint config for the lint:
+            [lints.rust]
+            unexpected_cfgs = { level = "warn", check-cfg = ['cfg(armv7r)'] }
+   = help: or consider adding `println!("cargo::rustc-check-cfg=cfg(armv7r)");` to the top of the `build.rs`
+   = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition name: `armv7m`
+  --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\heapless-0.7.17\src\pool\singleton.rs:23:5
+   |
+23 |     armv7m,
+   |     ^^^^^^
+   |
+   = help: consider using a Cargo feature instead
+   = help: or consider adding in `Cargo.toml` the `check-cfg` lint config for the lint:
+            [lints.rust]
+            unexpected_cfgs = { level = "warn", check-cfg = ['cfg(armv7m)'] }
+   = help: or consider adding `println!("cargo::rustc-check-cfg=cfg(armv7m)");` to the top of the `build.rs`
+   = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition name: `armv8m_main`
+  --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\heapless-0.7.17\src\pool\singleton.rs:24:5
+   |
+24 |     armv8m_main,
+   |     ^^^^^^^^^^^
+   |
+   = help: consider using a Cargo feature instead
+   = help: or consider adding in `Cargo.toml` the `check-cfg` lint config for the lint:
+            [lints.rust]
+            unexpected_cfgs = { level = "warn", check-cfg = ['cfg(armv8m_main)'] }
+   = help: or consider adding `println!("cargo::rustc-check-cfg=cfg(armv8m_main)");` to the top of the `build.rs`
+   = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition name: `cas_atomic_polyfill`
+  --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\heapless-0.7.17\src\pool\singleton\arc.rs:84:7
+   |
+84 | #[cfg(cas_atomic_polyfill)]
+   |       ^^^^^^^^^^^^^^^^^^^
+   |
+   = help: consider using a Cargo feature instead
+   = help: or consider adding in `Cargo.toml` the `check-cfg` lint config for the lint:
+            [lints.rust]
+            unexpected_cfgs = { level = "warn", check-cfg = ['cfg(cas_atomic_polyfill)'] }
+   = help: or consider adding `println!("cargo::rustc-check-cfg=cfg(cas_atomic_polyfill)");` to the top of the `build.rs`
+   = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition name: `cas_atomic_polyfill`
+  --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\heapless-0.7.17\src\pool\singleton\arc.rs:87:11
+   |
+87 | #[cfg(not(cas_atomic_polyfill))]
+   |           ^^^^^^^^^^^^^^^^^^^
+   |
+   = help: consider using a Cargo feature instead
+   = help: or consider adding in `Cargo.toml` the `check-cfg` lint config for the lint:
+            [lints.rust]
+            unexpected_cfgs = { level = "warn", check-cfg = ['cfg(cas_atomic_polyfill)'] }
+   = help: or consider adding `println!("cargo::rustc-check-cfg=cfg(cas_atomic_polyfill)");` to the top of the `build.rs`
+   = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition name: `armv6m`
+  --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\heapless-0.7.17\src\pool\singleton\arc.rs:95:5
+   |
+95 |     armv6m,
+   |     ^^^^^^
+   |
+   = help: consider using a Cargo feature instead
+   = help: or consider adding in `Cargo.toml` the `check-cfg` lint config for the lint:
+            [lints.rust]
+            unexpected_cfgs = { level = "warn", check-cfg = ['cfg(armv6m)'] }
+   = help: or consider adding `println!("cargo::rustc-check-cfg=cfg(armv6m)");` to the top of the `build.rs`
+   = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition name: `armv7a`
+  --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\heapless-0.7.17\src\pool\singleton\arc.rs:96:5
+   |
+96 |     armv7a,
+   |     ^^^^^^
+   |
+   = help: consider using a Cargo feature instead
+   = help: or consider adding in `Cargo.toml` the `check-cfg` lint config for the lint:
+            [lints.rust]
+            unexpected_cfgs = { level = "warn", check-cfg = ['cfg(armv7a)'] }
+   = help: or consider adding `println!("cargo::rustc-check-cfg=cfg(armv7a)");` to the top of the `build.rs`
+   = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition name: `armv7r`
+  --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\heapless-0.7.17\src\pool\singleton\arc.rs:97:5
+   |
+97 |     armv7r,
+   |     ^^^^^^
+   |
+   = help: consider using a Cargo feature instead
+   = help: or consider adding in `Cargo.toml` the `check-cfg` lint config for the lint:
+            [lints.rust]
+            unexpected_cfgs = { level = "warn", check-cfg = ['cfg(armv7r)'] }
+   = help: or consider adding `println!("cargo::rustc-check-cfg=cfg(armv7r)");` to the top of the `build.rs`
+   = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition name: `armv7m`
+  --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\heapless-0.7.17\src\pool\singleton\arc.rs:98:5
+   |
+98 |     armv7m,
+   |     ^^^^^^
+   |
+   = help: consider using a Cargo feature instead
+   = help: or consider adding in `Cargo.toml` the `check-cfg` lint config for the lint:
+            [lints.rust]
+            unexpected_cfgs = { level = "warn", check-cfg = ['cfg(armv7m)'] }
+   = help: or consider adding `println!("cargo::rustc-check-cfg=cfg(armv7m)");` to the top of the `build.rs`
+   = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition name: `armv8m_main`
+  --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\heapless-0.7.17\src\pool\singleton\arc.rs:99:5
+   |
+99 |     armv8m_main,
+   |     ^^^^^^^^^^^
+   |
+   = help: consider using a Cargo feature instead
+   = help: or consider adding in `Cargo.toml` the `check-cfg` lint config for the lint:
+            [lints.rust]
+            unexpected_cfgs = { level = "warn", check-cfg = ['cfg(armv8m_main)'] }
+   = help: or consider adding `println!("cargo::rustc-check-cfg=cfg(armv8m_main)");` to the top of the `build.rs`
+   = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition name: `full_atomic_polyfill`
+  --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\heapless-0.7.17\src\spsc.rs:89:7
+   |
+89 | #[cfg(full_atomic_polyfill)]
+   |       ^^^^^^^^^^^^^^^^^^^^
+   |
+   = help: consider using a Cargo feature instead
+   = help: or consider adding in `Cargo.toml` the `check-cfg` lint config for the lint:
+            [lints.rust]
+            unexpected_cfgs = { level = "warn", check-cfg = ['cfg(full_atomic_polyfill)'] }
+   = help: or consider adding `println!("cargo::rustc-check-cfg=cfg(full_atomic_polyfill)");` to the top of the `build.rs`
+   = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition name: `full_atomic_polyfill`
+  --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\heapless-0.7.17\src\spsc.rs:91:11
+   |
+91 | #[cfg(not(full_atomic_polyfill))]
+   |           ^^^^^^^^^^^^^^^^^^^^
+   |
+   = help: consider using a Cargo feature instead
+   = help: or consider adding in `Cargo.toml` the `check-cfg` lint config for the lint:
+            [lints.rust]
+            unexpected_cfgs = { level = "warn", check-cfg = ['cfg(full_atomic_polyfill)'] }
+   = help: or consider adding `println!("cargo::rustc-check-cfg=cfg(full_atomic_polyfill)");` to the top of the `build.rs`
+   = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: use of deprecated associated function `core::num::<impl usize>::max_value`: replaced by the `MAX` associated constant on this type
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\heapless-0.7.17\src\pool\mod.rs:366:27
+    |
+366 |             return usize::max_value();
+    |                           ^^^^^^^^^
+    |
+    = note: `#[warn(deprecated)]` implied by `#[warn(warnings)]`
+
+warning: use of deprecated associated function `core::num::<impl usize>::max_value`: replaced by the `MAX` associated constant on this type
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\heapless-0.7.17\src\pool\mod.rs:421:27
+    |
+421 |             return usize::max_value();
+    |                           ^^^^^^^^^
+
+warning: struct `IntoIter` is never constructed
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\heapless-0.7.17\src\linear_map.rs:415:12
+    |
+415 | pub struct IntoIter<K, V, const N: usize>
+    |            ^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` implied by `#[warn(warnings)]`
+
+       Fresh rand v0.8.6
+warning: use of deprecated module `core::u64`: all constants in this module replaced by associated constants on the type
+  --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\rand-0.8.6\src\distributions\bernoulli.rs:13:17
+   |
+13 | use core::{fmt, u64};
+   |                 ^^^
+   |
+   = note: `#[warn(deprecated)]` on by default
+
+warning: use of deprecated constant `core::u64::MAX`: replaced by the `MAX` associated constant on this type
+  --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\rand-0.8.6\src\distributions\bernoulli.rs:62:31
+   |
+62 | const ALWAYS_TRUE: u64 = u64::MAX;
+   |                               ^^^
+
+warning: use of deprecated constant `core::f32::EPSILON`: replaced by the `EPSILON` associated constant on `f32`
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\rand-0.8.6\src\distributions\float.rs:141:38
+    |
+ 91 | macro_rules! float_impls {
+...
+141 |                 use core::$f_scalar::EPSILON;
+    |                                      ^^^^^^^
+...
+152 | float_impls! { f32, u32, f32, u32, 23, 127 }
+    | -------------------------------------------- in this macro invocation
+
+warning: use of deprecated constant `core::f64::EPSILON`: replaced by the `EPSILON` associated constant on `f64`
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\rand-0.8.6\src\distributions\float.rs:141:38
+    |
+ 91 | macro_rules! float_impls {
+...
+141 |                 use core::$f_scalar::EPSILON;
+    |                                      ^^^^^^^
+...
+153 | float_impls! { f64, u64, f64, u64, 52, 1023 }
+    | --------------------------------------------- in this macro invocation
+
+warning: use of deprecated constant `core::f32::EPSILON`: replaced by the `EPSILON` associated constant on `f32`
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\rand-0.8.6\src\distributions\float.rs:146:63
+    |
+ 91 | macro_rules! float_impls {
+...
+146 |                 fraction.into_float_with_exponent(0) - (1.0 - EPSILON / 2.0)
+    |                                                               ^^^^^^^
+...
+152 | float_impls! { f32, u32, f32, u32, 23, 127 }
+    | -------------------------------------------- in this macro invocation
+
+warning: use of deprecated constant `core::f64::EPSILON`: replaced by the `EPSILON` associated constant on `f64`
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\rand-0.8.6\src\distributions\float.rs:146:63
+    |
+ 91 | macro_rules! float_impls {
+...
+146 |                 fraction.into_float_with_exponent(0) - (1.0 - EPSILON / 2.0)
+    |                                                               ^^^^^^^
+...
+153 | float_impls! { f64, u64, f64, u64, 52, 1023 }
+    | --------------------------------------------- in this macro invocation
+
+warning: use of deprecated constant `core::f32::INFINITY`: replaced by the `INFINITY` associated constant on `f32`
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\rand-0.8.6\src\distributions\utils.rs:238:38
+    |
+227 | macro_rules! scalar_float_impl {
+...
+238 |                 self == ::core::$ty::INFINITY || self == ::core::$ty::NEG_INFINITY
+    |                                      ^^^^^^^^
+...
+297 | scalar_float_impl!(f32, u32);
+    | ---------------------------- in this macro invocation
+
+warning: use of deprecated constant `core::f32::NEG_INFINITY`: replaced by the `NEG_INFINITY` associated constant on `f32`
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\rand-0.8.6\src\distributions\utils.rs:238:71
+    |
+227 | macro_rules! scalar_float_impl {
+...
+238 |                 self == ::core::$ty::INFINITY || self == ::core::$ty::NEG_INFINITY
+    |                                                                       ^^^^^^^^^^^^
+...
+297 | scalar_float_impl!(f32, u32);
+    | ---------------------------- in this macro invocation
+
+warning: use of deprecated constant `core::f64::INFINITY`: replaced by the `INFINITY` associated constant on `f64`
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\rand-0.8.6\src\distributions\utils.rs:238:38
+    |
+227 | macro_rules! scalar_float_impl {
+...
+238 |                 self == ::core::$ty::INFINITY || self == ::core::$ty::NEG_INFINITY
+    |                                      ^^^^^^^^
+...
+298 | scalar_float_impl!(f64, u64);
+    | ---------------------------- in this macro invocation
+
+warning: use of deprecated constant `core::f64::NEG_INFINITY`: replaced by the `NEG_INFINITY` associated constant on `f64`
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\rand-0.8.6\src\distributions\utils.rs:238:71
+    |
+227 | macro_rules! scalar_float_impl {
+...
+238 |                 self == ::core::$ty::INFINITY || self == ::core::$ty::NEG_INFINITY
+    |                                                                       ^^^^^^^^^^^^
+...
+298 | scalar_float_impl!(f64, u64);
+    | ---------------------------- in this macro invocation
+
+warning: use of deprecated constant `core::u32::MAX`: replaced by the `MAX` associated constant on this type
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\rand-0.8.6\src\distributions\uniform.rs:467:54
+    |
+427 | macro_rules! uniform_int_impl {
+...
+467 |                 let unsigned_max = ::core::$u_large::MAX;
+    |                                                      ^^^
+...
+557 | uniform_int_impl! { i8, u8, u32 }
+    | --------------------------------- in this macro invocation
+
+warning: use of deprecated constant `core::u32::MAX`: replaced by the `MAX` associated constant on this type
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\rand-0.8.6\src\distributions\uniform.rs:489:58
+    |
+427 | macro_rules! uniform_int_impl {
+...
+489 |                     let unsigned_max = ::core::$u_large::MAX;
+    |                                                          ^^^
+...
+557 | uniform_int_impl! { i8, u8, u32 }
+    | --------------------------------- in this macro invocation
+
+warning: use of deprecated constant `core::u8::MAX`: replaced by the `MAX` associated constant on this type
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\rand-0.8.6\src\distributions\uniform.rs:532:50
+    |
+427 | macro_rules! uniform_int_impl {
+...
+532 |                 let zone = if ::core::$unsigned::MAX <= ::core::u16::MAX as $unsigned {
+    |                                                  ^^^
+...
+557 | uniform_int_impl! { i8, u8, u32 }
+    | --------------------------------- in this macro invocation
+
+warning: use of deprecated constant `core::u16::MAX`: replaced by the `MAX` associated constant on this type
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\rand-0.8.6\src\distributions\uniform.rs:532:70
+    |
+427 | macro_rules! uniform_int_impl {
+...
+532 |                 let zone = if ::core::$unsigned::MAX <= ::core::u16::MAX as $unsigned {
+    |                                                                      ^^^
+...
+557 | uniform_int_impl! { i8, u8, u32 }
+    | --------------------------------- in this macro invocation
+
+warning: use of deprecated constant `core::u32::MAX`: replaced by the `MAX` associated constant on this type
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\rand-0.8.6\src\distributions\uniform.rs:536:68
+    |
+427 | macro_rules! uniform_int_impl {
+...
+536 |                     let unsigned_max: $u_large = ::core::$u_large::MAX;
+    |                                                                    ^^^
+...
+557 | uniform_int_impl! { i8, u8, u32 }
+    | --------------------------------- in this macro invocation
+
+warning: use of deprecated constant `core::u32::MAX`: replaced by the `MAX` associated constant on this type
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\rand-0.8.6\src\distributions\uniform.rs:467:54
+    |
+427 | macro_rules! uniform_int_impl {
+...
+467 |                 let unsigned_max = ::core::$u_large::MAX;
+    |                                                      ^^^
+...
+558 | uniform_int_impl! { i16, u16, u32 }
+    | ----------------------------------- in this macro invocation
+
+warning: use of deprecated constant `core::u32::MAX`: replaced by the `MAX` associated constant on this type
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\rand-0.8.6\src\distributions\uniform.rs:489:58
+    |
+427 | macro_rules! uniform_int_impl {
+...
+489 |                     let unsigned_max = ::core::$u_large::MAX;
+    |                                                          ^^^
+...
+558 | uniform_int_impl! { i16, u16, u32 }
+    | ----------------------------------- in this macro invocation
+
+warning: use of deprecated constant `core::u16::MAX`: replaced by the `MAX` associated constant on this type
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\rand-0.8.6\src\distributions\uniform.rs:532:50
+    |
+427 | macro_rules! uniform_int_impl {
+...
+532 |                 let zone = if ::core::$unsigned::MAX <= ::core::u16::MAX as $unsigned {
+    |                                                  ^^^
+...
+558 | uniform_int_impl! { i16, u16, u32 }
+    | ----------------------------------- in this macro invocation
+
+warning: use of deprecated constant `core::u16::MAX`: replaced by the `MAX` associated constant on this type
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\rand-0.8.6\src\distributions\uniform.rs:532:70
+    |
+427 | macro_rules! uniform_int_impl {
+...
+532 |                 let zone = if ::core::$unsigned::MAX <= ::core::u16::MAX as $unsigned {
+    |                                                                      ^^^
+...
+558 | uniform_int_impl! { i16, u16, u32 }
+    | ----------------------------------- in this macro invocation
+
+warning: use of deprecated constant `core::u32::MAX`: replaced by the `MAX` associated constant on this type
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\rand-0.8.6\src\distributions\uniform.rs:536:68
+    |
+427 | macro_rules! uniform_int_impl {
+...
+536 |                     let unsigned_max: $u_large = ::core::$u_large::MAX;
+    |                                                                    ^^^
+...
+558 | uniform_int_impl! { i16, u16, u32 }
+    | ----------------------------------- in this macro invocation
+
+warning: use of deprecated constant `core::u32::MAX`: replaced by the `MAX` associated constant on this type
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\rand-0.8.6\src\distributions\uniform.rs:467:54
+    |
+427 | macro_rules! uniform_int_impl {
+...
+467 |                 let unsigned_max = ::core::$u_large::MAX;
+    |                                                      ^^^
+...
+559 | uniform_int_impl! { i32, u32, u32 }
+    | ----------------------------------- in this macro invocation
+
+warning: use of deprecated constant `core::u32::MAX`: replaced by the `MAX` associated constant on this type
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\rand-0.8.6\src\distributions\uniform.rs:489:58
+    |
+427 | macro_rules! uniform_int_impl {
+...
+489 |                     let unsigned_max = ::core::$u_large::MAX;
+    |                                                          ^^^
+...
+559 | uniform_int_impl! { i32, u32, u32 }
+    | ----------------------------------- in this macro invocation
+
+warning: use of deprecated constant `core::u32::MAX`: replaced by the `MAX` associated constant on this type
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\rand-0.8.6\src\distributions\uniform.rs:532:50
+    |
+427 | macro_rules! uniform_int_impl {
+...
+532 |                 let zone = if ::core::$unsigned::MAX <= ::core::u16::MAX as $unsigned {
+    |                                                  ^^^
+...
+559 | uniform_int_impl! { i32, u32, u32 }
+    | ----------------------------------- in this macro invocation
+
+warning: use of deprecated constant `core::u16::MAX`: replaced by the `MAX` associated constant on this type
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\rand-0.8.6\src\distributions\uniform.rs:532:70
+    |
+427 | macro_rules! uniform_int_impl {
+...
+532 |                 let zone = if ::core::$unsigned::MAX <= ::core::u16::MAX as $unsigned {
+    |                                                                      ^^^
+...
+559 | uniform_int_impl! { i32, u32, u32 }
+    | ----------------------------------- in this macro invocation
+
+warning: use of deprecated constant `core::u32::MAX`: replaced by the `MAX` associated constant on this type
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\rand-0.8.6\src\distributions\uniform.rs:536:68
+    |
+427 | macro_rules! uniform_int_impl {
+...
+536 |                     let unsigned_max: $u_large = ::core::$u_large::MAX;
+    |                                                                    ^^^
+...
+559 | uniform_int_impl! { i32, u32, u32 }
+    | ----------------------------------- in this macro invocation
+
+warning: use of deprecated constant `core::u64::MAX`: replaced by the `MAX` associated constant on this type
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\rand-0.8.6\src\distributions\uniform.rs:467:54
+    |
+427 | macro_rules! uniform_int_impl {
+...
+467 |                 let unsigned_max = ::core::$u_large::MAX;
+    |                                                      ^^^
+...
+560 | uniform_int_impl! { i64, u64, u64 }
+    | ----------------------------------- in this macro invocation
+
+warning: use of deprecated constant `core::u64::MAX`: replaced by the `MAX` associated constant on this type
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\rand-0.8.6\src\distributions\uniform.rs:489:58
+    |
+427 | macro_rules! uniform_int_impl {
+...
+489 |                     let unsigned_max = ::core::$u_large::MAX;
+    |                                                          ^^^
+...
+560 | uniform_int_impl! { i64, u64, u64 }
+    | ----------------------------------- in this macro invocation
+
+warning: use of deprecated constant `core::u64::MAX`: replaced by the `MAX` associated constant on this type
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\rand-0.8.6\src\distributions\uniform.rs:532:50
+    |
+427 | macro_rules! uniform_int_impl {
+...
+532 |                 let zone = if ::core::$unsigned::MAX <= ::core::u16::MAX as $unsigned {
+    |                                                  ^^^
+...
+560 | uniform_int_impl! { i64, u64, u64 }
+    | ----------------------------------- in this macro invocation
+
+warning: use of deprecated constant `core::u16::MAX`: replaced by the `MAX` associated constant on this type
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\rand-0.8.6\src\distributions\uniform.rs:532:70
+    |
+427 | macro_rules! uniform_int_impl {
+...
+532 |                 let zone = if ::core::$unsigned::MAX <= ::core::u16::MAX as $unsigned {
+    |                                                                      ^^^
+...
+560 | uniform_int_impl! { i64, u64, u64 }
+    | ----------------------------------- in this macro invocation
+
+warning: use of deprecated constant `core::u64::MAX`: replaced by the `MAX` associated constant on this type
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\rand-0.8.6\src\distributions\uniform.rs:536:68
+    |
+427 | macro_rules! uniform_int_impl {
+...
+536 |                     let unsigned_max: $u_large = ::core::$u_large::MAX;
+    |                                                                    ^^^
+...
+560 | uniform_int_impl! { i64, u64, u64 }
+    | ----------------------------------- in this macro invocation
+
+warning: use of deprecated constant `core::u128::MAX`: replaced by the `MAX` associated constant on this type
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\rand-0.8.6\src\distributions\uniform.rs:467:54
+    |
+427 | macro_rules! uniform_int_impl {
+...
+467 |                 let unsigned_max = ::core::$u_large::MAX;
+    |                                                      ^^^
+...
+561 | uniform_int_impl! { i128, u128, u128 }
+    | -------------------------------------- in this macro invocation
+
+warning: use of deprecated constant `core::u128::MAX`: replaced by the `MAX` associated constant on this type
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\rand-0.8.6\src\distributions\uniform.rs:489:58
+    |
+427 | macro_rules! uniform_int_impl {
+...
+489 |                     let unsigned_max = ::core::$u_large::MAX;
+    |                                                          ^^^
+...
+561 | uniform_int_impl! { i128, u128, u128 }
+    | -------------------------------------- in this macro invocation
+
+warning: use of deprecated constant `core::u128::MAX`: replaced by the `MAX` associated constant on this type
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\rand-0.8.6\src\distributions\uniform.rs:532:50
+    |
+427 | macro_rules! uniform_int_impl {
+...
+532 |                 let zone = if ::core::$unsigned::MAX <= ::core::u16::MAX as $unsigned {
+    |                                                  ^^^
+...
+561 | uniform_int_impl! { i128, u128, u128 }
+    | -------------------------------------- in this macro invocation
+
+warning: use of deprecated constant `core::u16::MAX`: replaced by the `MAX` associated constant on this type
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\rand-0.8.6\src\distributions\uniform.rs:532:70
+    |
+427 | macro_rules! uniform_int_impl {
+...
+532 |                 let zone = if ::core::$unsigned::MAX <= ::core::u16::MAX as $unsigned {
+    |                                                                      ^^^
+...
+561 | uniform_int_impl! { i128, u128, u128 }
+    | -------------------------------------- in this macro invocation
+
+warning: use of deprecated constant `core::u128::MAX`: replaced by the `MAX` associated constant on this type
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\rand-0.8.6\src\distributions\uniform.rs:536:68
+    |
+427 | macro_rules! uniform_int_impl {
+...
+536 |                     let unsigned_max: $u_large = ::core::$u_large::MAX;
+    |                                                                    ^^^
+...
+561 | uniform_int_impl! { i128, u128, u128 }
+    | -------------------------------------- in this macro invocation
+
+warning: use of deprecated constant `core::usize::MAX`: replaced by the `MAX` associated constant on this type
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\rand-0.8.6\src\distributions\uniform.rs:467:54
+    |
+427 | macro_rules! uniform_int_impl {
+...
+467 |                 let unsigned_max = ::core::$u_large::MAX;
+    |                                                      ^^^
+...
+562 | uniform_int_impl! { isize, usize, usize }
+    | ----------------------------------------- in this macro invocation
+
+warning: use of deprecated constant `core::usize::MAX`: replaced by the `MAX` associated constant on this type
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\rand-0.8.6\src\distributions\uniform.rs:489:58
+    |
+427 | macro_rules! uniform_int_impl {
+...
+489 |                     let unsigned_max = ::core::$u_large::MAX;
+    |                                                          ^^^
+...
+562 | uniform_int_impl! { isize, usize, usize }
+    | ----------------------------------------- in this macro invocation
+
+warning: use of deprecated constant `core::usize::MAX`: replaced by the `MAX` associated constant on this type
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\rand-0.8.6\src\distributions\uniform.rs:532:50
+    |
+427 | macro_rules! uniform_int_impl {
+...
+532 |                 let zone = if ::core::$unsigned::MAX <= ::core::u16::MAX as $unsigned {
+    |                                                  ^^^
+...
+562 | uniform_int_impl! { isize, usize, usize }
+    | ----------------------------------------- in this macro invocation
+
+warning: use of deprecated constant `core::u16::MAX`: replaced by the `MAX` associated constant on this type
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\rand-0.8.6\src\distributions\uniform.rs:532:70
+    |
+427 | macro_rules! uniform_int_impl {
+...
+532 |                 let zone = if ::core::$unsigned::MAX <= ::core::u16::MAX as $unsigned {
+    |                                                                      ^^^
+...
+562 | uniform_int_impl! { isize, usize, usize }
+    | ----------------------------------------- in this macro invocation
+
+warning: use of deprecated constant `core::usize::MAX`: replaced by the `MAX` associated constant on this type
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\rand-0.8.6\src\distributions\uniform.rs:536:68
+    |
+427 | macro_rules! uniform_int_impl {
+...
+536 |                     let unsigned_max: $u_large = ::core::$u_large::MAX;
+    |                                                                    ^^^
+...
+562 | uniform_int_impl! { isize, usize, usize }
+    | ----------------------------------------- in this macro invocation
+
+warning: use of deprecated constant `core::u32::MAX`: replaced by the `MAX` associated constant on this type
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\rand-0.8.6\src\distributions\uniform.rs:467:54
+    |
+427 | macro_rules! uniform_int_impl {
+...
+467 |                 let unsigned_max = ::core::$u_large::MAX;
+    |                                                      ^^^
+...
+563 | uniform_int_impl! { u8, u8, u32 }
+    | --------------------------------- in this macro invocation
+
+warning: use of deprecated constant `core::u32::MAX`: replaced by the `MAX` associated constant on this type
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\rand-0.8.6\src\distributions\uniform.rs:489:58
+    |
+427 | macro_rules! uniform_int_impl {
+...
+489 |                     let unsigned_max = ::core::$u_large::MAX;
+    |                                                          ^^^
+...
+563 | uniform_int_impl! { u8, u8, u32 }
+    | --------------------------------- in this macro invocation
+
+warning: use of deprecated constant `core::u8::MAX`: replaced by the `MAX` associated constant on this type
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\rand-0.8.6\src\distributions\uniform.rs:532:50
+    |
+427 | macro_rules! uniform_int_impl {
+...
+532 |                 let zone = if ::core::$unsigned::MAX <= ::core::u16::MAX as $unsigned {
+    |                                                  ^^^
+...
+563 | uniform_int_impl! { u8, u8, u32 }
+    | --------------------------------- in this macro invocation
+
+warning: use of deprecated constant `core::u16::MAX`: replaced by the `MAX` associated constant on this type
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\rand-0.8.6\src\distributions\uniform.rs:532:70
+    |
+427 | macro_rules! uniform_int_impl {
+...
+532 |                 let zone = if ::core::$unsigned::MAX <= ::core::u16::MAX as $unsigned {
+    |                                                                      ^^^
+...
+563 | uniform_int_impl! { u8, u8, u32 }
+    | --------------------------------- in this macro invocation
+
+warning: use of deprecated constant `core::u32::MAX`: replaced by the `MAX` associated constant on this type
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\rand-0.8.6\src\distributions\uniform.rs:536:68
+    |
+427 | macro_rules! uniform_int_impl {
+...
+536 |                     let unsigned_max: $u_large = ::core::$u_large::MAX;
+    |                                                                    ^^^
+...
+563 | uniform_int_impl! { u8, u8, u32 }
+    | --------------------------------- in this macro invocation
+
+warning: use of deprecated constant `core::u32::MAX`: replaced by the `MAX` associated constant on this type
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\rand-0.8.6\src\distributions\uniform.rs:467:54
+    |
+427 | macro_rules! uniform_int_impl {
+...
+467 |                 let unsigned_max = ::core::$u_large::MAX;
+    |                                                      ^^^
+...
+564 | uniform_int_impl! { u16, u16, u32 }
+    | ----------------------------------- in this macro invocation
+
+warning: use of deprecated constant `core::u32::MAX`: replaced by the `MAX` associated constant on this type
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\rand-0.8.6\src\distributions\uniform.rs:489:58
+    |
+427 | macro_rules! uniform_int_impl {
+...
+489 |                     let unsigned_max = ::core::$u_large::MAX;
+    |                                                          ^^^
+...
+564 | uniform_int_impl! { u16, u16, u32 }
+    | ----------------------------------- in this macro invocation
+
+warning: use of deprecated constant `core::u16::MAX`: replaced by the `MAX` associated constant on this type
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\rand-0.8.6\src\distributions\uniform.rs:532:50
+    |
+427 | macro_rules! uniform_int_impl {
+...
+532 |                 let zone = if ::core::$unsigned::MAX <= ::core::u16::MAX as $unsigned {
+    |                                                  ^^^
+...
+564 | uniform_int_impl! { u16, u16, u32 }
+    | ----------------------------------- in this macro invocation
+
+warning: use of deprecated constant `core::u16::MAX`: replaced by the `MAX` associated constant on this type
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\rand-0.8.6\src\distributions\uniform.rs:532:70
+    |
+427 | macro_rules! uniform_int_impl {
+...
+532 |                 let zone = if ::core::$unsigned::MAX <= ::core::u16::MAX as $unsigned {
+    |                                                                      ^^^
+...
+564 | uniform_int_impl! { u16, u16, u32 }
+    | ----------------------------------- in this macro invocation
+
+warning: use of deprecated constant `core::u32::MAX`: replaced by the `MAX` associated constant on this type
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\rand-0.8.6\src\distributions\uniform.rs:536:68
+    |
+427 | macro_rules! uniform_int_impl {
+...
+536 |                     let unsigned_max: $u_large = ::core::$u_large::MAX;
+    |                                                                    ^^^
+...
+564 | uniform_int_impl! { u16, u16, u32 }
+    | ----------------------------------- in this macro invocation
+
+warning: use of deprecated constant `core::u32::MAX`: replaced by the `MAX` associated constant on this type
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\rand-0.8.6\src\distributions\uniform.rs:467:54
+    |
+427 | macro_rules! uniform_int_impl {
+...
+467 |                 let unsigned_max = ::core::$u_large::MAX;
+    |                                                      ^^^
+...
+565 | uniform_int_impl! { u32, u32, u32 }
+    | ----------------------------------- in this macro invocation
+
+warning: use of deprecated constant `core::u32::MAX`: replaced by the `MAX` associated constant on this type
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\rand-0.8.6\src\distributions\uniform.rs:489:58
+    |
+427 | macro_rules! uniform_int_impl {
+...
+489 |                     let unsigned_max = ::core::$u_large::MAX;
+    |                                                          ^^^
+...
+565 | uniform_int_impl! { u32, u32, u32 }
+    | ----------------------------------- in this macro invocation
+
+warning: use of deprecated constant `core::u32::MAX`: replaced by the `MAX` associated constant on this type
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\rand-0.8.6\src\distributions\uniform.rs:532:50
+    |
+427 | macro_rules! uniform_int_impl {
+...
+532 |                 let zone = if ::core::$unsigned::MAX <= ::core::u16::MAX as $unsigned {
+    |                                                  ^^^
+...
+565 | uniform_int_impl! { u32, u32, u32 }
+    | ----------------------------------- in this macro invocation
+
+warning: use of deprecated constant `core::u16::MAX`: replaced by the `MAX` associated constant on this type
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\rand-0.8.6\src\distributions\uniform.rs:532:70
+    |
+427 | macro_rules! uniform_int_impl {
+...
+532 |                 let zone = if ::core::$unsigned::MAX <= ::core::u16::MAX as $unsigned {
+    |                                                                      ^^^
+...
+565 | uniform_int_impl! { u32, u32, u32 }
+    | ----------------------------------- in this macro invocation
+
+warning: use of deprecated constant `core::u32::MAX`: replaced by the `MAX` associated constant on this type
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\rand-0.8.6\src\distributions\uniform.rs:536:68
+    |
+427 | macro_rules! uniform_int_impl {
+...
+536 |                     let unsigned_max: $u_large = ::core::$u_large::MAX;
+    |                                                                    ^^^
+...
+565 | uniform_int_impl! { u32, u32, u32 }
+    | ----------------------------------- in this macro invocation
+
+warning: use of deprecated constant `core::u64::MAX`: replaced by the `MAX` associated constant on this type
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\rand-0.8.6\src\distributions\uniform.rs:467:54
+    |
+427 | macro_rules! uniform_int_impl {
+...
+467 |                 let unsigned_max = ::core::$u_large::MAX;
+    |                                                      ^^^
+...
+566 | uniform_int_impl! { u64, u64, u64 }
+    | ----------------------------------- in this macro invocation
+
+warning: use of deprecated constant `core::u64::MAX`: replaced by the `MAX` associated constant on this type
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\rand-0.8.6\src\distributions\uniform.rs:489:58
+    |
+427 | macro_rules! uniform_int_impl {
+...
+489 |                     let unsigned_max = ::core::$u_large::MAX;
+    |                                                          ^^^
+...
+566 | uniform_int_impl! { u64, u64, u64 }
+    | ----------------------------------- in this macro invocation
+
+warning: use of deprecated constant `core::u64::MAX`: replaced by the `MAX` associated constant on this type
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\rand-0.8.6\src\distributions\uniform.rs:532:50
+    |
+427 | macro_rules! uniform_int_impl {
+...
+532 |                 let zone = if ::core::$unsigned::MAX <= ::core::u16::MAX as $unsigned {
+    |                                                  ^^^
+...
+566 | uniform_int_impl! { u64, u64, u64 }
+    | ----------------------------------- in this macro invocation
+
+warning: use of deprecated constant `core::u16::MAX`: replaced by the `MAX` associated constant on this type
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\rand-0.8.6\src\distributions\uniform.rs:532:70
+    |
+427 | macro_rules! uniform_int_impl {
+...
+532 |                 let zone = if ::core::$unsigned::MAX <= ::core::u16::MAX as $unsigned {
+    |                                                                      ^^^
+...
+566 | uniform_int_impl! { u64, u64, u64 }
+    | ----------------------------------- in this macro invocation
+
+warning: use of deprecated constant `core::u64::MAX`: replaced by the `MAX` associated constant on this type
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\rand-0.8.6\src\distributions\uniform.rs:536:68
+    |
+427 | macro_rules! uniform_int_impl {
+...
+536 |                     let unsigned_max: $u_large = ::core::$u_large::MAX;
+    |                                                                    ^^^
+...
+566 | uniform_int_impl! { u64, u64, u64 }
+    | ----------------------------------- in this macro invocation
+
+warning: use of deprecated constant `core::usize::MAX`: replaced by the `MAX` associated constant on this type
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\rand-0.8.6\src\distributions\uniform.rs:467:54
+    |
+427 | macro_rules! uniform_int_impl {
+...
+467 |                 let unsigned_max = ::core::$u_large::MAX;
+    |                                                      ^^^
+...
+567 | uniform_int_impl! { usize, usize, usize }
+    | ----------------------------------------- in this macro invocation
+
+warning: use of deprecated constant `core::usize::MAX`: replaced by the `MAX` associated constant on this type
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\rand-0.8.6\src\distributions\uniform.rs:489:58
+    |
+427 | macro_rules! uniform_int_impl {
+...
+489 |                     let unsigned_max = ::core::$u_large::MAX;
+    |                                                          ^^^
+...
+567 | uniform_int_impl! { usize, usize, usize }
+    | ----------------------------------------- in this macro invocation
+
+warning: use of deprecated constant `core::usize::MAX`: replaced by the `MAX` associated constant on this type
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\rand-0.8.6\src\distributions\uniform.rs:532:50
+    |
+427 | macro_rules! uniform_int_impl {
+...
+532 |                 let zone = if ::core::$unsigned::MAX <= ::core::u16::MAX as $unsigned {
+    |                                                  ^^^
+...
+567 | uniform_int_impl! { usize, usize, usize }
+    | ----------------------------------------- in this macro invocation
+
+warning: use of deprecated constant `core::u16::MAX`: replaced by the `MAX` associated constant on this type
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\rand-0.8.6\src\distributions\uniform.rs:532:70
+    |
+427 | macro_rules! uniform_int_impl {
+...
+532 |                 let zone = if ::core::$unsigned::MAX <= ::core::u16::MAX as $unsigned {
+    |                                                                      ^^^
+...
+    Finished567 | uniform_int_impl! { usize, usize, usize }
+    | ----------------------------------------- in this macro invocation
+ `stage-4` profile [optimized + debuginfo] target(s) in 2.38s
+
+warning: use of deprecated constant `core::usize::MAX`: replaced by the `MAX` associated constant on this type
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\rand-0.8.6\src\distributions\uniform.rs:536:68
+    |
+427 | macro_rules! uniform_int_impl {
+...
+536 |                     let unsigned_max: $u_large = ::core::$u_large::MAX;
+    |                                                                    ^^^
+...
+567 | uniform_int_impl! { usize, usize, usize }
+    | ----------------------------------------- in this macro invocation
+
+warning: use of deprecated constant `core::u128::MAX`: replaced by the `MAX` associated constant on this type
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\rand-0.8.6\src\distributions\uniform.rs:467:54
+    |
+427 | macro_rules! uniform_int_impl {
+...
+467 |                 let unsigned_max = ::core::$u_large::MAX;
+    |                                                      ^^^
+...
+568 | uniform_int_impl! { u128, u128, u128 }
+    | -------------------------------------- in this macro invocation
+
+warning: use of deprecated constant `core::u128::MAX`: replaced by the `MAX` associated constant on this type
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\rand-0.8.6\src\distributions\uniform.rs:489:58
+    |
+427 | macro_rules! uniform_int_impl {
+...
+489 |                     let unsigned_max = ::core::$u_large::MAX;
+    |                                                          ^^^
+...
+568 | uniform_int_impl! { u128, u128, u128 }
+    | -------------------------------------- in this macro invocation
+
+warning: use of deprecated constant `core::u128::MAX`: replaced by the `MAX` associated constant on this type
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\rand-0.8.6\src\distributions\uniform.rs:532:50
+    |
+427 | macro_rules! uniform_int_impl {
+...
+532 |                 let zone = if ::core::$unsigned::MAX <= ::core::u16::MAX as $unsigned {
+    |                                                  ^^^
+...
+568 | uniform_int_impl! { u128, u128, u128 }
+    | -------------------------------------- in this macro invocation
+
+warning: use of deprecated constant `core::u16::MAX`: replaced by the `MAX` associated constant on this type
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\rand-0.8.6\src\distributions\uniform.rs:532:70
+    |
+427 | macro_rules! uniform_int_impl {
+...
+532 |                 let zone = if ::core::$unsigned::MAX <= ::core::u16::MAX as $unsigned {
+    |                                                                      ^^^
+...
+568 | uniform_int_impl! { u128, u128, u128 }
+    | -------------------------------------- in this macro invocation
+
+warning: use of deprecated constant `core::u128::MAX`: replaced by the `MAX` associated constant on this type
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\rand-0.8.6\src\distributions\uniform.rs:536:68
+    |
+427 | macro_rules! uniform_int_impl {
+...
+536 |                     let unsigned_max: $u_large = ::core::$u_large::MAX;
+    |                                                                    ^^^
+...
+568 | uniform_int_impl! { u128, u128, u128 }
+    | -------------------------------------- in this macro invocation
+
+warning: use of deprecated constant `core::u32::MAX`: replaced by the `MAX` associated constant on this type
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\rand-0.8.6\src\distributions\uniform.rs:695:41
+    |
+669 | macro_rules! uniform_float_impl {
+...
+695 |                     (::core::$u_scalar::MAX >> $bits_to_discard).into_float_with_exponent(0) - 1.0,
+    |                                         ^^^
+...
+851 | uniform_float_impl! { f32, u32, f32, u32, 32 - 23 }
+    | --------------------------------------------------- in this macro invocation
+
+warning: use of deprecated constant `core::u32::MAX`: replaced by the `MAX` associated constant on this type
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\rand-0.8.6\src\distributions\uniform.rs:734:41
+    |
+669 | macro_rules! uniform_float_impl {
+...
+734 |                     (::core::$u_scalar::MAX >> $bits_to_discard).into_float_with_exponent(0) - 1.0,
+    |                                         ^^^
+...
+851 | uniform_float_impl! { f32, u32, f32, u32, 32 - 23 }
+    | --------------------------------------------------- in this macro invocation
+
+warning: use of deprecated constant `core::u64::MAX`: replaced by the `MAX` associated constant on this type
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\rand-0.8.6\src\distributions\uniform.rs:695:41
+    |
+669 | macro_rules! uniform_float_impl {
+...
+695 |                     (::core::$u_scalar::MAX >> $bits_to_discard).into_float_with_exponent(0) - 1.0,
+    |                                         ^^^
+...
+852 | uniform_float_impl! { f64, u64, f64, u64, 64 - 52 }
+    | --------------------------------------------------- in this macro invocation
+
+warning: use of deprecated constant `core::u64::MAX`: replaced by the `MAX` associated constant on this type
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\rand-0.8.6\src\distributions\uniform.rs:734:41
+    |
+669 | macro_rules! uniform_float_impl {
+...
+734 |                     (::core::$u_scalar::MAX >> $bits_to_discard).into_float_with_exponent(0) - 1.0,
+    |                                         ^^^
+...
+852 | uniform_float_impl! { f64, u64, f64, u64, 64 - 52 }
+    | --------------------------------------------------- in this macro invocation
+
+warning: use of deprecated constant `core::u32::MAX`: replaced by the `MAX` associated constant on this type
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\rand-0.8.6\src\seq\mod.rs:660:30
+    |
+660 |     if ubound <= (core::u32::MAX as usize) {
+    |                              ^^^
+
+warning: use of deprecated associated function `core::num::<impl usize>::max_value`: replaced by the `MAX` associated constant on this type
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\rand-0.8.6\src\distributions\distribution.rs:151:17
+    |
+151 |         (usize::max_value(), None)
+    |                 ^^^^^^^^^
+
+       Fresh ucs2 v0.3.3
+       Fresh usize_conversions v0.2.0
+warning: unexpected `cfg` condition value: `128`
+  --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\usize_conversions-0.2.0\src\lib.rs:48:7
+   |
+48 | #[cfg(target_pointer_width = "128")] impl_from_usize!(u128);
+   |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+   = note: `#[warn(unexpected_cfgs)]` on by default
+help: `128` is an expected value for `target_has_atomic`
+   |
+48 - #[cfg(target_pointer_width = "128")] impl_from_usize!(u128);
+48 + #[cfg(target_has_atomic = "128")] impl_from_usize!(u128);
+   |
+help: `128` is an expected value for `target_has_atomic_load_store`
+   |
+48 - #[cfg(target_pointer_width = "128")] impl_from_usize!(u128);
+48 + #[cfg(target_has_atomic_load_store = "128")] impl_from_usize!(u128);
+   |
+help: `128` is an expected value for `target_has_atomic_primitive_alignment`
+   |
+48 - #[cfg(target_pointer_width = "128")] impl_from_usize!(u128);
+48 + #[cfg(target_has_atomic_primitive_alignment = "128")] impl_from_usize!(u128);
+   |
+
+warning: unexpected `cfg` condition value: `128`
+  --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\usize_conversions-0.2.0\src\lib.rs:49:7
+   |
+49 | #[cfg(target_pointer_width = "128")] impl_into_usize!(u128);
+   |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+help: `128` is an expected value for `target_has_atomic`
+   |
+49 - #[cfg(target_pointer_width = "128")] impl_into_usize!(u128);
+49 + #[cfg(target_has_atomic = "128")] impl_into_usize!(u128);
+   |
+help: `128` is an expected value for `target_has_atomic_load_store`
+   |
+49 - #[cfg(target_pointer_width = "128")] impl_into_usize!(u128);
+49 + #[cfg(target_has_atomic_load_store = "128")] impl_into_usize!(u128);
+   |
+help: `128` is an expected value for `target_has_atomic_primitive_alignment`
+   |
+49 - #[cfg(target_pointer_width = "128")] impl_into_usize!(u128);
+49 + #[cfg(target_has_atomic_primitive_alignment = "128")] impl_into_usize!(u128);
+   |
+
+warning: unexpected `cfg` condition value: `128`
+  --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\usize_conversions-0.2.0\src\lib.rs:50:7
+   |
+50 | #[cfg(target_pointer_width = "128")] impl_into_usize!(u64);
+   |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+help: `128` is an expected value for `target_has_atomic`
+   |
+50 - #[cfg(target_pointer_width = "128")] impl_into_usize!(u64);
+50 + #[cfg(target_has_atomic = "128")] impl_into_usize!(u64);
+   |
+help: `128` is an expected value for `target_has_atomic_load_store`
+   |
+50 - #[cfg(target_pointer_width = "128")] impl_into_usize!(u64);
+50 + #[cfg(target_has_atomic_load_store = "128")] impl_into_usize!(u64);
+   |
+help: `128` is an expected value for `target_has_atomic_primitive_alignment`
+   |
+50 - #[cfg(target_pointer_width = "128")] impl_into_usize!(u64);
+50 + #[cfg(target_has_atomic_primitive_alignment = "128")] impl_into_usize!(u64);
+   |
+
+warning: unexpected `cfg` condition value: `128`
+  --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\usize_conversions-0.2.0\src\lib.rs:51:7
+   |
+51 | #[cfg(target_pointer_width = "128")] impl_into_usize!(u32);
+   |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+help: `128` is an expected value for `target_has_atomic`
+   |
+51 - #[cfg(target_pointer_width = "128")] impl_into_usize!(u32);
+51 + #[cfg(target_has_atomic = "128")] impl_into_usize!(u32);
+   |
+help: `128` is an expected value for `target_has_atomic_load_store`
+   |
+51 - #[cfg(target_pointer_width = "128")] impl_into_usize!(u32);
+51 + #[cfg(target_has_atomic_load_store = "128")] impl_into_usize!(u32);
+   |
+help: `128` is an expected value for `target_has_atomic_primitive_alignment`
+   |
+51 - #[cfg(target_pointer_width = "128")] impl_into_usize!(u32);
+51 + #[cfg(target_has_atomic_primitive_alignment = "128")] impl_into_usize!(u32);
+   |
+
+warning: unexpected `cfg` condition value: `128`
+  --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\usize_conversions-0.2.0\src\lib.rs:52:7
+   |
+52 | #[cfg(target_pointer_width = "128")] impl_into_usize!(u16);
+   |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+help: `128` is an expected value for `target_has_atomic`
+   |
+52 - #[cfg(target_pointer_width = "128")] impl_into_usize!(u16);
+52 + #[cfg(target_has_atomic = "128")] impl_into_usize!(u16);
+   |
+help: `128` is an expected value for `target_has_atomic_load_store`
+   |
+52 - #[cfg(target_pointer_width = "128")] impl_into_usize!(u16);
+52 + #[cfg(target_has_atomic_load_store = "128")] impl_into_usize!(u16);
+   |
+help: `128` is an expected value for `target_has_atomic_primitive_alignment`
+   |
+52 - #[cfg(target_pointer_width = "128")] impl_into_usize!(u16);
+52 + #[cfg(target_has_atomic_primitive_alignment = "128")] impl_into_usize!(u16);
+   |
+
+warning: unexpected `cfg` condition value: `128`
+  --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\usize_conversions-0.2.0\src\lib.rs:53:7
+   |
+53 | #[cfg(target_pointer_width = "128")] impl_into_usize!(u8);
+   |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+help: `128` is an expected value for `target_has_atomic`
+   |
+53 - #[cfg(target_pointer_width = "128")] impl_into_usize!(u8);
+53 + #[cfg(target_has_atomic = "128")] impl_into_usize!(u8);
+   |
+help: `128` is an expected value for `target_has_atomic_load_store`
+   |
+53 - #[cfg(target_pointer_width = "128")] impl_into_usize!(u8);
+53 + #[cfg(target_has_atomic_load_store = "128")] impl_into_usize!(u8);
+   |
+help: `128` is an expected value for `target_has_atomic_primitive_alignment`
+   |
+53 - #[cfg(target_pointer_width = "128")] impl_into_usize!(u8);
+53 + #[cfg(target_has_atomic_primitive_alignment = "128")] impl_into_usize!(u8);
+   |
+
+warning: unexpected `cfg` condition value: `8`
+  --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\usize_conversions-0.2.0\src\lib.rs:76:7
+   |
+76 | #[cfg(target_pointer_width = "8")] impl_from_usize!(u128);
+   |       ^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+help: `8` is an expected value for `target_has_atomic`
+   |
+76 - #[cfg(target_pointer_width = "8")] impl_from_usize!(u128);
+76 + #[cfg(target_has_atomic = "8")] impl_from_usize!(u128);
+   |
+help: `8` is an expected value for `target_has_atomic_load_store`
+   |
+76 - #[cfg(target_pointer_width = "8")] impl_from_usize!(u128);
+76 + #[cfg(target_has_atomic_load_store = "8")] impl_from_usize!(u128);
+   |
+help: `8` is an expected value for `target_has_atomic_primitive_alignment`
+   |
+76 - #[cfg(target_pointer_width = "8")] impl_from_usize!(u128);
+76 + #[cfg(target_has_atomic_primitive_alignment = "8")] impl_from_usize!(u128);
+   |
+
+warning: unexpected `cfg` condition value: `8`
+  --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\usize_conversions-0.2.0\src\lib.rs:77:7
+   |
+77 | #[cfg(target_pointer_width = "8")] impl_from_usize!(u64);
+   |       ^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+help: `8` is an expected value for `target_has_atomic`
+   |
+77 - #[cfg(target_pointer_width = "8")] impl_from_usize!(u64);
+77 + #[cfg(target_has_atomic = "8")] impl_from_usize!(u64);
+   |
+help: `8` is an expected value for `target_has_atomic_load_store`
+   |
+77 - #[cfg(target_pointer_width = "8")] impl_from_usize!(u64);
+77 + #[cfg(target_has_atomic_load_store = "8")] impl_from_usize!(u64);
+   |
+help: `8` is an expected value for `target_has_atomic_primitive_alignment`
+   |
+77 - #[cfg(target_pointer_width = "8")] impl_from_usize!(u64);
+77 + #[cfg(target_has_atomic_primitive_alignment = "8")] impl_from_usize!(u64);
+   |
+
+warning: unexpected `cfg` condition value: `8`
+  --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\usize_conversions-0.2.0\src\lib.rs:78:7
+   |
+78 | #[cfg(target_pointer_width = "8")] impl_from_usize!(u32);
+   |       ^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+help: `8` is an expected value for `target_has_atomic`
+   |
+78 - #[cfg(target_pointer_width = "8")] impl_from_usize!(u32);
+78 + #[cfg(target_has_atomic = "8")] impl_from_usize!(u32);
+   |
+help: `8` is an expected value for `target_has_atomic_load_store`
+   |
+78 - #[cfg(target_pointer_width = "8")] impl_from_usize!(u32);
+78 + #[cfg(target_has_atomic_load_store = "8")] impl_from_usize!(u32);
+   |
+help: `8` is an expected value for `target_has_atomic_primitive_alignment`
+   |
+78 - #[cfg(target_pointer_width = "8")] impl_from_usize!(u32);
+78 + #[cfg(target_has_atomic_primitive_alignment = "8")] impl_from_usize!(u32);
+   |
+
+warning: unexpected `cfg` condition value: `8`
+  --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\usize_conversions-0.2.0\src\lib.rs:79:7
+   |
+79 | #[cfg(target_pointer_width = "8")] impl_from_usize!(u16);
+   |       ^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+help: `8` is an expected value for `target_has_atomic`
+   |
+79 - #[cfg(target_pointer_width = "8")] impl_from_usize!(u16);
+79 + #[cfg(target_has_atomic = "8")] impl_from_usize!(u16);
+   |
+help: `8` is an expected value for `target_has_atomic_load_store`
+   |
+79 - #[cfg(target_pointer_width = "8")] impl_from_usize!(u16);
+79 + #[cfg(target_has_atomic_load_store = "8")] impl_from_usize!(u16);
+   |
+help: `8` is an expected value for `target_has_atomic_primitive_alignment`
+   |
+79 - #[cfg(target_pointer_width = "8")] impl_from_usize!(u16);
+79 + #[cfg(target_has_atomic_primitive_alignment = "8")] impl_from_usize!(u16);
+   |
+
+warning: unexpected `cfg` condition value: `8`
+  --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\usize_conversions-0.2.0\src\lib.rs:80:7
+   |
+80 | #[cfg(target_pointer_width = "8")] impl_from_usize!(u8);
+   |       ^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+help: `8` is an expected value for `target_has_atomic`
+   |
+80 - #[cfg(target_pointer_width = "8")] impl_from_usize!(u8);
+80 + #[cfg(target_has_atomic = "8")] impl_from_usize!(u8);
+   |
+help: `8` is an expected value for `target_has_atomic_load_store`
+   |
+80 - #[cfg(target_pointer_width = "8")] impl_from_usize!(u8);
+80 + #[cfg(target_has_atomic_load_store = "8")] impl_from_usize!(u8);
+   |
+help: `8` is an expected value for `target_has_atomic_primitive_alignment`
+   |
+80 - #[cfg(target_pointer_width = "8")] impl_from_usize!(u8);
+80 + #[cfg(target_has_atomic_primitive_alignment = "8")] impl_from_usize!(u8);
+   |
+
+warning: unexpected `cfg` condition value: `8`
+  --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\usize_conversions-0.2.0\src\lib.rs:81:7
+   |
+81 | #[cfg(target_pointer_width = "8")] impl_into_usize!(u8);
+   |       ^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+help: `8` is an expected value for `target_has_atomic`
+   |
+81 - #[cfg(target_pointer_width = "8")] impl_into_usize!(u8);
+81 + #[cfg(target_has_atomic = "8")] impl_into_usize!(u8);
+   |
+help: `8` is an expected value for `target_has_atomic_load_store`
+   |
+81 - #[cfg(target_pointer_width = "8")] impl_into_usize!(u8);
+81 + #[cfg(target_has_atomic_load_store = "8")] impl_into_usize!(u8);
+   |
+help: `8` is an expected value for `target_has_atomic_primitive_alignment`
+   |
+81 - #[cfg(target_pointer_width = "8")] impl_into_usize!(u8);
+81 + #[cfg(target_has_atomic_primitive_alignment = "8")] impl_into_usize!(u8);
+   |
+
+warning: anonymous parameters are deprecated and will be removed in the next edition
+  --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\usize_conversions-0.2.0\src\lib.rs:25:19
+   |
+25 |     fn from_usize(usize) -> Self;
+   |                   ^^^^^ help: try naming the parameter or explicitly ignoring it: `_: usize`
+   |
+   = warning: this is accepted in the current edition (Rust 2015) but is a hard error in Rust 2018!
+   = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2018/trait-fn-parameters.html>
+   = note: `#[warn(anonymous_parameters)]` (part of `#[warn(rust_2018_compatibility)]`) on by default
+
+warning: the feature `i128_type` has been stable since 1.26.0 and no longer requires an attribute to enable
+ --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\usize_conversions-0.2.0\src\lib.rs:6:12
+  |
+6 | #![feature(i128_type)]
+  |            ^^^^^^^^^
+  |
+  = note: `#[warn(stable_features)]` on by default
+
+       Fresh noto-sans-mono-bitmap v0.2.0
+warning: constant `RASTER_WIDTH` is never used
+  --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\noto-sans-mono-bitmap-0.2.0\src\bold\size_16.rs:18:11
+   |
+18 | pub const RASTER_WIDTH: usize = 9;
+   |           ^^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `get_char` is never used
+  --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\noto-sans-mono-bitmap-0.2.0\src\bold\size_16.rs:24:14
+   |
+24 | pub const fn get_char(c: char) -> Option<&'static [&'static [u8]]> {
+   |              ^^^^^^^^
+
+warning: constant `RASTER_WIDTH` is never used
+  --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\noto-sans-mono-bitmap-0.2.0\src\light\size_16.rs:18:11
+   |
+18 | pub const RASTER_WIDTH: usize = 9;
+   |           ^^^^^^^^^^^^
+
+warning: function `get_char` is never used
+  --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\noto-sans-mono-bitmap-0.2.0\src\light\size_16.rs:24:14
+   |
+24 | pub const fn get_char(c: char) -> Option<&'static [&'static [u8]]> {
+   |              ^^^^^^^^
+
+       Fresh cfg-if v1.0.0
+       Fresh ryu v1.0.14
+warning: use of deprecated associated function `core::num::<impl u32>::max_value`: replaced by the `MAX` associated constant on this type
+  --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\ryu-1.0.14\src\f2s_intrinsics.rs:70:39
+   |
+70 |     debug_assert!(shifted_sum <= u32::max_value() as u64);
+   |                                       ^^^^^^^^^
+   |
+   = note: `#[warn(deprecated)]` on by default
+
+warning: value assigned to `vp` is never read
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\ryu-1.0.14\src\f2s.rs:144:17
+    |
+144 |                 vp /= 10;
+    |                 ^^^^^^^^
+    |
+    = help: maybe it is overwritten before being read?
+    = note: `#[warn(unused_assignments)]` (part of `#[warn(unused)]`) on by default
+
+warning: `heapless` (lib) generated 32 warnings
+warning: `rand` (lib) generated 76 warnings
+warning: `usize_conversions` (lib) generated 14 warnings
+warning: `noto-sans-mono-bitmap` (lib) generated 4 warnings
+warning: `ryu` (lib) generated 2 warnings
+       Fresh uefi v0.38.0
+       Fresh serde-json-core v0.5.0
+warning: use of deprecated associated function `core::num::<impl i8>::min_value`: replaced by the `MIN` associated constant on this type
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-json-core-0.5.0\src\ser\mod.rs:120:45
+    |
+117 | macro_rules! serialize_signed {
+...
+120 |         let (signed, mut v) = if v == $ixx::min_value() {
+    |                                             ^^^^^^^^^
+...
+197 |         serialize_signed!(self, 4, v, i8, u8)
+    |         ------------------------------------- in this macro invocation
+    |
+note: the lint level is defined here
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-json-core-0.5.0\src\lib.rs:59:9
+    |
+ 59 | #![deny(warnings)]
+    |         ^^^^^^^^
+    = note: `#[warn(deprecated)]` implied by `#[warn(warnings)]`
+
+warning: use of deprecated associated function `core::num::<impl i8>::max_value`: replaced by the `MAX` associated constant on this type
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-json-core-0.5.0\src\ser\mod.rs:121:26
+    |
+117 | macro_rules! serialize_signed {
+...
+121 |             (true, $ixx::max_value() as $uxx + 1)
+    |                          ^^^^^^^^^
+...
+197 |         serialize_signed!(self, 4, v, i8, u8)
+    |         ------------------------------------- in this macro invocation
+
+warning: use of deprecated associated function `core::num::<impl i16>::min_value`: replaced by the `MIN` associated constant on this type
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-json-core-0.5.0\src\ser\mod.rs:120:45
+    |
+117 | macro_rules! serialize_signed {
+...
+120 |         let (signed, mut v) = if v == $ixx::min_value() {
+    |                                             ^^^^^^^^^
+...
+202 |         serialize_signed!(self, 6, v, i16, u16)
+    |         --------------------------------------- in this macro invocation
+
+warning: use of deprecated associated function `core::num::<impl i16>::max_value`: replaced by the `MAX` associated constant on this type
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-json-core-0.5.0\src\ser\mod.rs:121:26
+    |
+117 | macro_rules! serialize_signed {
+...
+121 |             (true, $ixx::max_value() as $uxx + 1)
+    |                          ^^^^^^^^^
+...
+202 |         serialize_signed!(self, 6, v, i16, u16)
+    |         --------------------------------------- in this macro invocation
+
+warning: use of deprecated associated function `core::num::<impl i32>::min_value`: replaced by the `MIN` associated constant on this type
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-json-core-0.5.0\src\ser\mod.rs:120:45
+    |
+117 | macro_rules! serialize_signed {
+...
+120 |         let (signed, mut v) = if v == $ixx::min_value() {
+    |                                             ^^^^^^^^^
+...
+207 |         serialize_signed!(self, 11, v, i32, u32)
+    |         ---------------------------------------- in this macro invocation
+
+warning: use of deprecated associated function `core::num::<impl i32>::max_value`: replaced by the `MAX` associated constant on this type
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-json-core-0.5.0\src\ser\mod.rs:121:26
+    |
+117 | macro_rules! serialize_signed {
+...
+121 |             (true, $ixx::max_value() as $uxx + 1)
+    |                          ^^^^^^^^^
+...
+207 |         serialize_signed!(self, 11, v, i32, u32)
+    |         ---------------------------------------- in this macro invocation
+
+warning: use of deprecated associated function `core::num::<impl i64>::min_value`: replaced by the `MIN` associated constant on this type
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-json-core-0.5.0\src\ser\mod.rs:120:45
+    |
+117 | macro_rules! serialize_signed {
+...
+120 |         let (signed, mut v) = if v == $ixx::min_value() {
+    |                                             ^^^^^^^^^
+...
+212 |         serialize_signed!(self, 20, v, i64, u64)
+    |         ---------------------------------------- in this macro invocation
+
+warning: use of deprecated associated function `core::num::<impl i64>::max_value`: replaced by the `MAX` associated constant on this type
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-json-core-0.5.0\src\ser\mod.rs:121:26
+    |
+117 | macro_rules! serialize_signed {
+...
+121 |             (true, $ixx::max_value() as $uxx + 1)
+    |                          ^^^^^^^^^
+...
+212 |         serialize_signed!(self, 20, v, i64, u64)
+    |         ---------------------------------------- in this macro invocation
+
+warning: eliding a lifetime that's named elsewhere is confusing
+  --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-json-core-0.5.0\src\de\mod.rs:88:45
+   |
+88 |     fn new(slice: &'a [u8]) -> Deserializer<'_> {
+   |                    --                       ^^ the same lifetime is elided here
+   |                    |
+   |                    the lifetime is named here
+   |
+   = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+   = note: `#[warn(mismatched_lifetime_syntaxes)]` implied by `#[warn(warnings)]`
+help: consistently use `'a`
+   |
+88 -     fn new(slice: &'a [u8]) -> Deserializer<'_> {
+88 +     fn new(slice: &'a [u8]) -> Deserializer<'a> {
+   |
+
+       Fresh bootloader-x86_64-common v0.11.17
+warning: `serde-json-core` (lib) generated 9 warnings
+       Fresh bootloader-x86_64-uefi v0.11.17
+warning: variable does not need to be mutable
+   --> C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bootloader-x86_64-uefi-0.11.17\src\main.rs:239:9
+    |
+239 |     let mut ptr = boot::allocate_pages(
+    |         ----^^^
+    |         |
+    |         help: remove this `mut`
+    |
+    = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: `bootloader-x86_64-uefi` (bin "bootloader-x86_64-uefi") generated 1 warning
+    Finished `release` profile [optimized] target(s) in 2.43s
+warning: the following packages contain code that will be rejected by a future version of Rust: core v0.0.0 (C:\Users\Kavin\.rustup\toolchains\nightly-x86_64-pc-windows-msvc\lib\rustlib\src\rust\library\core)
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`
+  Installing C:\Users\Kavin\Downloads\MY OWN Os\myos\target-codex\release\build\bootloader\f2ad5edd650d72b1\out\bin\bootloader-x86_64-bios-stage-4
+   Installed package `bootloader-x86_64-bios-stage-4 v0.11.17` (executable `bootloader-x86_64-bios-stage-4`)
+warning: be sure to add `C:\Users\Kavin\Downloads\MY OWN Os\myos\target-codex\release\build\bootloader\f2ad5edd650d72b1\out\bin` to your PATH to be able to run the installed binaries
+warning: the following packages contain code that will be rejected by a future version of Rust: core v0.0.0 (C:\Users\Kavin\.rustup\toolchains\nightly-x86_64-pc-windows-msvc\lib\rustlib\src\rust\library\core)
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`
+  Installing C:\Users\Kavin\Downloads\MY OWN Os\myos\target-codex\release\build\bootloader\f2ad5edd650d72b1\out\bin\bootloader-x86_64-uefi.efi
+   Installed package `bootloader-x86_64-uefi v0.11.17` (executable `bootloader-x86_64-uefi.efi`)
+warning: be sure to add `C:\Users\Kavin\Downloads\MY OWN Os\myos\target-codex\release\build\bootloader\f2ad5edd650d72b1\out\bin` to your PATH to be able to run the installed binaries

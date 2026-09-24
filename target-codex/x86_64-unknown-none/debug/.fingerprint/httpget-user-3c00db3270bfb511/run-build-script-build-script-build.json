@@ -1,0 +1,1 @@
+{"rustc":15335473461698482004,"features":"","declared_features":"","target":0,"profile":0,"path":0,"deps":[[16991532549325128816,"build_script_build",false,5339446131622424364]],"local":[{"RerunIfChanged":{"output":"x86_64-unknown-none\\debug\\build\\httpget-user-3c00db3270bfb511\\output","paths":["link.ld"]}}],"rustflags":[],"config":0,"compile_kind":0}

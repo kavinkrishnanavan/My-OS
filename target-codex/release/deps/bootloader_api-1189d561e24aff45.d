@@ -1,0 +1,13 @@
+C:\Users\Kavin\Downloads\MY OWN Os\myos\target-codex\release\deps\bootloader_api-1189d561e24aff45.d: C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bootloader_api-0.11.17\src\lib.rs C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bootloader_api-0.11.17\src\config.rs C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bootloader_api-0.11.17\src\info.rs C:\Users\Kavin\Downloads\MY\ OWN\ Os\myos\target-codex\release\build\bootloader_api-4700234aaf1708e1\out/concat.rs C:\Users\Kavin\Downloads\MY\ OWN\ Os\myos\target-codex\release\build\bootloader_api-4700234aaf1708e1\out/version_info.rs
+
+C:\Users\Kavin\Downloads\MY OWN Os\myos\target-codex\release\deps\libbootloader_api-1189d561e24aff45.rlib: C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bootloader_api-0.11.17\src\lib.rs C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bootloader_api-0.11.17\src\config.rs C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bootloader_api-0.11.17\src\info.rs C:\Users\Kavin\Downloads\MY\ OWN\ Os\myos\target-codex\release\build\bootloader_api-4700234aaf1708e1\out/concat.rs C:\Users\Kavin\Downloads\MY\ OWN\ Os\myos\target-codex\release\build\bootloader_api-4700234aaf1708e1\out/version_info.rs
+
+C:\Users\Kavin\Downloads\MY OWN Os\myos\target-codex\release\deps\libbootloader_api-1189d561e24aff45.rmeta: C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bootloader_api-0.11.17\src\lib.rs C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bootloader_api-0.11.17\src\config.rs C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bootloader_api-0.11.17\src\info.rs C:\Users\Kavin\Downloads\MY\ OWN\ Os\myos\target-codex\release\build\bootloader_api-4700234aaf1708e1\out/concat.rs C:\Users\Kavin\Downloads\MY\ OWN\ Os\myos\target-codex\release\build\bootloader_api-4700234aaf1708e1\out/version_info.rs
+
+C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bootloader_api-0.11.17\src\lib.rs:
+C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bootloader_api-0.11.17\src\config.rs:
+C:\Users\Kavin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bootloader_api-0.11.17\src\info.rs:
+C:\Users\Kavin\Downloads\MY\ OWN\ Os\myos\target-codex\release\build\bootloader_api-4700234aaf1708e1\out/concat.rs:
+C:\Users\Kavin\Downloads\MY\ OWN\ Os\myos\target-codex\release\build\bootloader_api-4700234aaf1708e1\out/version_info.rs:
+
+# env-dep:OUT_DIR=C:\\Users\\Kavin\\Downloads\\MY OWN Os\\myos\\target-codex\\release\\build\\bootloader_api-4700234aaf1708e1\\out
