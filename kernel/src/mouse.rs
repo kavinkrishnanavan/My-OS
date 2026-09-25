@@ -391,7 +391,21 @@ fn decode_packet(bytes: &[u8]) {
 /// `init()` detected wheel support) and, once a complete packet has been
 /// assembled, decodes it into `MouseEvent`s. Never blocks — reads
 /// exactly one byte and returns, same constraint as `keyboard::on_irq`.
+/// How many raw bytes IRQ12 has ever delivered — a live, on-screen-
+/// visible counter (`desktop.rs` draws it in a corner) that answers,
+/// without needing serial log access, the one question that actually
+/// distinguishes "the mouse driver has a real bug" from "nothing is
+/// reaching this driver at all": does this number ever move off zero
+/// when the mouse is moved on real hardware/QEMU. Temporary — worth
+/// removing once IRQ12 delivery has been confirmed working end to end.
+static IRQ_BYTE_COUNT: core::sync::atomic::AtomicU32 = core::sync::atomic::AtomicU32::new(0);
+
+pub fn irq_byte_count() -> u32 {
+    IRQ_BYTE_COUNT.load(core::sync::atomic::Ordering::Relaxed)
+}
+
 pub fn on_irq() {
+    IRQ_BYTE_COUNT.fetch_add(1, core::sync::atomic::Ordering::Relaxed);
     let byte = read_data();
     let wheel_mode = WHEEL_MODE.load(core::sync::atomic::Ordering::Relaxed);
     let packet_len = if wheel_mode { 4 } else { 3 };

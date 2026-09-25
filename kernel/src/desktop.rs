@@ -117,6 +117,23 @@ pub fn draw_taskbar(fb: &mut gfx::Framebuffer, width: usize, height: usize, acti
     }
 }
 
+/// Temporary diagnostic: prints how many raw bytes IRQ1/IRQ12 have ever
+/// delivered, in the top-right corner — see `mouse::irq_byte_count`'s doc
+/// comment. Answers "is any interrupt reaching the keyboard/mouse driver
+/// at all" by just looking at the screen, no serial log needed. Worth
+/// removing once real mouse movement is confirmed working end to end.
+fn draw_irq_diagnostic(fb: &mut gfx::Framebuffer, width: usize) {
+    let text = alloc::format!(
+        "kbd irq bytes: {}  mouse irq bytes: {}",
+        crate::keyboard::irq_byte_count(),
+        crate::mouse::irq_byte_count(),
+    );
+    const BOX_W: usize = 340;
+    let x0 = width.saturating_sub(BOX_W);
+    fb.fill_rect(x0, 20, BOX_W, 20, TASKBAR_BG);
+    fb.draw_wrapped(&text, x0 + 6, 22, width - 4, gfx::GRAY, TASKBAR_BG, FontSize::Size16);
+}
+
 fn draw_desktop(fb: &mut gfx::Framebuffer, width: usize, height: usize) {
     fb.fill_rect(0, 0, width, height - TASKBAR_HEIGHT, DESKTOP_BG);
     fb.draw_wrapped("MyOS", 24, 24, width - 24, TEXT_COLOR, DESKTOP_BG, FontSize::Size32);
@@ -129,6 +146,7 @@ fn draw_desktop(fb: &mut gfx::Framebuffer, width: usize, height: usize) {
         DESKTOP_BG,
         FontSize::Size16,
     );
+    draw_irq_diagnostic(fb, width);
     draw_taskbar(fb, width, height, None);
 }
 
@@ -156,6 +174,15 @@ pub async fn run() -> ! {
             fb.draw_cursor(mouse_x as usize, mouse_y as usize);
         }
 
+        // Forces a redraw every ~50 wakeups (roughly 500ms, since
+        // `net_tick` wakes on every ~10ms PIT tick) purely so the IRQ
+        // diagnostic counters in the corner visibly refresh even when
+        // zero real mouse/keyboard events are arriving — otherwise a
+        // stuck-at-zero counter would never repaint and this whole
+        // diagnostic would be useless for telling "truly stuck at zero"
+        // apart from "just hasn't redrawn recently".
+        let mut idle_ticks: u32 = 0;
+
         let clicked = loop {
             let mut redraw = false;
             match crate::mouse::poll_event() {
@@ -173,6 +200,12 @@ pub async fn run() -> ! {
                     }
                 }
                 Some(MouseEvent::LeftUp) | Some(MouseEvent::ScrollUp) | Some(MouseEvent::ScrollDown) | None => {}
+            }
+
+            idle_ticks += 1;
+            if idle_ticks >= 50 {
+                idle_ticks = 0;
+                redraw = true;
             }
 
             if redraw {
