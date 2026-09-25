@@ -422,7 +422,18 @@ pub fn on_irq() {
 }
 
 /// Non-blocking pop of the next buffered event, or `None` if there isn't
-/// one yet.
+/// one yet. Wrapped in `without_interrupts` for the same reason
+/// `mouse::init`'s own doc comment explains in detail: this runs in
+/// ordinary task context with interrupts enabled, and `on_irq` (which
+/// also locks `EVENT_BUFFER`, from inside the ISR) can fire at any
+/// point — including mid-critical-section here. Without this, IRQ12
+/// landing between this lock's acquire and release would have `on_irq`
+/// spin forever waiting for a lock whose holder can never run again
+/// (resuming it requires this very ISR to return first) — a same-core
+/// deadlock that freezes the whole kernel, not just mouse input.
+/// Reproduced in practice: real, frequent mouse motion would move the
+/// cursor briefly and then the whole system would stop dead once the
+/// race actually landed, exactly as expected from this class of bug.
 pub fn poll_event() -> Option<MouseEvent> {
-    EVENT_BUFFER.lock().pop()
+    x86_64::instructions::interrupts::without_interrupts(|| EVENT_BUFFER.lock().pop())
 }

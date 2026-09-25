@@ -179,6 +179,11 @@ pub fn on_irq() {
     }
 }
 
+/// Wrapped in `without_interrupts` for the same reason `mouse::poll_event`
+/// is: this runs in ordinary task context with interrupts enabled, and
+/// `on_irq` (which also locks `KEY_BUFFER`, from inside the ISR) can
+/// land mid-critical-section here otherwise — a same-core deadlock, not
+/// just a missed keystroke.
 pub fn pop_key() -> Option<u8> {
-    KEY_BUFFER.lock().pop()
+    x86_64::instructions::interrupts::without_interrupts(|| KEY_BUFFER.lock().pop())
 }
