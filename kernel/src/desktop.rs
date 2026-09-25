@@ -62,8 +62,56 @@ const APP_LIST: [(AppId, &str); 4] = [
 ];
 
 const HOME_WIDTH: usize = 84;
-const BUTTON_WIDTH: usize = 96;
+const BUTTON_WIDTH: usize = 108;
 const BUTTON_GAP: usize = 10;
+const ICON_RADIUS: usize = 8;
+
+/// Draws the "MyOS" logo — concentric circles, the same simple vector-
+/// shape approach `draw_app_icon` uses for the per-app icons below (no
+/// image assets in this kernel, just basic shapes) — centered at
+/// `(cx, cy)`.
+fn draw_logo_icon(fb: &mut gfx::Framebuffer, cx: usize, cy: usize) {
+    fb.fill_circle(cx, cy, ICON_RADIUS, TEXT_COLOR);
+    fb.fill_circle(cx, cy, ICON_RADIUS - 3, LOGO_BG);
+}
+
+/// Draws a small, simple vector icon for `id` centered at `(cx, cy)` —
+/// beside each taskbar button's text label, the way a real desktop's
+/// taskbar pairs an icon with every app's name. Deliberately plain
+/// geometric shapes (no image assets/decoder needed for the desktop
+/// shell itself): a folder for Files, a globe for the Browser, a
+/// keypad for the Calculator, a gamepad for the Game.
+fn draw_app_icon(fb: &mut gfx::Framebuffer, id: AppId, cx: usize, cy: usize) {
+    match id {
+        AppId::Files => {
+            const FOLDER: Color = Color(0xe8, 0xb8, 0x3c);
+            fb.fill_rect(cx - 8, cy - 5, 16, 11, FOLDER);
+            fb.fill_rect(cx - 8, cy - 8, 8, 4, FOLDER);
+        }
+        AppId::Browser => {
+            const GLOBE: Color = Color(0x4a, 0x9c, 0xe8);
+            fb.fill_circle(cx, cy, ICON_RADIUS, GLOBE);
+            fb.fill_rect(cx - ICON_RADIUS, cy - 1, ICON_RADIUS * 2, 2, TASKBAR_BG);
+            fb.fill_rect(cx - 2, cy - ICON_RADIUS, 3, ICON_RADIUS * 2, TASKBAR_BG);
+        }
+        AppId::Calculator => {
+            const BODY: Color = Color(0xc4, 0xc4, 0xcc);
+            const KEY: Color = Color(0x30, 0x30, 0x38);
+            fb.fill_rect(cx - 8, cy - 8, 16, 16, BODY);
+            fb.fill_rect(cx - 6, cy - 6, 12, 4, KEY);
+            for (kx, ky) in [(-6, 1), (-1, 1), (4, 1), (-6, 5), (-1, 5), (4, 5)] {
+                fb.fill_rect((cx as isize + kx) as usize, (cy as isize + ky) as usize, 3, 3, KEY);
+            }
+        }
+        AppId::Game => {
+            const PAD: Color = Color(0x8a, 0x50, 0xd8);
+            const BUTTON: Color = Color(0xf0, 0xf0, 0xf0);
+            fb.fill_rect(cx - 9, cy - 5, 18, 10, PAD);
+            fb.fill_circle(cx - 4, cy, 2, BUTTON);
+            fb.fill_circle(cx + 4, cy, 2, BUTTON);
+        }
+    }
+}
 
 /// The taskbar's Home/logo button — clicking it always means "go back to
 /// the desktop", whether that click happened while an app is running
@@ -90,11 +138,13 @@ pub fn draw_taskbar(fb: &mut gfx::Framebuffer, width: usize, height: usize, acti
     fb.fill_rect(0, bar_y, width, TASKBAR_HEIGHT, TASKBAR_BG);
 
     let home = home_rect(width, height);
+    let home_mid_y = home.y0 + (home.y1 - home.y0) / 2;
     fb.fill_rect(home.x0, home.y0, home.x1 - home.x0, home.y1 - home.y0, LOGO_BG);
+    draw_logo_icon(fb, home.x0 + 8 + ICON_RADIUS, home_mid_y);
     fb.draw_wrapped(
         "MyOS",
-        home.x0 + 10,
-        home.y0 + (home.y1 - home.y0).saturating_sub(16) / 2,
+        home.x0 + 20 + ICON_RADIUS,
+        home_mid_y.saturating_sub(8),
         home.x1 - 4,
         TEXT_COLOR,
         LOGO_BG,
@@ -103,12 +153,14 @@ pub fn draw_taskbar(fb: &mut gfx::Framebuffer, width: usize, height: usize, acti
 
     for (i, (id, label)) in APP_LIST.iter().enumerate() {
         let r = app_rect(i, height);
+        let mid_y = r.y0 + (r.y1 - r.y0) / 2;
         let button_bg = if active == Some(*id) { ACTIVE_BG } else { BUTTON_BG };
         fb.fill_rect(r.x0, r.y0, r.x1 - r.x0, r.y1 - r.y0, button_bg);
+        draw_app_icon(fb, *id, r.x0 + 8 + ICON_RADIUS, mid_y);
         fb.draw_wrapped(
             label,
-            r.x0 + 10,
-            r.y0 + (r.y1 - r.y0).saturating_sub(16) / 2,
+            r.x0 + 20 + ICON_RADIUS,
+            mid_y.saturating_sub(8),
             r.x1 - 4,
             TEXT_COLOR,
             button_bg,
@@ -154,6 +206,7 @@ pub async fn run() -> ! {
         let mut mouse_y: i32 = (height - TASKBAR_HEIGHT / 2) as i32;
         if let Some(fb) = gfx::SCREEN.lock().as_mut() {
             fb.draw_cursor(mouse_x as usize, mouse_y as usize);
+            fb.present();
         }
 
         let clicked = 'wait: loop {
@@ -189,6 +242,7 @@ pub async fn run() -> ! {
                 if let Some(fb) = gfx::SCREEN.lock().as_mut() {
                     draw_desktop(fb, width, height);
                     fb.draw_cursor(mouse_x as usize, mouse_y as usize);
+                    fb.present();
                 }
             }
             net_tick().await;

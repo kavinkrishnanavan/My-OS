@@ -150,6 +150,7 @@ pub async fn run(width: usize, height: usize) {
     draw(&expr, width, height);
     if let Some(fb) = gfx::SCREEN.lock().as_mut() {
         fb.draw_cursor(mouse_x as usize, mouse_y as usize);
+        fb.present();
     }
 
     loop {
@@ -203,6 +204,7 @@ pub async fn run(width: usize, height: usize) {
         draw(&expr, width, height);
         if let Some(fb) = gfx::SCREEN.lock().as_mut() {
             fb.draw_cursor(mouse_x as usize, mouse_y as usize);
+            fb.present();
         }
     }
 }

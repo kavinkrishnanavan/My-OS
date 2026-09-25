@@ -296,6 +296,7 @@ fn render_status(msg: &str, viewport_h: usize) {
         let w = fb.width();
         fb.fill_rect(0, 0, w, viewport_h, gfx::BLACK);
         fb.draw_wrapped(msg, MARGIN, MARGIN, w - MARGIN, gfx::GRAY, gfx::BLACK, RasterHeight::Size16);
+        fb.present();
     }
 }
 
@@ -359,6 +360,9 @@ async fn render_page(target: &Url<'_>, html_src: &str, viewport_h: usize, home: 
         })
         .collect();
     draw_at_scroll(&quick_resolved, quick_bg, quick_x0, quick_w, viewport_h, 0);
+    if let Some(fb) = gfx::SCREEN.lock().as_mut() {
+        fb.present();
+    }
 
     let mut css_text = String::new();
     layout::collect_inline_css(&dom_root, &mut css_text);
@@ -403,6 +407,7 @@ async fn render_page(target: &Url<'_>, html_src: &str, viewport_h: usize, home: 
                 bg,
                 RasterHeight::Size16,
             );
+            fb.present();
         }
         return PageAction::Done;
     }
@@ -425,6 +430,11 @@ async fn render_page(target: &Url<'_>, html_src: &str, viewport_h: usize, home: 
     let mut scroll_y: usize = 0;
     let (content_height, mut click_regions) = draw_at_scroll(&resolved, bg, content_x0, content_w, viewport_h, 0);
     let max_scroll = content_height.saturating_sub(viewport_h);
+    // Whether the mouse is currently dragging the scrollbar's thumb —
+    // set on a LeftDown that lands in the scrollbar track, cleared on
+    // LeftUp; while set, every subsequent Move (until LeftUp) adjusts
+    // `scroll_y` proportionally instead of just moving the cursor.
+    let mut dragging_scrollbar = false;
 
     // Mouse position is tracked here (not in `mouse.rs`, which only
     // reports relative deltas) since only this loop knows the viewport
@@ -434,6 +444,7 @@ async fn render_page(target: &Url<'_>, html_src: &str, viewport_h: usize, home: 
     let mut mouse_y: i32 = (viewport_h / 2) as i32;
     if let Some(fb) = gfx::SCREEN.lock().as_mut() {
         fb.draw_cursor(mouse_x as usize, mouse_y as usize);
+        fb.present();
     }
 
     // Scroll/click loop: redraws only on an actual key press, scroll
@@ -476,6 +487,14 @@ async fn render_page(target: &Url<'_>, html_src: &str, viewport_h: usize, home: 
                 crate::mouse::MouseEvent::Move { dx, dy } => {
                     mouse_x = (mouse_x + dx).clamp(0, screen_w as i32 - 1);
                     mouse_y = (mouse_y + dy).clamp(0, screen_h as i32 - 1);
+                    if dragging_scrollbar && max_scroll > 0 {
+                        let thumb_h = ((viewport_h * viewport_h) / content_height.max(1)).clamp(SCROLLBAR_MIN_THUMB, viewport_h);
+                        let free = viewport_h.saturating_sub(thumb_h);
+                        if free > 0 {
+                            let delta_scroll = (dy as isize * max_scroll as isize) / free as isize;
+                            scroll_y = (scroll_y as isize + delta_scroll).clamp(0, max_scroll as isize) as usize;
+                        }
+                    }
                     // A full redraw per move (rather than a cheaper
                     // draw-old-position-back/erase trick) is the simplest
                     // correct way to keep the cursor visible without ever
@@ -497,11 +516,29 @@ async fn render_page(target: &Url<'_>, html_src: &str, viewport_h: usize, home: 
                     if home.contains(mx, my) {
                         return PageAction::Home;
                     }
+                    if max_scroll > 0 && scrollbar_track_rect(screen_w, viewport_h).contains(mx, my) {
+                        // Jump-to-position: center the thumb on the click,
+                        // then start dragging from there — a click
+                        // anywhere in the track (not just precisely on the
+                        // thumb) both jumps and starts a drag, the same
+                        // behavior a real OS's scrollbar track has.
+                        dragging_scrollbar = true;
+                        let thumb_h = ((viewport_h * viewport_h) / content_height.max(1)).clamp(SCROLLBAR_MIN_THUMB, viewport_h);
+                        let free = viewport_h.saturating_sub(thumb_h);
+                        if free > 0 {
+                            let thumb_y = my.saturating_sub(thumb_h / 2).min(free);
+                            scroll_y = (thumb_y * max_scroll) / free;
+                        }
+                        redraw = true;
+                        continue;
+                    }
                     if let Some(region) = click_regions.iter().find(|r| mx >= r.x0 && mx < r.x1 && my >= r.y0 && my < r.y1) {
                         return PageAction::Navigate(resolve_url(target, &region.href));
                     }
                 }
-                crate::mouse::MouseEvent::LeftUp => {}
+                crate::mouse::MouseEvent::LeftUp => {
+                    dragging_scrollbar = false;
+                }
             }
         }
 
@@ -513,6 +550,7 @@ async fn render_page(target: &Url<'_>, html_src: &str, viewport_h: usize, home: 
         click_regions = regions;
         if let Some(fb) = gfx::SCREEN.lock().as_mut() {
             fb.draw_cursor(mouse_x as usize, mouse_y as usize);
+            fb.present();
         }
     }
 }
@@ -637,7 +675,47 @@ fn draw_at_scroll(resolved: &[ResolvedItem], bg: gfx::Color, content_x0: usize, 
             }
         }
     }
+
+    if content_y > viewport_h {
+        let track = scrollbar_track_rect(width, viewport_h);
+        fb.fill_rect(track.x0, track.y0, track.x1 - track.x0, track.y1 - track.y0, SCROLLBAR_TRACK);
+        let max_scroll = content_y.saturating_sub(viewport_h);
+        let thumb = scrollbar_thumb_rect(width, viewport_h, scroll_y, max_scroll, content_y);
+        fb.fill_rect(thumb.x0, thumb.y0, thumb.x1 - thumb.x0, thumb.y1 - thumb.y0, SCROLLBAR_THUMB);
+    }
+
     (content_y, click_regions)
+}
+
+const SCROLLBAR_WIDTH: usize = 10;
+const SCROLLBAR_TRACK: gfx::Color = gfx::Color(0x30, 0x30, 0x36);
+const SCROLLBAR_THUMB: gfx::Color = gfx::Color(0x80, 0x80, 0x8c);
+/// Smallest a scrollbar thumb is ever drawn, regardless of how long the
+/// page is relative to the viewport — otherwise a very long page would
+/// shrink the thumb to a sliver too small to reliably click.
+const SCROLLBAR_MIN_THUMB: usize = 24;
+
+/// The scrollbar's full track — drawn behind the thumb by `draw_at_scroll`
+/// and used by `render_page`'s click handling for "clicked outside the
+/// thumb, but still in the track" hit-testing (jump-to-position) as well
+/// as the thumb-drag hit test. Sits in the page's own right-hand margin
+/// (`MARGIN` is 24px; this is 12px wide including its gaps), so it never
+/// overlaps the actual page content column.
+fn scrollbar_track_rect(screen_w: usize, viewport_h: usize) -> Rect {
+    Rect { x0: screen_w - SCROLLBAR_WIDTH - 2, y0: 0, x1: screen_w - 2, y1: viewport_h }
+}
+
+/// The scrollbar's thumb — its height shrinks as the page gets longer
+/// relative to the viewport (down to `SCROLLBAR_MIN_THUMB`), and its
+/// position within the track tracks `scroll_y / max_scroll`, exactly
+/// like a real OS's scrollbar.
+fn scrollbar_thumb_rect(screen_w: usize, viewport_h: usize, scroll_y: usize, max_scroll: usize, content_height: usize) -> Rect {
+    let track = scrollbar_track_rect(screen_w, viewport_h);
+    let thumb_h = ((viewport_h * viewport_h) / content_height.max(1))
+        .clamp(SCROLLBAR_MIN_THUMB, viewport_h);
+    let free = viewport_h.saturating_sub(thumb_h);
+    let thumb_y = if max_scroll == 0 { 0 } else { (scroll_y * free) / max_scroll };
+    Rect { x0: track.x0, y0: thumb_y, x1: track.x1, y1: thumb_y + thumb_h }
 }
 
 /// Finds every `<link rel="stylesheet" href="...">` in document order —

@@ -5,6 +5,8 @@
 //! HTML-to-text extractor (`html.rs`) that a simple flowed-text renderer
 //! walks to draw glyphs.
 
+use alloc::vec;
+use alloc::vec::Vec;
 use bootloader_api::info::{FrameBufferInfo, PixelFormat};
 pub use noto_sans_mono_bitmap::FontWeight;
 pub use noto_sans_mono_bitmap::RasterHeight as FontSize;
@@ -13,8 +15,23 @@ use spin::Mutex;
 
 pub static SCREEN: Mutex<Option<Framebuffer>> = Mutex::new(None);
 
+/// Every draw call writes into `back_buffer`, an off-screen copy the same
+/// size as the real video memory — never directly into `buffer` (the
+/// actual linear framebuffer the display scans out of). `present()` is
+/// the only thing that ever touches `buffer`, and it does so with one
+/// single contiguous copy. This is what a real double-buffered renderer
+/// does and for the same reason: without it, every draw call (a
+/// background fill, then text, then the taskbar, then the cursor — each
+/// a separate, comparatively slow, per-pixel loop) was visible on the
+/// real display the instant it happened, so a redraw showed up as a
+/// flash of blank background before the content painted back in on top
+/// of it, then the taskbar, then the cursor — a real, visible flicker
+/// on every single mouse move or scroll, not just a one-time glitch.
+/// Every caller that used to draw straight to `SCREEN` must now call
+/// `present()` once, after every draw call for that frame is done.
 pub struct Framebuffer {
     buffer: &'static mut [u8],
+    back_buffer: Vec<u8>,
     info: FrameBufferInfo,
 }
 
@@ -26,7 +43,8 @@ pub const GRAY: Color = Color(0x90, 0x90, 0x98);
 
 impl Framebuffer {
     pub fn new(buffer: &'static mut [u8], info: FrameBufferInfo) -> Self {
-        Framebuffer { buffer, info }
+        let back_buffer = vec![0u8; buffer.len()];
+        Framebuffer { buffer, back_buffer, info }
     }
 
     pub fn width(&self) -> usize {
@@ -35,6 +53,15 @@ impl Framebuffer {
 
     pub fn height(&self) -> usize {
         self.info.height
+    }
+
+    /// Copies the whole back buffer to the real video memory in one shot
+    /// — the only place this struct ever writes to `buffer`. Must be
+    /// called once after every draw call for a frame is finished; until
+    /// it's called, nothing drawn since the last `present()` is visible
+    /// on screen at all.
+    pub fn present(&mut self) {
+        self.buffer.copy_from_slice(&self.back_buffer);
     }
 
     fn put_pixel(&mut self, x: usize, y: usize, color: Color) {
@@ -51,8 +78,8 @@ impl Framebuffer {
             _ => [r, g, b, 0],
         };
         let bpp = self.info.bytes_per_pixel;
-        if byte_offset + bpp <= self.buffer.len() {
-            self.buffer[byte_offset..byte_offset + bpp].copy_from_slice(&bytes[..bpp]);
+        if byte_offset + bpp <= self.back_buffer.len() {
+            self.back_buffer[byte_offset..byte_offset + bpp].copy_from_slice(&bytes[..bpp]);
         }
     }
 
@@ -209,6 +236,25 @@ impl Framebuffer {
         for y in y0..y0.saturating_add(h) {
             for x in x0..x0.saturating_add(w) {
                 self.put_pixel(x, y, color);
+            }
+        }
+    }
+
+    /// Fills a circle of radius `r` centered at `(cx, cy)` — used for the
+    /// taskbar's app icons/logo (`desktop.rs`), which are simple vector
+    /// shapes rather than loaded image assets.
+    pub fn fill_circle(&mut self, cx: usize, cy: usize, r: usize, color: Color) {
+        let r_i = r as isize;
+        for dy in -r_i..=r_i {
+            for dx in -r_i..=r_i {
+                if dx * dx + dy * dy > r_i * r_i {
+                    continue;
+                }
+                let x = cx as isize + dx;
+                let y = cy as isize + dy;
+                if x >= 0 && y >= 0 {
+                    self.put_pixel(x as usize, y as usize, color);
+                }
             }
         }
     }
