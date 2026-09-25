@@ -17,7 +17,9 @@
 extern crate alloc;
 
 mod allocator;
+mod apps;
 mod css;
+mod desktop;
 mod disk;
 mod dom;
 mod elf;
@@ -148,7 +150,9 @@ fn kernel_main(boot_info: &'static mut BootInfo) -> ! {
     let mut executor = Executor::new();
     executor.spawn(Task::new(net_poll_loop()));
     executor.spawn(Task::new(spawn_userland_network_demo_when_online()));
-    executor.spawn(Task::new(net::http::fetch("https://en.wikipedia.org/wiki/PNG")));
+    executor.spawn(Task::new(async {
+        desktop::run().await;
+    }));
     executor.run();
 }
 

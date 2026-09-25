@@ -8,6 +8,7 @@
 //! back to the executor, get resumed when the NIC IRQ or PIT tick says
 //! "check again", never a spin loop.
 
+use crate::desktop::Rect;
 use crate::gfx;
 use crate::img;
 use crate::layout;
@@ -56,12 +57,12 @@ fn parse_url(url: &str) -> Url<'_> {
 
 const MAX_REDIRECTS: u32 = 10;
 
-/// Spawned as its own task from `main`. Fetches `url`, draws it to the
-/// screen, and logs progress over serial. Runs once; a real OS would
-/// expose this as a syscall/API a shell or browser chrome could call for
-/// any URL, but the point here is proving the whole stack — driver,
-/// DHCP, DNS, TCP, TLS, HTTP, and on-screen rendering — works end to end.
-pub async fn fetch(url: &'static str) {
+/// The Browser app's engine (`apps::browser` calls this). Fetches `url`
+/// and draws it into the top `viewport_h` pixels of the screen, leaving
+/// the desktop taskbar (below `viewport_h`) untouched. `home` is the
+/// taskbar's Home button's screen rect — clicking it exits back to the
+/// desktop (returns normally) instead of being treated as a page click.
+pub async fn fetch(url: &str, viewport_h: usize, home: Rect) {
     serial_println!("http: waiting for DHCP lease...");
     while !stack::has_ip() {
         net_tick().await;
@@ -80,27 +81,30 @@ pub async fn fetch(url: &'static str) {
         for redirect in 0..=MAX_REDIRECTS {
             let target = parse_url(&current);
 
-            render_status(&format!("Resolving {}...", target.host));
+            render_status(&format!("Resolving {}...", target.host), viewport_h);
             serial_println!("http: resolving {}", target.host);
             let ip = match resolve(target.host).await {
                 Some(ip) => ip,
                 None => {
-                    render_status(&format!("Could not resolve {}", target.host));
+                    render_status(&format!("Could not resolve {}", target.host), viewport_h);
                     serial_println!("http: DNS resolution for {} failed", target.host);
                     return;
                 }
             };
             serial_println!("http: {} -> {}", target.host, ip);
 
-            render_status(&format!(
-                "Connecting to {} ({ip}) over {}...",
-                target.host,
-                if target.https { "TLS" } else { "plain HTTP" }
-            ));
+            render_status(
+                &format!(
+                    "Connecting to {} ({ip}) over {}...",
+                    target.host,
+                    if target.https { "TLS" } else { "plain HTTP" }
+                ),
+                viewport_h,
+            );
             let response = match get(ip, &target).await {
                 Ok(body) => body,
                 Err(e) => {
-                    render_status(&format!("Request to {} failed: {e}", target.host));
+                    render_status(&format!("Request to {} failed: {e}", target.host), viewport_h);
                     serial_println!("http: request failed: {}", e);
                     return;
                 }
@@ -111,7 +115,7 @@ pub async fn fetch(url: &'static str) {
 
             if let Some(location) = redirect_location(headers) {
                 if redirect == MAX_REDIRECTS {
-                    render_status("Too many redirects");
+                    render_status("Too many redirects", viewport_h);
                     serial_println!("http: too many redirects, giving up at {}", location);
                     return;
                 }
@@ -128,13 +132,13 @@ pub async fn fetch(url: &'static str) {
             };
 
             let text = String::from_utf8_lossy(&body);
-            match render_page(&target, &text).await {
-                Some(clicked_url) => {
+            match render_page(&target, &text, viewport_h, home).await {
+                PageAction::Navigate(clicked_url) => {
                     serial_println!("http: navigating to {}", clicked_url);
                     current = clicked_url;
                     continue 'navigate;
                 }
-                None => return,
+                PageAction::Home | PageAction::Done => return,
             }
         }
     }
@@ -283,11 +287,14 @@ const MARGIN: usize = 24;
 /// on this kernel's current CSS engine.
 pub const MOBILE_USER_AGENT: &str = "Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36";
 
-fn render_status(msg: &str) {
+/// Clears only the top `viewport_h` pixels (never the taskbar strip below
+/// it) before drawing a one-line status message — used while nothing else
+/// is on screen yet (DNS resolving, connecting, etc.).
+fn render_status(msg: &str, viewport_h: usize) {
     let mut guard = gfx::SCREEN.lock();
     if let Some(fb) = guard.as_mut() {
         let w = fb.width();
-        fb.clear(gfx::BLACK);
+        fb.fill_rect(0, 0, w, viewport_h, gfx::BLACK);
         fb.draw_wrapped(msg, MARGIN, MARGIN, w - MARGIN, gfx::GRAY, gfx::BLACK, RasterHeight::Size16);
     }
 }
@@ -302,17 +309,30 @@ enum ResolvedItem {
     Image { bitmap: img::Bitmap, intended_width: Option<usize>, intended_height: Option<usize> },
 }
 
+/// What the scroll/click loop below decided once it stopped: either the
+/// user clicked a link (navigate `fetch`'s outer loop to it), clicked the
+/// desktop taskbar's Home button (exit the Browser app back to the
+/// desktop), or the page itself gave up (DNS/fetch failure, or genuinely
+/// no readable content) and there's nothing left to interact with.
+enum PageAction {
+    Navigate(String),
+    Home,
+    Done,
+}
+
 /// Parses `html` into a real DOM (`dom.rs`), resolves CSS (a built-in UA
 /// default stylesheet, page `<style>` tags, and up to one externally
 /// linked stylesheet — see `MAX_LINKED_STYLESHEETS` — merged via
 /// `layout::build_rules`), fetches/decodes every image once
-/// (`resolve_items`), then draws and re-draws the result on the
-/// framebuffer as the user scrolls (arrow keys / Page Up/Page Down —
-/// `crate::keyboard`'s extended-scancode support) via `draw_at_scroll`,
-/// polling non-blockingly between keystrokes the same way every other
-/// wait in this file does (`net_tick().await`, never a spin loop).
-async fn render_page(target: &Url<'_>, html_src: &str) -> Option<String> {
-    render_status("Parsing page...");
+/// (`resolve_items`), then draws and re-draws the result within the top
+/// `viewport_h` pixels of the screen as the user scrolls (arrow keys /
+/// Page Up/Page Down — `crate::keyboard`'s extended-scancode support) via
+/// `draw_at_scroll`, polling non-blockingly between keystrokes the same
+/// way every other wait in this file does (`net_tick().await`, never a
+/// spin loop). `home` is the desktop taskbar's Home button rect, checked
+/// on every click alongside the page's own link regions.
+async fn render_page(target: &Url<'_>, html_src: &str, viewport_h: usize, home: Rect) -> PageAction {
+    render_status("Parsing page...", viewport_h);
     let dom_root = crate::dom::parse(html_src);
 
     // A fast, plain first pass — UA defaults only, no page CSS, no
@@ -326,10 +346,10 @@ async fn render_page(target: &Url<'_>, html_src: &str) -> Option<String> {
     let no_css = layout::build_rules("");
     let quick_items = layout::flatten(&dom_root, &no_css);
     let quick_bg = layout::page_background(&dom_root, &no_css);
-    let (quick_h, quick_x0, quick_w) = {
+    let (screen_w, screen_h, quick_x0, quick_w) = {
         let mut guard = gfx::SCREEN.lock();
-        let Some(fb) = guard.as_mut() else { return None };
-        (fb.height(), MARGIN, fb.width() - 2 * MARGIN)
+        let Some(fb) = guard.as_mut() else { return PageAction::Done };
+        (fb.width(), fb.height(), MARGIN, fb.width() - 2 * MARGIN)
     };
     let quick_resolved: Vec<ResolvedItem> = quick_items
         .into_iter()
@@ -338,7 +358,7 @@ async fn render_page(target: &Url<'_>, html_src: &str) -> Option<String> {
             layout::LayoutItem::Image { .. } => None,
         })
         .collect();
-    draw_at_scroll(&quick_resolved, quick_bg, quick_x0, quick_w, quick_h, 0);
+    draw_at_scroll(&quick_resolved, quick_bg, quick_x0, quick_w, viewport_h, 0);
 
     let mut css_text = String::new();
     layout::collect_inline_css(&dom_root, &mut css_text);
@@ -362,24 +382,17 @@ async fn render_page(target: &Url<'_>, html_src: &str) -> Option<String> {
     let items = layout::flatten(&dom_root, &rules);
     let bg = layout::page_background(&dom_root, &rules);
 
-    let (viewport_w, viewport_h, content_x0, content_w) = {
-        let mut guard = gfx::SCREEN.lock();
-        let Some(fb) = guard.as_mut() else { return None };
-        let w = fb.width();
-        let h = fb.height();
-        // A centered, narrower reading column when the page's own CSS
-        // asks for one (`width`/`max-width` on `<body>`/`<html>`, e.g.
-        // `example.com`'s `width:60vw`) — falls back to the full
-        // viewport (minus the outer gutter) otherwise.
-        let content_w = layout::page_content_width(&dom_root, &rules, w).unwrap_or(w - 2 * MARGIN);
-        let content_x0 = (w.saturating_sub(content_w)) / 2;
-        (w, h, content_x0, content_w)
-    };
+    // A centered, narrower reading column when the page's own CSS asks
+    // for one (`width`/`max-width` on `<body>`/`<html>`, e.g.
+    // `example.com`'s `width:60vw`) — falls back to the full viewport
+    // (minus the outer gutter) otherwise.
+    let content_w = layout::page_content_width(&dom_root, &rules, screen_w).unwrap_or(screen_w - 2 * MARGIN);
+    let content_x0 = (screen_w.saturating_sub(content_w)) / 2;
 
     if items.is_empty() {
         let mut guard = gfx::SCREEN.lock();
         if let Some(fb) = guard.as_mut() {
-            fb.clear(bg);
+            fb.fill_rect(0, 0, screen_w, viewport_h, bg);
             fb.draw_wrapped(
                 "(this page has no readable text — it likely relies on \
                  JavaScript this kernel doesn't run)",
@@ -391,7 +404,7 @@ async fn render_page(target: &Url<'_>, html_src: &str) -> Option<String> {
                 RasterHeight::Size16,
             );
         }
-        return None;
+        return PageAction::Done;
     }
 
     let mut resolved = Vec::with_capacity(items.len());
@@ -417,7 +430,7 @@ async fn render_page(target: &Url<'_>, html_src: &str) -> Option<String> {
     // reports relative deltas) since only this loop knows the viewport
     // bounds to clamp against. Starts centered — a PS/2 mouse has no
     // concept of absolute position to report on its own.
-    let mut mouse_x: i32 = (viewport_w / 2) as i32;
+    let mut mouse_x: i32 = (screen_w / 2) as i32;
     let mut mouse_y: i32 = (viewport_h / 2) as i32;
     if let Some(fb) = gfx::SCREEN.lock().as_mut() {
         fb.draw_cursor(mouse_x as usize, mouse_y as usize);
@@ -454,8 +467,8 @@ async fn render_page(target: &Url<'_>, html_src: &str) -> Option<String> {
 
         match crate::mouse::poll_event() {
             Some(crate::mouse::MouseEvent::Move { dx, dy }) => {
-                mouse_x = (mouse_x + dx).clamp(0, viewport_w as i32 - 1);
-                mouse_y = (mouse_y + dy).clamp(0, viewport_h as i32 - 1);
+                mouse_x = (mouse_x + dx).clamp(0, screen_w as i32 - 1);
+                mouse_y = (mouse_y + dy).clamp(0, screen_h as i32 - 1);
                 // A full redraw per move (rather than a cheaper
                 // draw-old-position-back/erase trick) is the simplest
                 // correct way to keep the cursor visible without ever
@@ -474,8 +487,11 @@ async fn render_page(target: &Url<'_>, html_src: &str) -> Option<String> {
             }
             Some(crate::mouse::MouseEvent::LeftDown) => {
                 let (mx, my) = (mouse_x as usize, mouse_y as usize);
+                if home.contains(mx, my) {
+                    return PageAction::Home;
+                }
                 if let Some(region) = click_regions.iter().find(|r| mx >= r.x0 && mx < r.x1 && my >= r.y0 && my < r.y1) {
-                    return Some(resolve_url(target, &region.href));
+                    return PageAction::Navigate(resolve_url(target, &region.href));
                 }
             }
             Some(crate::mouse::MouseEvent::LeftUp) | None => {}
@@ -521,7 +537,11 @@ struct ClickRegion {
 fn draw_at_scroll(resolved: &[ResolvedItem], bg: gfx::Color, content_x0: usize, content_w: usize, viewport_h: usize, scroll_y: usize) -> (usize, Vec<ClickRegion>) {
     let mut guard = gfx::SCREEN.lock();
     let Some(fb) = guard.as_mut() else { return (0, Vec::new()) };
-    fb.clear(bg);
+    // Only the app's own content area — never the taskbar strip below it
+    // (`viewport_h` is always the screen height minus the taskbar, or the
+    // full screen height for a taskbar-less caller, so this is safe either way).
+    let width = fb.width();
+    fb.fill_rect(0, 0, width, viewport_h, bg);
 
     let mut content_y: usize = MARGIN;
     let right_edge = content_x0 + content_w;

@@ -37,14 +37,6 @@ impl Framebuffer {
         self.info.height
     }
 
-    pub fn clear(&mut self, color: Color) {
-        for y in 0..self.info.height {
-            for x in 0..self.info.width {
-                self.put_pixel(x, y, color);
-            }
-        }
-    }
-
     fn put_pixel(&mut self, x: usize, y: usize, color: Color) {
         if x >= self.info.width || y >= self.info.height {
             return;

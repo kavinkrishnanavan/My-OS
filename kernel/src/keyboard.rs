@@ -90,6 +90,8 @@ pub const KEY_UP: u8 = 200;
 pub const KEY_DOWN: u8 = 201;
 pub const KEY_PAGE_UP: u8 = 202;
 pub const KEY_PAGE_DOWN: u8 = 203;
+pub const KEY_LEFT: u8 = 204;
+pub const KEY_RIGHT: u8 = 205;
 
 struct KeyBuffer {
     buf: [u8; KEY_BUFFER_CAPACITY],
@@ -161,6 +163,8 @@ pub fn on_irq() {
         let code = match scancode {
             0x48 => KEY_UP,
             0x50 => KEY_DOWN,
+            0x4B => KEY_LEFT,
+            0x4D => KEY_RIGHT,
             0x49 => KEY_PAGE_UP,
             0x51 => KEY_PAGE_DOWN,
             _ => return, // other extended keys (right Ctrl/Alt, etc.) — not supported
