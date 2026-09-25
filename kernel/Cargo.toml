@@ -97,3 +97,14 @@ miniz_oxide = { version = "0.8", default-features = false, features = ["with-all
 # compiler). Both read/write the same on-disk FAT32 format, so the two
 # only need to agree on that, not on which crate either side uses.
 embedded-sdmmc = { version = "0.8", default-features = false }
+
+# Real Flexbox + CSS Grid layout algorithms (the same crate real Rust UI
+# projects like Bevy/Dioxus use) — no_std+alloc capable by disabling its
+# default `std` feature. Used for `display:flex`/`grid` containers
+# (layout.rs) to get actual computed box geometry (wrapping onto
+# multiple rows, gaps, justify-content, flex-grow) instead of this
+# renderer's own hand-rolled "one row of equal columns" approximation.
+# Floating point is fine here — `fpu::init()` (main.rs) already saves/
+# restores FPU/SSE state across interrupts, and img/jpeg.rs's IDCT
+# already uses floats.
+taffy = { version = "0.9", default-features = false, features = ["alloc", "taffy_tree", "flexbox", "grid"] }

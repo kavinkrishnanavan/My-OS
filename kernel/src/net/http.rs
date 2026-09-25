@@ -317,6 +317,7 @@ enum ResolvedItem {
     Text { text: String, style: layout::ComputedStyle, href: Option<String> },
     Image { bitmap: img::Bitmap, intended_width: Option<usize>, intended_height: Option<usize> },
     TableRow { cells: Vec<String>, style: layout::ComputedStyle },
+    FlexBox { children: Vec<layout::BoxChild>, total_height: usize },
 }
 
 /// What the scroll/click loop below decided once it stopped: either the
@@ -369,15 +370,16 @@ async fn render_page(target: &Url<'_>, html_src: &str, viewport_h: usize, home: 
     // not true incremental parsing). Overwritten by the fully-styled
     // pass below once it's ready.
     let no_css = layout::build_rules("");
-    let quick_items = layout::flatten(&dom_root, &no_css);
-    let quick_bg = layout::page_background(&dom_root, &no_css);
     let quick_x0 = MARGIN;
     let quick_w = screen_w - 2 * MARGIN;
+    let quick_items = layout::flatten(&dom_root, &no_css, quick_w);
+    let quick_bg = layout::page_background(&dom_root, &no_css);
     let quick_resolved: Vec<ResolvedItem> = quick_items
         .into_iter()
         .filter_map(|item| match item {
             layout::LayoutItem::Text { text, style, href } => Some(ResolvedItem::Text { text, style, href }),
             layout::LayoutItem::TableRow { cells, style } => Some(ResolvedItem::TableRow { cells, style }),
+            layout::LayoutItem::FlexBox { children, total_height } => Some(ResolvedItem::FlexBox { children, total_height }),
             layout::LayoutItem::Image { .. } => None,
         })
         .collect();
@@ -406,15 +408,17 @@ async fn render_page(target: &Url<'_>, html_src: &str, viewport_h: usize, home: 
     }
 
     let rules = layout::build_rules(&css_text);
-    let items = layout::flatten(&dom_root, &rules);
     let bg = layout::page_background(&dom_root, &rules);
 
     // A centered, narrower reading column when the page's own CSS asks
     // for one (`width`/`max-width` on `<body>`/`<html>`, e.g.
     // `example.com`'s `width:60vw`) — falls back to the full viewport
-    // (minus the outer gutter) otherwise.
+    // (minus the outer gutter) otherwise. Computed before `flatten` (not
+    // after, as it used to be) since `display:flex`/`grid` containers
+    // now need a real content width to lay their children out against.
     let content_w = layout::page_content_width(&dom_root, &rules, screen_w).unwrap_or(screen_w - 2 * MARGIN);
     let content_x0 = (screen_w.saturating_sub(content_w)) / 2;
+    let items = layout::flatten(&dom_root, &rules, content_w);
 
     if items.is_empty() {
         let mut guard = gfx::SCREEN.lock();
@@ -440,6 +444,7 @@ async fn render_page(target: &Url<'_>, html_src: &str, viewport_h: usize, home: 
         match item {
             layout::LayoutItem::Text { text, style, href } => resolved.push(ResolvedItem::Text { text, style, href }),
             layout::LayoutItem::TableRow { cells, style } => resolved.push(ResolvedItem::TableRow { cells, style }),
+            layout::LayoutItem::FlexBox { children, total_height } => resolved.push(ResolvedItem::FlexBox { children, total_height }),
             layout::LayoutItem::Image { src, intended_width, intended_height } => {
                 let image_url = resolve_url(target, &src);
                 serial_println!("http: fetching image {}", image_url);
@@ -782,6 +787,30 @@ fn draw_at_scroll(resolved: &[ResolvedItem], bg: gfx::Color, content_x0: usize, 
                     fb.fill_rect(content_x0, draw_y + row_height, content_w, 1, BORDER);
                 }
                 content_y += row_height + 1;
+            }
+            ResolvedItem::FlexBox { children, total_height } => {
+                if children.is_empty() {
+                    continue;
+                }
+                const CHILD_PAD: usize = 4;
+                for child in children {
+                    let box_x0 = content_x0 + child.x;
+                    let box_y = (content_y + child.y) as isize - (scroll_y as isize);
+                    if box_y + child.h as isize >= 0 && box_y <= viewport_h as isize {
+                        let weight = layout::font_weight(&child.style);
+                        fb.draw_wrapped_styled(
+                            &child.text,
+                            box_x0 + CHILD_PAD,
+                            box_y.max(0) as usize + CHILD_PAD,
+                            box_x0 + child.w.saturating_sub(CHILD_PAD),
+                            child.style.color,
+                            bg,
+                            child.style.size,
+                            weight,
+                        );
+                    }
+                }
+                content_y += total_height + 6;
             }
         }
     }

@@ -602,17 +602,44 @@ pub enum LayoutItem {
     /// real box model (no colspan/rowspan, no per-column sizing based
     /// on content), but a real visual grid instead of a flat stack.
     TableRow { cells: Vec<String>, style: ComputedStyle },
+    /// A `display:flex`/`grid` container, laid out for real by the
+    /// `taffy` crate (the same real Flexbox/Grid algorithms real Rust UI
+    /// projects use) instead of the naive "one row of equal columns"
+    /// approximation this used to be — see `layout_flex_grid_container`.
+    /// Real wrapping onto multiple rows, real `gap` spacing, and real
+    /// `flex-grow` proportional sizing all actually happen now; still
+    /// text-only per child (no nested rich per-child styling), the same
+    /// simplification `TableRow`'s cells already make, and `grid` is
+    /// approximated as wrapping flex rather than true CSS Grid track
+    /// placement (see that function's own doc comment for why).
+    FlexBox { children: Vec<BoxChild>, total_height: usize },
+}
+
+/// One positioned child within a `LayoutItem::FlexBox` — real
+/// Taffy-computed geometry (`x`/`y`/`w`/`h`, relative to the container's
+/// own top-left corner) rather than a naive equal-width column.
+pub struct BoxChild {
+    pub x: usize,
+    pub y: usize,
+    pub w: usize,
+    pub h: usize,
+    pub text: String,
+    pub style: ComputedStyle,
 }
 
 /// Walks `node` and its subtree in document order, producing a flat,
 /// linear `LayoutItem` list — the synchronous half of rendering (no
 /// network I/O happens here; see the module doc comment for why images
-/// are deferred to a second pass).
-pub fn flatten(root: &Node, rules: &RuleIndex) -> Vec<LayoutItem> {
+/// are deferred to a second pass). `content_w` is the pixel width
+/// `display:flex`/`grid` containers lay their children out against (real
+/// Flexbox/Grid layout needs a real available width to wrap/grow
+/// against — unlike the rest of this renderer, which just flows text
+/// down an implicit column with no geometry of its own until draw time).
+pub fn flatten(root: &Node, rules: &RuleIndex, content_w: usize) -> Vec<LayoutItem> {
     let mut out = Vec::new();
     let mut path: Vec<&Node> = Vec::new();
     let mut state = ParagraphState { text: String::new(), style: default_style(), href: None };
-    walk(root, rules, default_style(), &mut path, &mut out, &mut state);
+    walk(root, rules, default_style(), &mut path, &mut out, &mut state, content_w);
     flush(&mut state, &mut out);
     out
 }
@@ -631,7 +658,15 @@ fn flush(state: &mut ParagraphState, out: &mut Vec<LayoutItem>) {
     state.text.clear();
 }
 
-fn walk<'a>(node: &'a Node, rules: &RuleIndex, inherited: ComputedStyle, path: &mut Vec<&'a Node>, out: &mut Vec<LayoutItem>, state: &mut ParagraphState) {
+fn walk<'a>(
+    node: &'a Node,
+    rules: &RuleIndex,
+    inherited: ComputedStyle,
+    path: &mut Vec<&'a Node>,
+    out: &mut Vec<LayoutItem>,
+    state: &mut ParagraphState,
+    content_w: usize,
+) {
     if node.tag.is_empty() {
         // Text node: collapse internal whitespace runs to one space (real
         // HTML whitespace-collapsing behavior — `dom.rs` deliberately
@@ -688,10 +723,11 @@ fn walk<'a>(node: &'a Node, rules: &RuleIndex, inherited: ComputedStyle, path: &
     // flex/grid container looked like before this, and modern real-world
     // pages use flex/grid constantly for exactly this kind of layout
     // (nav bars, card rows, button groups).
-    let is_flex_or_grid = matches!(display.as_deref(), Some("flex") | Some("inline-flex") | Some("grid") | Some("inline-grid"));
+    let is_grid = matches!(display.as_deref(), Some("grid") | Some("inline-grid"));
+    let is_flex_or_grid = is_grid || matches!(display.as_deref(), Some("flex") | Some("inline-flex"));
     if is_flex_or_grid && !display_none {
         flush(state, out);
-        walk_flex_row(node, style, out);
+        layout_flex_grid_container(node, path, rules, style, content_w, is_grid, out);
         path.pop();
         return;
     }
@@ -718,7 +754,7 @@ fn walk<'a>(node: &'a Node, rules: &RuleIndex, inherited: ComputedStyle, path: &
             }
         }
         for child in &node.children {
-            walk(child, rules, style, path, out, state);
+            walk(child, rules, style, path, out, state, content_w);
         }
         if block {
             flush(state, out);
@@ -763,26 +799,171 @@ fn walk_table_rows<'a>(node: &'a Node, rules: &RuleIndex, inherited: ComputedSty
     }
 }
 
-/// Reduces a `display:flex`/`display:grid` container to one
-/// `LayoutItem::TableRow` — one column per direct element child (text-
-/// only children, and whitespace-only text nodes, are skipped: a flex
-/// container's direct children are almost always element wrappers, and
-/// bare text would just show up as a single-column row of its own,
-/// which is more confusing than useful here). Same simplification
-/// `walk_table_rows` already makes for real tables, reused as-is rather
-/// than duplicated: a flex/grid row IS structurally a table row here
-/// (a horizontal strip of independently-wrapped cells), just arrived at
-/// via `display` instead of `<table>`/`<tr>`.
-fn walk_flex_row(node: &Node, style: ComputedStyle, out: &mut Vec<LayoutItem>) {
-    let cells: Vec<String> = node
-        .children
-        .iter()
-        .filter(|c| !c.tag.is_empty() && !is_never_rendered(&c.tag))
-        .map(cell_text)
-        .filter(|text| !text.is_empty())
-        .collect();
-    if !cells.is_empty() {
-        out.push(LayoutItem::TableRow { cells, style });
+/// The final (cascade-resolved, inline-wins-last) value of one specific
+/// CSS property for the element at the end of `path` — the same
+/// candidates()/inline scan `resolve_style` does, generalized to an
+/// arbitrary property name. Only ever called on a confirmed
+/// `display:flex`/`grid` container (a small minority of elements), so
+/// unlike the earlier `declared_display` mistake (which ran an
+/// equivalent extra scan on *every* element and doubled this renderer's
+/// already-known-hot selector-matching cost — see `resolve_style`'s own
+/// doc comment), this doesn't reintroduce that performance cliff.
+fn declared_property(path: &[&Node], rules: &RuleIndex, prop: &str) -> Option<String> {
+    let node = *path.last().expect("path is never empty");
+    let mut value = None;
+    for rule in rules.candidates(&node.tag) {
+        if rule.selectors.iter().any(|sel| selector_matches(path, sel)) {
+            for decl in &rule.declarations {
+                if decl.property == prop {
+                    value = Some(decl.value.trim().to_ascii_lowercase());
+                }
+            }
+        }
+    }
+    if let Some(inline) = node.attr("style") {
+        for decl_str in inline.split(';') {
+            if let Some((p, v)) = decl_str.split_once(':') {
+                if p.trim().eq_ignore_ascii_case(prop) {
+                    value = Some(v.trim().to_ascii_lowercase());
+                }
+            }
+        }
+    }
+    value
+}
+
+/// Lays out a `display:flex`/`display:grid` container's direct element
+/// children using the real `taffy` crate's Flexbox algorithm — actual
+/// wrapping onto multiple rows, `gap` spacing, and `flex-grow`
+/// proportional sizing, instead of the naive "one row of N equal
+/// columns" this used to be. `flex-direction`/`flex-wrap`/`gap` are read
+/// from the container's own CSS; `justify-content`/`align-items` are
+/// deliberately not — `taffy`'s alignment API shape varies enough across
+/// versions that hand-matching it here wasn't worth the risk, so
+/// alignment just uses `taffy`'s own (flex-start-ish) defaults. Real
+/// `display:grid` track placement (`grid-template-columns`/`-rows`,
+/// explicit item placement) isn't implemented at all — a `grid`
+/// container is approximated as a *wrapping* flex row with every child
+/// given equal `flex-grow`, which gets the common "N roughly-equal
+/// items, wrapping onto new rows as needed" case looking right without
+/// a real grid track algorithm.
+///
+/// Each child is still reduced to its own plain concatenated text
+/// (`cell_text`) — no nested rich per-child layout — but keeps its OWN
+/// resolved style (unlike `TableRow`, which shares one style across a
+/// whole row), since flex/grid children are very often individually
+/// styled (nav items, cards).
+fn layout_flex_grid_container<'a>(
+    node: &'a Node,
+    path: &mut Vec<&'a Node>,
+    rules: &RuleIndex,
+    container_style: ComputedStyle,
+    content_w: usize,
+    is_grid: bool,
+    out: &mut Vec<LayoutItem>,
+) {
+    let mut taffy_tree: taffy::TaffyTree<()> = taffy::TaffyTree::new();
+    let mut child_leaves = Vec::new();
+    let mut child_info: Vec<(String, ComputedStyle)> = Vec::new();
+
+    for child in &node.children {
+        if child.tag.is_empty() || is_never_rendered(&child.tag) {
+            continue;
+        }
+        let text = cell_text(child);
+        if text.is_empty() {
+            continue;
+        }
+        path.push(child);
+        let (style, _) = resolve_style(path, rules, container_style);
+        path.pop();
+
+        // A rough intrinsic-size estimate (average glyph width * char
+        // count) — `taffy`'s own algorithm then grows/shrinks/wraps the
+        // actual boxes from this starting point, so it only needs to be
+        // "in the right ballpark": the box `taffy` actually computes
+        // (not this estimate) is what drives the real on-screen wrap
+        // width at draw time.
+        const CHAR_W: usize = 8;
+        const LINE_H: usize = 20;
+        let denom = content_w.max(1);
+        let natural_w = (text.chars().count() * CHAR_W + 16).min(denom);
+        let lines = ((natural_w + denom - 1) / denom).max(1);
+        let natural_h = LINE_H * lines;
+
+        let leaf = match taffy_tree.new_leaf(taffy::style::Style {
+            size: taffy::geometry::Size {
+                width: taffy::style::Dimension::length(natural_w as f32),
+                height: taffy::style::Dimension::length(natural_h as f32),
+            },
+            flex_grow: if is_grid { 1.0 } else { 0.0 },
+            ..Default::default()
+        }) {
+            Ok(id) => id,
+            Err(_) => continue,
+        };
+        child_leaves.push(leaf);
+        child_info.push((text, style));
+    }
+
+    if child_leaves.is_empty() {
+        return;
+    }
+
+    let flex_direction = if is_grid {
+        taffy::style::FlexDirection::Row
+    } else {
+        match declared_property(path, rules, "flex-direction").as_deref() {
+            Some("column") => taffy::style::FlexDirection::Column,
+            Some("column-reverse") => taffy::style::FlexDirection::ColumnReverse,
+            Some("row-reverse") => taffy::style::FlexDirection::RowReverse,
+            _ => taffy::style::FlexDirection::Row,
+        }
+    };
+    let flex_wrap = if is_grid {
+        taffy::style::FlexWrap::Wrap
+    } else {
+        match declared_property(path, rules, "flex-wrap").as_deref() {
+            Some("wrap") | Some("wrap-reverse") => taffy::style::FlexWrap::Wrap,
+            _ => taffy::style::FlexWrap::NoWrap,
+        }
+    };
+    let gap_px = declared_property(path, rules, "gap").and_then(|v| parse_px(&v)).unwrap_or(8) as f32;
+
+    let container_taffy_style = taffy::style::Style {
+        display: taffy::style::Display::Flex,
+        flex_direction,
+        flex_wrap,
+        gap: taffy::geometry::Size {
+            width: taffy::style::LengthPercentage::length(gap_px),
+            height: taffy::style::LengthPercentage::length(gap_px),
+        },
+        ..Default::default()
+    };
+
+    let Ok(root) = taffy_tree.new_with_children(container_taffy_style, &child_leaves) else { return };
+    let available = taffy::geometry::Size {
+        width: taffy::style::AvailableSpace::Definite(content_w as f32),
+        height: taffy::style::AvailableSpace::MaxContent,
+    };
+    if taffy_tree.compute_layout(root, available).is_err() {
+        return;
+    }
+
+    let mut children = Vec::with_capacity(child_leaves.len());
+    let mut total_height = 0usize;
+    for (leaf, (text, style)) in child_leaves.into_iter().zip(child_info.into_iter()) {
+        let Ok(box_layout) = taffy_tree.layout(leaf) else { continue };
+        let x = box_layout.location.x.max(0.0) as usize;
+        let y = box_layout.location.y.max(0.0) as usize;
+        let w = box_layout.size.width.max(0.0) as usize;
+        let h = box_layout.size.height.max(0.0) as usize;
+        total_height = total_height.max(y + h);
+        children.push(BoxChild { x, y, w, h, text, style });
+    }
+
+    if !children.is_empty() {
+        out.push(LayoutItem::FlexBox { children, total_height });
     }
 }
 
