@@ -308,6 +308,7 @@ fn render_status(msg: &str, viewport_h: usize) {
 enum ResolvedItem {
     Text { text: String, style: layout::ComputedStyle, href: Option<String> },
     Image { bitmap: img::Bitmap, intended_width: Option<usize>, intended_height: Option<usize> },
+    TableRow { cells: Vec<String>, style: layout::ComputedStyle },
 }
 
 /// What the scroll/click loop below decided once it stopped: either the
@@ -356,6 +357,7 @@ async fn render_page(target: &Url<'_>, html_src: &str, viewport_h: usize, home: 
         .into_iter()
         .filter_map(|item| match item {
             layout::LayoutItem::Text { text, style, href } => Some(ResolvedItem::Text { text, style, href }),
+            layout::LayoutItem::TableRow { cells, style } => Some(ResolvedItem::TableRow { cells, style }),
             layout::LayoutItem::Image { .. } => None,
         })
         .collect();
@@ -416,6 +418,7 @@ async fn render_page(target: &Url<'_>, html_src: &str, viewport_h: usize, home: 
     for item in items {
         match item {
             layout::LayoutItem::Text { text, style, href } => resolved.push(ResolvedItem::Text { text, style, href }),
+            layout::LayoutItem::TableRow { cells, style } => resolved.push(ResolvedItem::TableRow { cells, style }),
             layout::LayoutItem::Image { src, intended_width, intended_height } => {
                 let image_url = resolve_url(target, &src);
                 serial_println!("http: fetching image {}", image_url);
@@ -672,6 +675,48 @@ fn draw_at_scroll(resolved: &[ResolvedItem], bg: gfx::Color, content_x0: usize, 
                     fb.draw_bitmap_scaled(bitmap, content_x0, screen_y.max(0) as usize, target_w, target_h);
                 }
                 content_y += target_h + 6;
+            }
+            ResolvedItem::TableRow { cells, style } => {
+                if cells.is_empty() {
+                    continue;
+                }
+                const CELL_PAD: usize = 6;
+                const BORDER: gfx::Color = gfx::Color(0x60, 0x60, 0x68);
+                let weight = layout::font_weight(style);
+                let col_w = content_w / cells.len();
+
+                let row_height = cells
+                    .iter()
+                    .map(|cell| {
+                        let x0 = content_x0 + CELL_PAD;
+                        gfx::measure_wrapped_height(cell, x0, x0 + col_w.saturating_sub(2 * CELL_PAD), style.size, weight)
+                    })
+                    .max()
+                    .unwrap_or(0)
+                    + 2 * CELL_PAD;
+
+                let screen_y = (content_y as isize) - (scroll_y as isize);
+                if screen_y + row_height as isize >= 0 && screen_y <= viewport_h as isize {
+                    let draw_y = screen_y.max(0) as usize;
+                    for (i, cell) in cells.iter().enumerate() {
+                        let col_x0 = content_x0 + i * col_w;
+                        fb.draw_wrapped_styled(
+                            cell,
+                            col_x0 + CELL_PAD,
+                            draw_y + CELL_PAD,
+                            col_x0 + col_w.saturating_sub(CELL_PAD),
+                            style.color,
+                            bg,
+                            style.size,
+                            weight,
+                        );
+                        if i > 0 {
+                            fb.fill_rect(col_x0, draw_y, 1, row_height, BORDER);
+                        }
+                    }
+                    fb.fill_rect(content_x0, draw_y + row_height, content_w, 1, BORDER);
+                }
+                content_y += row_height + 1;
             }
         }
     }

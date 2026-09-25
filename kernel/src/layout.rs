@@ -516,6 +516,21 @@ pub enum LayoutItem {
     /// every image look oversized. `None` (no attribute present) falls
     /// back to that fit-to-column behavior.
     Image { src: String, intended_width: Option<usize>, intended_height: Option<usize> },
+    /// One `<tr>`'s worth of cells, each already reduced to its own
+    /// plain concatenated text (nested tags within a cell contribute
+    /// their text but not their own individual styling — the same
+    /// "whole element, one style" tradeoff `Text` already makes, just
+    /// per-cell instead of per-paragraph). Real tables (Wikipedia
+    /// infoboxes, wikitables, nav footers) were previously the single
+    /// worst-looking thing this renderer produced: every `<td>`/`<th>`
+    /// was just another block, so a whole table became a long vertical
+    /// wall of one-cell-per-line text with no columns at all. This gets
+    /// an actual grid — `net/http.rs`'s `draw_at_scroll` divides the
+    /// content column evenly across `cells.len()` and draws each cell
+    /// in its own column, wrapped, with light divider lines — not a
+    /// real box model (no colspan/rowspan, no per-column sizing based
+    /// on content), but a real visual grid instead of a flat stack.
+    TableRow { cells: Vec<String>, style: ComputedStyle },
 }
 
 /// Walks `node` and its subtree in document order, producing a flat,
@@ -578,6 +593,14 @@ fn walk<'a>(node: &'a Node, rules: &RuleIndex, inherited: ComputedStyle, path: &
         }
         return;
     }
+    if node.tag == "table" {
+        flush(state, out);
+        path.push(node);
+        let style = resolve_style(path, rules, inherited);
+        walk_table_rows(node, rules, style, path, out);
+        path.pop();
+        return;
+    }
 
     path.push(node);
     let style = resolve_style(path, rules, inherited);
@@ -617,6 +640,71 @@ fn walk<'a>(node: &'a Node, rules: &RuleIndex, inherited: ComputedStyle, path: &
         }
     }
     path.pop();
+}
+
+/// Finds every `<tr>` anywhere within a `<table>` (recursing through
+/// `<thead>`/`<tbody>`/`<tfoot>` wrappers, which real HTML almost always
+/// has and which aren't block boundaries of their own for this purpose)
+/// and emits one `LayoutItem::TableRow` per row. A nested `<table>`
+/// inside a cell is walked for its own rows too (real Wikipedia infoboxes
+/// nest tables sometimes) — not correctly nested as its own sub-grid,
+/// just flattened into the same row stream, which is a real fidelity
+/// gap but far better than crashing or silently dropping the content.
+fn walk_table_rows<'a>(node: &'a Node, rules: &RuleIndex, inherited: ComputedStyle, path: &mut Vec<&'a Node>, out: &mut Vec<LayoutItem>) {
+    if node.tag == "tr" {
+        let cells: Vec<String> = node
+            .children
+            .iter()
+            .filter(|c| c.tag == "td" || c.tag == "th")
+            .map(cell_text)
+            .collect();
+        if !cells.is_empty() {
+            path.push(node);
+            let style = resolve_style(path, rules, inherited);
+            path.pop();
+            out.push(LayoutItem::TableRow { cells, style });
+        }
+        return;
+    }
+    for child in &node.children {
+        if child.tag.is_empty() || is_never_rendered(&child.tag) {
+            continue;
+        }
+        path.push(child);
+        let style = resolve_style(path, rules, inherited);
+        walk_table_rows(child, rules, style, path, out);
+        path.pop();
+    }
+}
+
+/// Concatenates all text anywhere within `node`'s subtree into one
+/// whitespace-collapsed string — a cell's own plain-text content,
+/// ignoring any nested tags' individual styling (the same "whole
+/// element, one style" tradeoff `LayoutItem::Text` already documents).
+fn cell_text(node: &Node) -> String {
+    let mut out = String::new();
+    fn walk_text(node: &Node, out: &mut String) {
+        if node.tag.is_empty() {
+            for ch in node.text.chars() {
+                if ch.is_whitespace() {
+                    if !out.ends_with(' ') && !out.is_empty() {
+                        out.push(' ');
+                    }
+                } else {
+                    out.push(ch);
+                }
+            }
+            return;
+        }
+        if is_never_rendered(&node.tag) {
+            return;
+        }
+        for child in &node.children {
+            walk_text(child, out);
+        }
+    }
+    walk_text(node, &mut out);
+    out.trim().to_string()
 }
 
 /// Collects the text content of every `<style>` element anywhere in the
