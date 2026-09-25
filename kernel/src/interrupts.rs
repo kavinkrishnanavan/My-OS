@@ -330,6 +330,27 @@ pub fn unmask_irq(irq: u8) {
                 new_masks[0] = masks[0] & !(1 << irq);
             } else {
                 new_masks[1] = masks[1] & !(1 << (irq - 8));
+                // IRQ8-15 physically exist only on the SECONDARY 8259;
+                // that chip can only ever signal the CPU by asserting
+                // its own INT output into the PRIMARY chip's IR2 pin
+                // (the standard PC cascade wiring), which the primary
+                // chip will only forward if IR2 (IRQ2) is itself
+                // unmasked. Every earlier unmask_irq(N>=8) call here only
+                // ever touched the secondary chip's own mask bit and
+                // left the primary's bit 2 at whatever `init()` set it
+                // to (masked, alongside everything else) — meaning a
+                // secondary-PIC line could be fully unmasked on its own
+                // chip, genuinely raise a pending, unmasked IRQ (visible
+                // in `info pic`'s `irr` for that chip), and STILL never
+                // reach the CPU, forever, because the primary chip
+                // simply never forwards IR2. A real, reproduced bug: the
+                // PS/2 mouse (IRQ12) never delivered a single interrupt
+                // despite `info pic` showing its request bit set and its
+                // own mask bit clear, traced to exactly this — `info
+                // pic pic0`'s `imr` had bit 2 set the entire time. Fixed
+                // by always also clearing the primary chip's bit 2
+                // whenever any secondary-chip line is unmasked.
+                new_masks[0] = masks[0] & !(1 << 2);
             }
             pics.write_masks(new_masks[0], new_masks[1]);
         }

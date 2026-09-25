@@ -144,19 +144,8 @@ static KEY_BUFFER: Mutex<KeyBuffer> = Mutex::new(KeyBuffer::new());
 /// concurrency, just a convenient `Sync` static.
 static PENDING_EXTENDED: core::sync::atomic::AtomicBool = core::sync::atomic::AtomicBool::new(false);
 
-/// How many raw bytes IRQ1 has ever delivered — see `mouse::irq_byte_count`'s
-/// doc comment for why this exists: a live on-screen counter to compare
-/// against the mouse's own, so "is IRQ delivery broken in general" and
-/// "is it specific to the mouse" are distinguishable at a glance.
-static IRQ_BYTE_COUNT: core::sync::atomic::AtomicU32 = core::sync::atomic::AtomicU32::new(0);
-
-pub fn irq_byte_count() -> u32 {
-    IRQ_BYTE_COUNT.load(core::sync::atomic::Ordering::Relaxed)
-}
-
 pub fn on_irq() {
     use core::sync::atomic::Ordering;
-    IRQ_BYTE_COUNT.fetch_add(1, Ordering::Relaxed);
     let mut port: Port<u8> = Port::new(DATA_PORT);
     let scancode = unsafe { port.read() };
 
