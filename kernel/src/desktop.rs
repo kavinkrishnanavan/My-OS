@@ -71,8 +71,8 @@ const ICON_RADIUS: usize = 8;
 /// image assets in this kernel, just basic shapes) — centered at
 /// `(cx, cy)`.
 fn draw_logo_icon(fb: &mut gfx::Framebuffer, cx: usize, cy: usize) {
-    fb.fill_circle(cx, cy, ICON_RADIUS, TEXT_COLOR);
-    fb.fill_circle(cx, cy, ICON_RADIUS - 3, LOGO_BG);
+    fb.fill_circle(cx, cy, ICON_RADIUS, TEXT_COLOR, LOGO_BG);
+    fb.fill_circle(cx, cy, ICON_RADIUS - 3, LOGO_BG, TEXT_COLOR);
 }
 
 /// Draws a small, simple vector icon for `id` centered at `(cx, cy)` —
@@ -81,7 +81,7 @@ fn draw_logo_icon(fb: &mut gfx::Framebuffer, cx: usize, cy: usize) {
 /// geometric shapes (no image assets/decoder needed for the desktop
 /// shell itself): a folder for Files, a globe for the Browser, a
 /// keypad for the Calculator, a gamepad for the Game.
-fn draw_app_icon(fb: &mut gfx::Framebuffer, id: AppId, cx: usize, cy: usize) {
+fn draw_app_icon(fb: &mut gfx::Framebuffer, id: AppId, cx: usize, cy: usize, bg: Color) {
     match id {
         AppId::Files => {
             const FOLDER: Color = Color(0xe8, 0xb8, 0x3c);
@@ -90,7 +90,7 @@ fn draw_app_icon(fb: &mut gfx::Framebuffer, id: AppId, cx: usize, cy: usize) {
         }
         AppId::Browser => {
             const GLOBE: Color = Color(0x4a, 0x9c, 0xe8);
-            fb.fill_circle(cx, cy, ICON_RADIUS, GLOBE);
+            fb.fill_circle(cx, cy, ICON_RADIUS, GLOBE, bg);
             fb.fill_rect(cx - ICON_RADIUS, cy - 1, ICON_RADIUS * 2, 2, TASKBAR_BG);
             fb.fill_rect(cx - 2, cy - ICON_RADIUS, 3, ICON_RADIUS * 2, TASKBAR_BG);
         }
@@ -107,8 +107,8 @@ fn draw_app_icon(fb: &mut gfx::Framebuffer, id: AppId, cx: usize, cy: usize) {
             const PAD: Color = Color(0x8a, 0x50, 0xd8);
             const BUTTON: Color = Color(0xf0, 0xf0, 0xf0);
             fb.fill_rect(cx - 9, cy - 5, 18, 10, PAD);
-            fb.fill_circle(cx - 4, cy, 2, BUTTON);
-            fb.fill_circle(cx + 4, cy, 2, BUTTON);
+            fb.fill_circle(cx - 4, cy, 2, BUTTON, PAD);
+            fb.fill_circle(cx + 4, cy, 2, BUTTON, PAD);
         }
     }
 }
@@ -156,7 +156,7 @@ pub fn draw_taskbar(fb: &mut gfx::Framebuffer, width: usize, height: usize, acti
         let mid_y = r.y0 + (r.y1 - r.y0) / 2;
         let button_bg = if active == Some(*id) { ACTIVE_BG } else { BUTTON_BG };
         fb.fill_rect(r.x0, r.y0, r.x1 - r.x0, r.y1 - r.y0, button_bg);
-        draw_app_icon(fb, *id, r.x0 + 8 + ICON_RADIUS, mid_y);
+        draw_app_icon(fb, *id, r.x0 + 8 + ICON_RADIUS, mid_y, button_bg);
         fb.draw_wrapped(
             label,
             r.x0 + 20 + ICON_RADIUS,

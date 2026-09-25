@@ -108,3 +108,17 @@ embedded-sdmmc = { version = "0.8", default-features = false }
 # restores FPU/SSE state across interrupts, and img/jpeg.rs's IDCT
 # already uses floats.
 taffy = { version = "0.9", default-features = false, features = ["alloc", "taffy_tree", "flexbox", "grid"] }
+
+# Real 2D rasterizer (a Rust port of Skia's CPU raster backend) —
+# no_std+alloc capable via `no-std-float` in place of the default `std`
+# feature. Used in gfx.rs for the specific shapes that actually benefit
+# from real rasterization: anti-aliased circles (taskbar icons/logo —
+# previously a crude distance-threshold circle with a visibly jagged
+# edge) and bilinear-filtered image scaling (previously nearest-
+# neighbor, which looks blocky on any real photo/thumbnail scaled down
+# from its decoded size). Plain axis-aligned rect fills and glyph
+# rendering stay on this kernel's own direct pixel-poking code — an
+# unrotated integer-pixel rectangle has no rasterization ambiguity for
+# tiny-skia to improve on, and glyphs already get real per-pixel
+# coverage-based blending from the font rasterizer itself.
+tiny-skia = { version = "0.11", default-features = false, features = ["no-std-float"] }

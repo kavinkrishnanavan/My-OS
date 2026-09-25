@@ -157,10 +157,59 @@ impl Framebuffer {
     /// "fit to column if too wide" isn't the right rule at all — the
     /// page's own size should win), falling back to `bitmap_draw_size`'s
     /// fit-to-column sizing when the page doesn't declare one.
+    /// Rasterized via `tiny-skia`'s bilinear-filtered `draw_pixmap`
+    /// rather than this kernel's own nearest-neighbor sampling (a
+    /// previous version's `src_x = x * bitmap.width / target_w`-style
+    /// direct index, which just picks one source pixel per destination
+    /// pixel with no blending — visibly blocky on any real photo/
+    /// thumbnail scaled down significantly, which is the common case:
+    /// see `LayoutItem::Image`'s doc comment on real thumbnails usually
+    /// being decoded far larger than their intended on-page size).
+    /// Falls back to the old nearest-neighbor path if either temporary
+    /// pixmap fails to allocate (only possible at `target_w`/`target_h`
+    /// or `bitmap.width`/`height` of 0, already guarded above, or on
+    /// allocation failure) — always producing *something* rather than
+    /// silently drawing nothing.
     pub fn draw_bitmap_scaled(&mut self, bitmap: &crate::img::Bitmap, x0: usize, y0: usize, target_w: usize, target_h: usize) {
         if bitmap.width == 0 || bitmap.height == 0 || target_w == 0 || target_h == 0 {
             return;
         }
+        if self.draw_bitmap_scaled_bilinear(bitmap, x0, y0, target_w, target_h).is_none() {
+            self.draw_bitmap_scaled_nearest(bitmap, x0, y0, target_w, target_h);
+        }
+    }
+
+    fn draw_bitmap_scaled_bilinear(&mut self, bitmap: &crate::img::Bitmap, x0: usize, y0: usize, target_w: usize, target_h: usize) -> Option<()> {
+        let mut src = tiny_skia::Pixmap::new(bitmap.width as u32, bitmap.height as u32)?;
+        {
+            let data = src.data_mut();
+            for (i, px) in bitmap.pixels.iter().enumerate() {
+                data[i * 4] = px.0;
+                data[i * 4 + 1] = px.1;
+                data[i * 4 + 2] = px.2;
+                data[i * 4 + 3] = 255;
+            }
+        }
+        let mut dst = tiny_skia::Pixmap::new(target_w as u32, target_h as u32)?;
+        let sx = target_w as f32 / bitmap.width as f32;
+        let sy = target_h as f32 / bitmap.height as f32;
+        let paint = tiny_skia::PixmapPaint {
+            quality: tiny_skia::FilterQuality::Bilinear,
+            ..Default::default()
+        };
+        dst.draw_pixmap(0, 0, src.as_ref(), &paint, tiny_skia::Transform::from_scale(sx, sy), None);
+
+        let data = dst.data();
+        for y in 0..target_h {
+            for x in 0..target_w {
+                let idx = (y * target_w + x) * 4;
+                self.put_pixel(x0 + x, y0 + y, Color(data[idx], data[idx + 1], data[idx + 2]));
+            }
+        }
+        Some(())
+    }
+
+    fn draw_bitmap_scaled_nearest(&mut self, bitmap: &crate::img::Bitmap, x0: usize, y0: usize, target_w: usize, target_h: usize) {
         for y in 0..target_h {
             let src_y = (y * bitmap.height) / target_h;
             for x in 0..target_w {
@@ -274,18 +323,52 @@ impl Framebuffer {
 
     /// Fills a circle of radius `r` centered at `(cx, cy)` — used for the
     /// taskbar's app icons/logo (`desktop.rs`), which are simple vector
-    /// shapes rather than loaded image assets.
-    pub fn fill_circle(&mut self, cx: usize, cy: usize, r: usize, color: Color) {
-        let r_i = r as isize;
-        for dy in -r_i..=r_i {
-            for dx in -r_i..=r_i {
-                if dx * dx + dy * dy > r_i * r_i {
+    /// shapes rather than loaded image assets. `bg` is the color already
+    /// underneath the circle (the icon's own button/logo background, or
+    /// whatever shape it's drawn on top of), needed for blending real
+    /// anti-aliased edge coverage the same way glyph rendering already
+    /// does (`blend_pixel`) — without it, the circle's boundary has
+    /// nothing correct to blend against.
+    ///
+    /// Rasterized via `tiny-skia` (a real 2D rasterizer, not this
+    /// kernel's own code) into a small temporary off-screen `Pixmap`
+    /// sized just to the circle's own bounding box, then blended pixel-
+    /// by-pixel into this framebuffer using that pixmap's real alpha-
+    /// channel coverage as the blend intensity. A previous version used
+    /// a plain distance-threshold test (`dx*dx+dy*dy <= r*r`), which
+    /// produces a visibly jagged, hard-edged circle — real coverage-
+    /// based anti-aliasing is exactly what a rasterizer like this is
+    /// for, the same reason real browsers don't hand-roll their own.
+    pub fn fill_circle(&mut self, cx: usize, cy: usize, r: usize, color: Color, bg: Color) {
+        if r == 0 {
+            return;
+        }
+        let dim = (r * 2 + 2) as u32;
+        let Some(mut pm) = tiny_skia::Pixmap::new(dim, dim) else { return };
+        let mut paint = tiny_skia::Paint::default();
+        // Plain opaque white: only the rasterizer's own alpha-channel
+        // coverage is used below (as the blend intensity against `bg`),
+        // not this mask pixmap's own color.
+        paint.set_color_rgba8(255, 255, 255, 255);
+        paint.anti_alias = true;
+        let mut pb = tiny_skia::PathBuilder::new();
+        let center = dim as f32 / 2.0;
+        pb.push_circle(center, center, r as f32);
+        let Some(path) = pb.finish() else { return };
+        pm.fill_path(&path, &paint, tiny_skia::FillRule::Winding, tiny_skia::Transform::identity(), None);
+
+        let dim_usize = dim as usize;
+        let data = pm.data();
+        for py in 0..dim_usize {
+            for px in 0..dim_usize {
+                let alpha = data[(py * dim_usize + px) * 4 + 3];
+                if alpha == 0 {
                     continue;
                 }
-                let x = cx as isize + dx;
-                let y = cy as isize + dy;
-                if x >= 0 && y >= 0 {
-                    self.put_pixel(x as usize, y as usize, color);
+                let sx = cx as isize + px as isize - dim_usize as isize / 2;
+                let sy = cy as isize + py as isize - dim_usize as isize / 2;
+                if sx >= 0 && sy >= 0 {
+                    self.blend_pixel(sx as usize, sy as usize, color, alpha, bg);
                 }
             }
         }
