@@ -20,7 +20,7 @@
 //! tree-walk code for no real benefit; two passes (flatten, then render)
 //! is simpler and just as correct.
 
-use crate::css::{CompoundSelector, Declaration, Rule};
+use crate::css::PathElement;
 use crate::dom::Node;
 use crate::gfx::{Color, FontSize, FontWeight};
 use alloc::collections::BTreeMap;
@@ -39,40 +39,46 @@ use alloc::vec::Vec;
 /// or `#bar` with no element name) has to be checked against every node
 /// regardless (`tag_agnostic`); one with an explicit tag (`div.foo`)
 /// only needs checking against nodes with that exact tag (`by_tag`).
-pub struct RuleIndex {
-    rules: Vec<Rule>,
+pub struct RuleIndex<'a> {
+    // Specificity precomputed once here (`Selector::specificity()` isn't
+    // free — it's not just a stored field, `simplecss` computes it from
+    // the parsed selector) rather than freshly on every `resolve_style`/
+    // `declared_property` call for every element that happens to have
+    // this rule as a candidate — a rule with a common tag/tag-agnostic
+    // selector can be a candidate for hundreds of elements on a real
+    // page, so recomputing its specificity that many times over was
+    // real, measured, avoidable cost once real specificity sorting was
+    // added (see `resolve_style`'s own doc comment for why that sorting
+    // exists at all).
+    rules: Vec<(simplecss::Rule<'a>, [u8; 3])>,
     by_tag: BTreeMap<String, Vec<usize>>,
     tag_agnostic: Vec<usize>,
 }
 
-impl RuleIndex {
-    fn build(rules: Vec<Rule>) -> Self {
+impl<'a> RuleIndex<'a> {
+    fn build(rules: Vec<simplecss::Rule<'a>>) -> Self {
         let mut by_tag: BTreeMap<String, Vec<usize>> = BTreeMap::new();
         let mut tag_agnostic = Vec::new();
         for (i, rule) in rules.iter().enumerate() {
-            let mut added_agnostic = false;
-            for sel in &rule.selectors {
-                match sel.0.last().and_then(|c| c.tag.as_ref()) {
-                    Some(tag) => by_tag.entry(tag.clone()).or_default().push(i),
-                    None => {
-                        if !added_agnostic {
-                            tag_agnostic.push(i);
-                            added_agnostic = true;
-                        }
-                    }
-                }
+            let sel_text = alloc::format!("{}", rule.selector);
+            match crate::css::quick_target_tag(&sel_text) {
+                Some(tag) => by_tag.entry(tag).or_default().push(i),
+                None => tag_agnostic.push(i),
             }
         }
+        let rules = rules.into_iter().map(|r| { let spec = r.selector.specificity(); (r, spec) }).collect();
         RuleIndex { rules, by_tag, tag_agnostic }
     }
 
     /// Every rule that could possibly match an element with tag `tag`,
-    /// in original stylesheet order (required for the cascade's "later
-    /// rule wins" rule — see `resolve_style`) — a merge of the two
+    /// each paired with its precomputed specificity — a merge of the two
     /// relevant index buckets, not just one chained after the other,
     /// since either could legitimately come first in the real
-    /// stylesheet.
-    fn candidates<'a>(&'a self, tag: &str) -> impl Iterator<Item = &'a Rule> + 'a {
+    /// stylesheet (`resolve_style` sorts by specificity itself; this
+    /// just needs to not lose track of original order for equal-
+    /// specificity ties, which the index-based sort/dedup below
+    /// preserves).
+    fn candidates<'b>(&'b self, tag: &str) -> impl Iterator<Item = &'b (simplecss::Rule<'a>, [u8; 3])> + 'b {
         let mut indices: Vec<usize> = self.by_tag.get(tag).cloned().unwrap_or_default();
         indices.extend_from_slice(&self.tag_agnostic);
         indices.sort_unstable();
@@ -193,111 +199,31 @@ fn is_never_rendered(tag: &str) -> bool {
 /// instead of them, so a page still looks roughly right even where our
 /// selector matching or the page's own CSS misses something. Lowest
 /// priority: real rules parsed from the page always override these.
-fn ua_default_rules() -> Vec<Rule> {
-    fn rule(tags: &[&str], decls: &[(&str, &str)]) -> Rule {
-        Rule {
-            selectors: tags
-                .iter()
-                .map(|t| crate::css::Selector(alloc::vec![CompoundSelector { tag: Some(t.to_string()), id: None, classes: Vec::new() }]))
-                .collect(),
-            declarations: decls.iter().map(|(p, v)| Declaration { property: p.to_string(), value: v.to_string() }).collect(),
-        }
-    }
-    alloc::vec![
-        rule(&["h1"], &[("font-weight", "bold"), ("font-size", "32px"), ("margin-top", "22px"), ("margin-bottom", "22px")]),
-        rule(&["h2"], &[("font-weight", "bold"), ("font-size", "24px"), ("margin-top", "20px"), ("margin-bottom", "20px")]),
-        rule(&["h3", "h4", "h5", "h6"], &[("font-weight", "bold"), ("font-size", "20px"), ("margin-top", "18px"), ("margin-bottom", "18px")]),
-        rule(&["p", "ul", "ol", "blockquote", "table"], &[("margin-top", "16px"), ("margin-bottom", "16px")]),
-        rule(&["a"], &[("color", "#5a9cf5")]),
-        rule(&["b", "strong"], &[("font-weight", "bold")]),
-        rule(&["caption", "th"], &[("font-weight", "bold")]),
-    ]
-}
-
-/// Does `node` (given its ancestor chain, root-first, `node` itself last)
-/// match `selector`'s descendant chain? Each compound selector in the
-/// chain must match SOME node at or after the previous match's position
-/// walking outward-to-inward along `path` — i.e. real (if simplified,
-/// descendant-only) CSS descendant-combinator matching, not requiring
-/// direct parentage.
-fn selector_matches(path: &[&Node], selector: &crate::css::Selector) -> bool {
-    let parts = &selector.0;
-    let Some(last) = parts.last() else { return false };
-    let Some((&target, ancestors)) = path.split_last() else { return false };
-    if !compound_matches(target, last) {
-        return false;
-    }
-    if parts.len() == 1 {
-        return true;
-    }
-    // Walk the remaining (earlier) compound selectors outward through the
-    // remaining ancestors, each one needing to match some ancestor at or
-    // before the previous match — a simple greedy scan is sufficient
-    // for descendant-only matching (no backtracking needed: matching the
-    // nearest possible ancestor first can never make an earlier part
-    // harder to satisfy, since ancestors only run out, never regrow).
-    let mut remaining = &parts[..parts.len() - 1];
-    let mut search_space = ancestors;
-    while let Some((needle, rest)) = remaining.split_last() {
-        let mut found = false;
-        for i in (0..search_space.len()).rev() {
-            if compound_matches(search_space[i], needle) {
-                search_space = &search_space[..i];
-                found = true;
-                break;
-            }
-        }
-        if !found {
-            return false;
-        }
-        remaining = rest;
-    }
-    true
-}
-
-fn compound_matches(node: &Node, sel: &CompoundSelector) -> bool {
-    if let Some(tag) = &sel.tag {
-        if node.tag != *tag {
-            return false;
-        }
-    }
-    if let Some(id) = &sel.id {
-        if node.attr("id") != Some(id.as_str()) {
-            return false;
-        }
-    }
-    if !sel.classes.is_empty() {
-        let node_classes: Vec<&str> = node.attr("class").map(|c| c.split_whitespace().collect()).unwrap_or_default();
-        for want in &sel.classes {
-            if !node_classes.contains(&want.as_str()) {
-                return false;
-            }
-        }
-    }
-    true
-}
+const UA_CSS: &str = "\
+h1 { font-weight: bold; font-size: 32px; margin-top: 22px; margin-bottom: 22px; }\n\
+h2 { font-weight: bold; font-size: 24px; margin-top: 20px; margin-bottom: 20px; }\n\
+h3, h4, h5, h6 { font-weight: bold; font-size: 20px; margin-top: 18px; margin-bottom: 18px; }\n\
+p, ul, ol, blockquote, table { margin-top: 16px; margin-bottom: 16px; }\n\
+a { color: #5a9cf5; }\n\
+b, strong { font-weight: bold; }\n\
+caption, th { font-weight: bold; }\n";
 
 /// Merges every declaration from every rule whose selector matches
-/// `path` (in stylesheet order — later rules win on a given property,
-/// the same simplification `css.rs`'s own doc comment already
-/// documents choosing over real specificity math) onto `inherited`,
-/// producing this element's own computed style. `color`/`bold`/`size`/
-/// `align_center` all inherit by default (matching real CSS inheritance
-/// for text-ish properties) when not explicitly set on this element.
-/// Returns the resolved style plus the element's own cascade-resolved
-/// `display` value (`None` if nothing sets one) — computed together in
-/// one pass over the matching rules/inline declarations rather than two
-/// separate full scans (an earlier version had a standalone
-/// `declared_display` doing its own identical candidates()/inline scan;
-/// on a page with as many elements and rules as a real Wikipedia article
-/// that doubled this function's already-known-hot selector-matching
-/// cost — see `RuleIndex`'s own doc comment for the earlier performance
-/// cliff this exact kind of per-element O(rules) work caused — and
-/// turned a page load that used to take single-digit seconds into one
-/// that visibly stalled). `display` isn't a `ComputedStyle` field itself
-/// since nothing inherits it or needs it at draw time — only `walk`'s
-/// one "is this a flex/grid container" decision does.
-fn resolve_style(path: &[&Node], rules: &RuleIndex, inherited: ComputedStyle) -> (ComputedStyle, Option<String>) {
+/// `path` onto `inherited`, producing this element's own computed
+/// style. Real CSS cascade order, using `simplecss::Selector`'s actual
+/// `specificity()` (the whole reason this kernel switched from its own
+/// hand-rolled "later rule wins" parser to `simplecss`): matched rules
+/// are applied lowest-to-highest specificity (a stable sort, so two
+/// rules of equal specificity still resolve by original stylesheet
+/// order, same as real CSS), then the element's own inline `style=`
+/// attribute (which always outranks any selector-based rule), then
+/// finally any `!important` declaration from a matched rule — which in
+/// real CSS outranks *everything* else, inline styles included.
+/// `color`/`bold`/`size`/`align_center` all inherit by default (matching
+/// real CSS inheritance for text-ish properties) when not explicitly
+/// set. Returns the resolved style plus the element's own cascade-
+/// resolved `display` value (`None` if nothing sets one).
+fn resolve_style(path: &[&Node], rules: &RuleIndex<'_>, inherited: ComputedStyle) -> (ComputedStyle, Option<String>) {
     let mut style = inherited;
     // background/margin do not inherit in real CSS — each element starts
     // fresh and only gets one from its OWN matched rules below.
@@ -311,44 +237,52 @@ fn resolve_style(path: &[&Node], rules: &RuleIndex, inherited: ComputedStyle) ->
     style.offset_left = 0;
     let node = *path.last().expect("path is never empty");
     let mut display = None;
+    let elem = PathElement { path };
 
-    for rule in rules.candidates(&node.tag) {
-        if rule.selectors.iter().any(|sel| selector_matches(path, sel)) {
-            for decl in &rule.declarations {
-                if decl.property == "display" {
-                    display = Some(decl.value.trim().to_ascii_lowercase());
-                }
-                apply_declaration(&mut style, decl);
-            }
+    let mut matched: Vec<&(simplecss::Rule, [u8; 3])> = rules.candidates(&node.tag).filter(|(r, _)| r.selector.matches(&elem)).collect();
+    matched.sort_by_key(|(_, spec)| *spec);
+    let matched: Vec<&simplecss::Rule> = matched.into_iter().map(|(r, _)| r).collect();
+
+    let mut apply = |name: &str, value: &str| {
+        if name == "display" {
+            display = Some(value.trim().to_ascii_lowercase());
+        }
+        apply_declaration(&mut style, name, value);
+    };
+
+    for rule in &matched {
+        for decl in rule.declarations.iter().filter(|d| !d.important) {
+            apply(decl.name, decl.value);
         }
     }
-    // Inline `style="..."` attribute wins over stylesheet rules, same
-    // priority order real browsers use. Parsed directly here (not via
-    // `css::parse`, which parses a whole stylesheet with selectors) since
-    // an inline `style` attribute is just a bare declaration list.
+    // Inline `style="..."` attribute wins over stylesheet rules (short of
+    // `!important`, below), same priority order real browsers use.
+    // Parsed directly here since an inline `style` attribute is just a
+    // bare declaration list.
     if let Some(inline) = node.attr("style") {
         for decl_str in inline.split(';') {
             if let Some((prop, val)) = decl_str.split_once(':') {
-                let prop = prop.trim().to_ascii_lowercase();
-                if prop == "display" {
-                    display = Some(val.trim().to_ascii_lowercase());
-                }
-                apply_declaration(&mut style, &Declaration { property: prop, value: val.trim().to_string() });
+                apply(&prop.trim().to_ascii_lowercase(), val.trim());
             }
+        }
+    }
+    for rule in &matched {
+        for decl in rule.declarations.iter().filter(|d| d.important) {
+            apply(decl.name, decl.value);
         }
     }
     (style, display)
 }
 
-fn apply_declaration(style: &mut ComputedStyle, decl: &Declaration) {
-    match decl.property.as_str() {
+fn apply_declaration(style: &mut ComputedStyle, prop: &str, val: &str) {
+    match prop {
         "color" => {
-            if let Some(c) = parse_color(&decl.value) {
+            if let Some(c) = parse_color(val) {
                 style.color = c;
             }
         }
         "font-weight" => {
-            let v = decl.value.trim();
+            let v = val.trim();
             if v == "bold" || v.parse::<u32>().is_ok_and(|n| n >= 600) {
                 style.bold = true;
             } else if v == "normal" {
@@ -356,15 +290,15 @@ fn apply_declaration(style: &mut ComputedStyle, decl: &Declaration) {
             }
         }
         "font-size" => {
-            if let Some(size) = parse_font_size(&decl.value) {
+            if let Some(size) = parse_font_size(val) {
                 style.size = size;
             }
         }
         "text-align" => {
-            style.align_center = decl.value.trim() == "center";
+            style.align_center = val.trim() == "center";
         }
         "background-color" => {
-            style.background = parse_color(&decl.value);
+            style.background = parse_color(val);
         }
         // The `background` shorthand can carry position/repeat/image
         // keywords too (`background: url(x) no-repeat`) — we only ever
@@ -372,17 +306,17 @@ fn apply_declaration(style: &mut ComputedStyle, decl: &Declaration) {
         // token until one parses as a color (real browsers do fuller
         // shorthand parsing; this is deliberately the simple subset).
         "background" => {
-            if let Some(c) = decl.value.split_whitespace().find_map(parse_color) {
+            if let Some(c) = val.split_whitespace().find_map(parse_color) {
                 style.background = Some(c);
             }
         }
         "margin-top" => {
-            if let Some(px) = parse_px(&decl.value) {
+            if let Some(px) = parse_px(val) {
                 style.margin_top = px;
             }
         }
         "margin-bottom" => {
-            if let Some(px) = parse_px(&decl.value) {
+            if let Some(px) = parse_px(val) {
                 style.margin_bottom = px;
             }
         }
@@ -392,7 +326,7 @@ fn apply_declaration(style: &mut ComputedStyle, decl: &Declaration) {
         // apply left/right margin to), so just pick out top/bottom per
         // the standard shorthand-expansion rule.
         "margin" => {
-            let parts: Vec<&str> = decl.value.split_whitespace().collect();
+            let parts: Vec<&str> = val.split_whitespace().collect();
             let (top, bottom) = match parts.len() {
                 1 => (parts[0], parts[0]),
                 2 => (parts[0], parts[0]),
@@ -412,12 +346,12 @@ fn apply_declaration(style: &mut ComputedStyle, decl: &Declaration) {
         // driving "how much space around the text inside its background
         // box" is the honest achievable subset.
         "padding" => {
-            if let Some(px) = decl.value.split_whitespace().next().and_then(parse_px) {
+            if let Some(px) = val.split_whitespace().next().and_then(parse_px) {
                 style.padding = px;
             }
         }
         "padding-top" | "padding-bottom" | "padding-left" | "padding-right" => {
-            if let Some(px) = parse_px(&decl.value) {
+            if let Some(px) = parse_px(val) {
                 style.padding = px;
             }
         }
@@ -425,7 +359,7 @@ fn apply_declaration(style: &mut ComputedStyle, decl: &Declaration) {
         // (no scroll-triggered re-pinning logic exists) to just leave it
         // alone rather than mishandle it as `absolute`.
         "position" => {
-            style.position = match decl.value.trim() {
+            style.position = match val.trim() {
                 "relative" => Position::Relative,
                 "absolute" => Position::Absolute,
                 "fixed" => Position::Fixed,
@@ -433,24 +367,23 @@ fn apply_declaration(style: &mut ComputedStyle, decl: &Declaration) {
             };
         }
         "top" => {
-            if let Some(px) = parse_px(&decl.value) {
+            if let Some(px) = parse_px(val) {
                 style.offset_top = px as isize;
             }
         }
         "left" => {
-            if let Some(px) = parse_px(&decl.value) {
+            if let Some(px) = parse_px(val) {
                 style.offset_left = px as isize;
             }
         }
         "border-bottom" | "border" => {
-            let color = decl.value.split_whitespace().find_map(parse_color).unwrap_or(style.color);
-            let thickness = decl
-                .value
+            let color = val.split_whitespace().find_map(parse_color).unwrap_or(style.color);
+            let thickness = val
                 .split_whitespace()
                 .find_map(parse_px)
                 .filter(|&px| px > 0)
                 .unwrap_or(1);
-            if decl.value.trim() == "none" || decl.value.trim() == "0" {
+            if val.trim() == "none" || val.trim() == "0" {
                 style.border_bottom = None;
             } else {
                 style.border_bottom = Some((color, thickness));
@@ -460,10 +393,7 @@ fn apply_declaration(style: &mut ComputedStyle, decl: &Declaration) {
     }
 }
 
-/// `#rrggbb` / `#rgb` hex, or a small set of named colors real
-/// stylesheets actually use for text — anything else (rgb()/hsl()/other
-/// names) is left unparsed (returns `None`, caller keeps the inherited
-/// color) rather than guessed at.
+/// `#rrggbb` / `#rgb` hex, `rgb(...)`/`rgba(...)`, or named colors.
 fn parse_color(value: &str) -> Option<Color> {
     let v = value.trim();
     if let Some(hex) = v.strip_prefix('#') {
@@ -480,8 +410,29 @@ fn parse_color(value: &str) -> Option<Color> {
                 let b = u8::from_str_radix(&hex[2..3].repeat(2), 16).ok()?;
                 Some(Color(r, g, b))
             }
+            8 => {
+                let r = u8::from_str_radix(&hex[0..2], 16).ok()?;
+                let g = u8::from_str_radix(&hex[2..4], 16).ok()?;
+                let b = u8::from_str_radix(&hex[4..6], 16).ok()?;
+                Some(Color(r, g, b))
+            }
+            4 => {
+                let r = u8::from_str_radix(&hex[0..1].repeat(2), 16).ok()?;
+                let g = u8::from_str_radix(&hex[1..2].repeat(2), 16).ok()?;
+                let b = u8::from_str_radix(&hex[2..3].repeat(2), 16).ok()?;
+                Some(Color(r, g, b))
+            }
             _ => None,
         };
+    }
+    if let Some(rest) = v.strip_prefix("rgb(").or_else(|| v.strip_prefix("rgba(")) {
+        if let Some(inner) = rest.strip_suffix(')') {
+            let mut parts = inner.split(',');
+            let r: u8 = parts.next()?.trim().parse().ok()?;
+            let g: u8 = parts.next()?.trim().parse().ok()?;
+            let b: u8 = parts.next()?.trim().parse().ok()?;
+            return Some(Color(r, g, b));
+        }
     }
     match v.to_ascii_lowercase().as_str() {
         "white" => Some(Color(0xea, 0xea, 0xea)),
@@ -490,6 +441,11 @@ fn parse_color(value: &str) -> Option<Color> {
         "blue" => Some(Color(0x5a, 0x9c, 0xf5)),
         "red" => Some(Color(0xe0, 0x5a, 0x5a)),
         "green" => Some(Color(0x5a, 0xc9, 0x7a)),
+        "yellow" => Some(Color(0xf5, 0xd0, 0x42)),
+        "orange" => Some(Color(0xf5, 0x8a, 0x42)),
+        "purple" => Some(Color(0x9f, 0x5a, 0xf5)),
+        "cyan" => Some(Color(0x42, 0xdd, 0xf5)),
+        "magenta" => Some(Color(0xdd, 0x42, 0xf5)),
         _ => None,
     }
 }
@@ -635,7 +591,7 @@ pub struct BoxChild {
 /// Flexbox/Grid layout needs a real available width to wrap/grow
 /// against — unlike the rest of this renderer, which just flows text
 /// down an implicit column with no geometry of its own until draw time).
-pub fn flatten(root: &Node, rules: &RuleIndex, content_w: usize) -> Vec<LayoutItem> {
+pub fn flatten(root: &Node, rules: &RuleIndex<'_>, content_w: usize) -> Vec<LayoutItem> {
     let mut out = Vec::new();
     let mut path: Vec<&Node> = Vec::new();
     let mut state = ParagraphState { text: String::new(), style: default_style(), href: None };
@@ -660,7 +616,7 @@ fn flush(state: &mut ParagraphState, out: &mut Vec<LayoutItem>) {
 
 fn walk<'a>(
     node: &'a Node,
-    rules: &RuleIndex,
+    rules: &RuleIndex<'_>,
     inherited: ComputedStyle,
     path: &mut Vec<&'a Node>,
     out: &mut Vec<LayoutItem>,
@@ -772,7 +728,7 @@ fn walk<'a>(
 /// nest tables sometimes) — not correctly nested as its own sub-grid,
 /// just flattened into the same row stream, which is a real fidelity
 /// gap but far better than crashing or silently dropping the content.
-fn walk_table_rows<'a>(node: &'a Node, rules: &RuleIndex, inherited: ComputedStyle, path: &mut Vec<&'a Node>, out: &mut Vec<LayoutItem>) {
+fn walk_table_rows<'a>(node: &'a Node, rules: &RuleIndex<'_>, inherited: ComputedStyle, path: &mut Vec<&'a Node>, out: &mut Vec<LayoutItem>) {
     if node.tag == "tr" {
         let cells: Vec<String> = node
             .children
@@ -799,24 +755,23 @@ fn walk_table_rows<'a>(node: &'a Node, rules: &RuleIndex, inherited: ComputedSty
     }
 }
 
-/// The final (cascade-resolved, inline-wins-last) value of one specific
+/// The final (cascade-resolved: specificity order, inline-wins-over-
+/// selectors, `!important`-wins-over-everything) value of one specific
 /// CSS property for the element at the end of `path` — the same
-/// candidates()/inline scan `resolve_style` does, generalized to an
-/// arbitrary property name. Only ever called on a confirmed
-/// `display:flex`/`grid` container (a small minority of elements), so
-/// unlike the earlier `declared_display` mistake (which ran an
-/// equivalent extra scan on *every* element and doubled this renderer's
-/// already-known-hot selector-matching cost — see `resolve_style`'s own
-/// doc comment), this doesn't reintroduce that performance cliff.
-fn declared_property(path: &[&Node], rules: &RuleIndex, prop: &str) -> Option<String> {
+/// candidates()/specificity/inline scan `resolve_style` does,
+/// generalized to an arbitrary property name.
+fn declared_property(path: &[&Node], rules: &RuleIndex<'_>, prop: &str) -> Option<String> {
     let node = *path.last().expect("path is never empty");
     let mut value = None;
-    for rule in rules.candidates(&node.tag) {
-        if rule.selectors.iter().any(|sel| selector_matches(path, sel)) {
-            for decl in &rule.declarations {
-                if decl.property == prop {
-                    value = Some(decl.value.trim().to_ascii_lowercase());
-                }
+    let elem = PathElement { path };
+    let mut matched: Vec<&(simplecss::Rule, [u8; 3])> = rules.candidates(&node.tag).filter(|(r, _)| r.selector.matches(&elem)).collect();
+    matched.sort_by_key(|(_, spec)| *spec);
+    let matched: Vec<&simplecss::Rule> = matched.into_iter().map(|(r, _)| r).collect();
+
+    for rule in &matched {
+        for decl in rule.declarations.iter().filter(|d| !d.important) {
+            if decl.name == prop {
+                value = Some(decl.value.trim().to_ascii_lowercase());
             }
         }
     }
@@ -826,6 +781,13 @@ fn declared_property(path: &[&Node], rules: &RuleIndex, prop: &str) -> Option<St
                 if p.trim().eq_ignore_ascii_case(prop) {
                     value = Some(v.trim().to_ascii_lowercase());
                 }
+            }
+        }
+    }
+    for rule in &matched {
+        for decl in rule.declarations.iter().filter(|d| d.important) {
+            if decl.name == prop {
+                value = Some(decl.value.trim().to_ascii_lowercase());
             }
         }
     }
@@ -856,7 +818,7 @@ fn declared_property(path: &[&Node], rules: &RuleIndex, prop: &str) -> Option<St
 fn layout_flex_grid_container<'a>(
     node: &'a Node,
     path: &mut Vec<&'a Node>,
-    rules: &RuleIndex,
+    rules: &RuleIndex<'_>,
     container_style: ComputedStyle,
     content_w: usize,
     is_grid: bool,
@@ -1027,7 +989,7 @@ pub fn collect_inline_css(node: &Node, out: &mut String) {
 /// kernel's usual dark-terminal aesthetic — pages routinely rely on that
 /// browser default (e.g. setting no `color` at all, only a light
 /// `background`) the same way `example.com`'s own CSS does.
-pub fn page_background(root: &Node, rules: &RuleIndex) -> Color {
+pub fn page_background(root: &Node, rules: &RuleIndex<'_>) -> Color {
     fn find<'a>(node: &'a Node, tag: &str) -> Option<&'a Node> {
         if node.tag == tag {
             return Some(node);
@@ -1065,7 +1027,7 @@ pub fn page_background(root: &Node, rules: &RuleIndex) -> Color {
 /// a centered, readable column instead of full-bleed text edge-to-edge
 /// (`example.com`'s own CSS does exactly this). Returns `None` if
 /// neither sets a width, meaning "use the full viewport".
-pub fn page_content_width(root: &Node, rules: &RuleIndex, viewport_width: usize) -> Option<usize> {
+pub fn page_content_width(root: &Node, rules: &RuleIndex<'_>, viewport_width: usize) -> Option<usize> {
     fn find<'a>(node: &'a Node, tag: &str) -> Option<&'a Node> {
         if node.tag == tag {
             return Some(node);
@@ -1096,11 +1058,22 @@ pub fn page_content_width(root: &Node, rules: &RuleIndex, viewport_width: usize)
     build_path(root, target as *const Node, &mut path);
 
     let mut width_decl: Option<String> = None;
-    for rule in rules.candidates(&target.tag) {
-        if rule.selectors.iter().any(|sel| selector_matches(&path, sel)) {
+    let elem = PathElement { path: &path };
+    for (rule, _) in rules.candidates(&target.tag) {
+        if rule.selector.matches(&elem) {
             for decl in &rule.declarations {
-                if decl.property == "width" || decl.property == "max-width" {
-                    width_decl = Some(decl.value.clone());
+                if decl.name == "width" || decl.name == "max-width" {
+                    width_decl = Some(decl.value.to_string());
+                }
+            }
+        }
+    }
+    if let Some(inline) = target.attr("style") {
+        for decl_str in inline.split(';') {
+            if let Some((p, v)) = decl_str.split_once(':') {
+                let p = p.trim().to_ascii_lowercase();
+                if p == "width" || p == "max-width" {
+                    width_decl = Some(v.trim().to_string());
                 }
             }
         }
@@ -1119,11 +1092,16 @@ pub fn page_content_width(root: &Node, rules: &RuleIndex, viewport_width: usize)
     Some((px as usize).clamp(200, viewport_width))
 }
 
-/// The UA default rules followed by `page_css` — later (page) rules win
-/// per `resolve_style`'s "later rule wins" cascade simplification.
-pub fn build_rules(page_css: &str) -> RuleIndex {
-    let mut rules = ua_default_rules();
-    rules.extend(crate::css::parse(page_css));
+/// The UA default rules followed by `page_css` (preprocessed) — parsed
+/// by `simplecss` with full specificity computation and cascade ordering.
+pub fn build_rules<'a>(page_css: &'a str) -> RuleIndex<'a> {
+    let mut rules = Vec::new();
+    let ua_sheet = simplecss::StyleSheet::parse(UA_CSS);
+    rules.extend(ua_sheet.rules);
+    if !page_css.is_empty() {
+        let page_sheet = simplecss::StyleSheet::parse(page_css);
+        rules.extend(page_sheet.rules);
+    }
     RuleIndex::build(rules)
 }
 

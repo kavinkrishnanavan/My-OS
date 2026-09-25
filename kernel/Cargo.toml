@@ -122,3 +122,18 @@ taffy = { version = "0.9", default-features = false, features = ["alloc", "taffy
 # tiny-skia to improve on, and glyphs already get real per-pixel
 # coverage-based blending from the font rasterizer itself.
 tiny-skia = { version = "0.11", default-features = false, features = ["no-std-float"] }
+
+# Real CSS 2 selector matching with actual specificity computation — our
+# own css.rs previously used "later rule wins" as a deliberate
+# simplification instead of real specificity math, which can pick the
+# wrong rule on real pages (e.g. a low-specificity rule that happens to
+# appear later in the stylesheet than a high-specificity one that
+# should win). no_std-native (no std feature to disable at all — it
+# just doesn't depend on std). css.rs now only does comment-stripping
+# and at-rule flattening (simplecss's own docs: "At-rules are not
+# supported. They will be skipped" — dropping @media-wrapped CSS
+# entirely would be a real regression from this kernel's deliberate
+# "over-apply rather than drop" choice for real pages, most of which
+# wrap real layout rules in @media blocks), then hands the result to
+# simplecss for actual selector parsing/matching.
+simplecss = { version = "0.2", default-features = false }

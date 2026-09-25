@@ -407,7 +407,8 @@ async fn render_page(target: &Url<'_>, html_src: &str, viewport_h: usize, home: 
         }
     }
 
-    let rules = layout::build_rules(&css_text);
+    let clean_css = crate::css::preprocess(&css_text);
+    let rules = layout::build_rules(&clean_css);
     let bg = layout::page_background(&dom_root, &rules);
 
     // A centered, narrower reading column when the page's own CSS asks

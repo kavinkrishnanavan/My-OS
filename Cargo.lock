@@ -844,6 +844,7 @@ dependencies = [
  "noto-sans-mono-bitmap",
  "pic8259",
  "rand_core",
+ "simplecss",
  "smoltcp",
  "spin",
  "taffy",
@@ -1111,6 +1112,15 @@ checksum = "77549399552de45a898a580c1b41d445bf730df867cc44e6c0233bbc4b8329de"
 dependencies = [
  "digest",
  "rand_core",
+]
+
+[[package]]
+name = "simplecss"
+version = "0.2.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7a9c6883ca9c3c7c90e888de77b7a5c849c779d25d74a1269b0218b14e8b136c"
+dependencies = [
+ "log",
 ]
 
 [[package]]
