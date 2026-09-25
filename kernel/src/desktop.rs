@@ -124,11 +124,12 @@ pub fn draw_taskbar(fb: &mut gfx::Framebuffer, width: usize, height: usize, acti
 /// removing once real mouse movement is confirmed working end to end.
 fn draw_irq_diagnostic(fb: &mut gfx::Framebuffer, width: usize) {
     let text = alloc::format!(
-        "kbd irq bytes: {}  mouse irq bytes: {}",
+        "mouse init ok: {}  kbd irq bytes: {}  mouse irq bytes: {}",
+        crate::mouse::init_succeeded(),
         crate::keyboard::irq_byte_count(),
         crate::mouse::irq_byte_count(),
     );
-    const BOX_W: usize = 340;
+    const BOX_W: usize = 460;
     let x0 = width.saturating_sub(BOX_W);
     fb.fill_rect(x0, 20, BOX_W, 20, TASKBAR_BG);
     fb.draw_wrapped(&text, x0 + 6, 22, width - 4, gfx::GRAY, TASKBAR_BG, FontSize::Size16);

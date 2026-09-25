@@ -132,6 +132,19 @@ static PACKET: Mutex<PacketAssembly> = Mutex::new(PacketAssembly { bytes: [0; 4]
 /// determines whether `on_irq` assembles 3-byte or 4-byte packets.
 static WHEEL_MODE: core::sync::atomic::AtomicBool = core::sync::atomic::AtomicBool::new(false);
 
+/// Whether `init()` itself succeeded — a second on-screen diagnostic
+/// (alongside `irq_byte_count`) for the same "mouse never moves"
+/// report: if this is `false`, IRQ12 was never unmasked at all (see
+/// `main.rs`), which alone fully explains a permanently-zero byte count
+/// with no interrupt-controller/IDT bug required. `irq_byte_count`
+/// staying at zero while this is `true` points the other way — at IRQ
+/// delivery itself, not the device handshake.
+static INIT_SUCCEEDED: core::sync::atomic::AtomicBool = core::sync::atomic::AtomicBool::new(false);
+
+pub fn init_succeeded() -> bool {
+    INIT_SUCCEEDED.load(core::sync::atomic::Ordering::Relaxed)
+}
+
 /// Left-button state as of the last decoded packet, so `on_irq` can emit
 /// `LeftDown`/`LeftUp` only on transitions rather than once per packet
 /// while the button is held down.
@@ -312,6 +325,7 @@ fn init_locked() -> bool {
 
     PACKET.lock().count = 0;
     LEFT_BUTTON_DOWN.store(false, core::sync::atomic::Ordering::Relaxed);
+    INIT_SUCCEEDED.store(true, core::sync::atomic::Ordering::Relaxed);
     crate::serial_println!("mouse: initialized");
     true
 }
