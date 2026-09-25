@@ -175,18 +175,23 @@ pub async fn run(width: usize, height: usize) {
             _ => {}
         }
 
-        match crate::mouse::poll_event() {
-            Some(MouseEvent::Move { dx, dy }) => {
-                mouse_x = (mouse_x + dx).clamp(0, width as i32 - 1);
-                mouse_y = (mouse_y + dy).clamp(0, height as i32 - 1);
-                redraw = true;
-            }
-            Some(MouseEvent::LeftDown) => {
-                if home.contains(mouse_x as usize, mouse_y as usize) {
-                    return;
+        // Drains every currently-queued mouse event before redrawing —
+        // see desktop.rs's `run` for why this matters for responsiveness
+        // under real, fast mouse motion.
+        while let Some(event) = crate::mouse::poll_event() {
+            match event {
+                MouseEvent::Move { dx, dy } => {
+                    mouse_x = (mouse_x + dx).clamp(0, width as i32 - 1);
+                    mouse_y = (mouse_y + dy).clamp(0, height as i32 - 1);
+                    redraw = true;
                 }
+                MouseEvent::LeftDown => {
+                    if home.contains(mouse_x as usize, mouse_y as usize) {
+                        return;
+                    }
+                }
+                _ => {}
             }
-            _ => {}
         }
 
         let now = tsc::now_ns();

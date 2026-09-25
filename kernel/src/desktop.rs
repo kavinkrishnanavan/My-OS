@@ -156,23 +156,33 @@ pub async fn run() -> ! {
             fb.draw_cursor(mouse_x as usize, mouse_y as usize);
         }
 
-        let clicked = loop {
+        let clicked = 'wait: loop {
             let mut redraw = false;
-            match crate::mouse::poll_event() {
-                Some(MouseEvent::Move { dx, dy }) => {
-                    mouse_x = (mouse_x + dx).clamp(0, width as i32 - 1);
-                    mouse_y = (mouse_y + dy).clamp(0, height as i32 - 1);
-                    redraw = true;
-                }
-                Some(MouseEvent::LeftDown) => {
-                    let (mx, my) = (mouse_x as usize, mouse_y as usize);
-                    if let Some((id, _)) = APP_LIST.iter().enumerate().find_map(|(i, (id, _))| {
-                        app_rect(i, height).contains(mx, my).then(|| (*id, i))
-                    }) {
-                        break id;
+            // Drains every currently-queued event before redrawing even
+            // once, instead of "pop one, redraw, repeat" — redrawing is a
+            // comparatively expensive full-screen software blit, and a
+            // real PS/2 mouse queues many small-delta Move packets per
+            // screen refresh. Redrawing per-event throttled the whole
+            // pipeline down to roughly one screen update per packet,
+            // which is what made the cursor feel like it needed a lot of
+            // physical motion to move a little on screen.
+            while let Some(event) = crate::mouse::poll_event() {
+                match event {
+                    MouseEvent::Move { dx, dy } => {
+                        mouse_x = (mouse_x + dx).clamp(0, width as i32 - 1);
+                        mouse_y = (mouse_y + dy).clamp(0, height as i32 - 1);
+                        redraw = true;
                     }
+                    MouseEvent::LeftDown => {
+                        let (mx, my) = (mouse_x as usize, mouse_y as usize);
+                        if let Some((id, _)) = APP_LIST.iter().enumerate().find_map(|(i, (id, _))| {
+                            app_rect(i, height).contains(mx, my).then(|| (*id, i))
+                        }) {
+                            break 'wait id;
+                        }
+                    }
+                    MouseEvent::LeftUp | MouseEvent::ScrollUp | MouseEvent::ScrollDown => {}
                 }
-                Some(MouseEvent::LeftUp) | Some(MouseEvent::ScrollUp) | Some(MouseEvent::ScrollDown) | None => {}
             }
 
             if redraw {

@@ -465,36 +465,44 @@ async fn render_page(target: &Url<'_>, html_src: &str, viewport_h: usize, home: 
             Some(_) | None => {}
         }
 
-        match crate::mouse::poll_event() {
-            Some(crate::mouse::MouseEvent::Move { dx, dy }) => {
-                mouse_x = (mouse_x + dx).clamp(0, screen_w as i32 - 1);
-                mouse_y = (mouse_y + dy).clamp(0, screen_h as i32 - 1);
-                // A full redraw per move (rather than a cheaper
-                // draw-old-position-back/erase trick) is the simplest
-                // correct way to keep the cursor visible without ever
-                // leaving a trail behind it — this renderer has no
-                // separate off-screen content buffer to restore just
-                // the cursor's old patch of pixels from.
-                redraw = true;
-            }
-            Some(crate::mouse::MouseEvent::ScrollDown) => {
-                scroll_y = (scroll_y + LINE_SCROLL_STEP).min(max_scroll);
-                redraw = true;
-            }
-            Some(crate::mouse::MouseEvent::ScrollUp) => {
-                scroll_y = scroll_y.saturating_sub(LINE_SCROLL_STEP);
-                redraw = true;
-            }
-            Some(crate::mouse::MouseEvent::LeftDown) => {
-                let (mx, my) = (mouse_x as usize, mouse_y as usize);
-                if home.contains(mx, my) {
-                    return PageAction::Home;
+        // Drains every currently-queued mouse event before redrawing —
+        // redrawing a whole page is comparatively expensive, and a real
+        // PS/2 mouse queues many small-delta Move packets per screen
+        // refresh; redrawing per-event throttled the whole pipeline down
+        // to roughly one screen update per packet, which is what made
+        // the cursor feel unresponsive under real, fast mouse motion.
+        while let Some(event) = crate::mouse::poll_event() {
+            match event {
+                crate::mouse::MouseEvent::Move { dx, dy } => {
+                    mouse_x = (mouse_x + dx).clamp(0, screen_w as i32 - 1);
+                    mouse_y = (mouse_y + dy).clamp(0, screen_h as i32 - 1);
+                    // A full redraw per move (rather than a cheaper
+                    // draw-old-position-back/erase trick) is the simplest
+                    // correct way to keep the cursor visible without ever
+                    // leaving a trail behind it — this renderer has no
+                    // separate off-screen content buffer to restore just
+                    // the cursor's old patch of pixels from.
+                    redraw = true;
                 }
-                if let Some(region) = click_regions.iter().find(|r| mx >= r.x0 && mx < r.x1 && my >= r.y0 && my < r.y1) {
-                    return PageAction::Navigate(resolve_url(target, &region.href));
+                crate::mouse::MouseEvent::ScrollDown => {
+                    scroll_y = (scroll_y + LINE_SCROLL_STEP).min(max_scroll);
+                    redraw = true;
                 }
+                crate::mouse::MouseEvent::ScrollUp => {
+                    scroll_y = scroll_y.saturating_sub(LINE_SCROLL_STEP);
+                    redraw = true;
+                }
+                crate::mouse::MouseEvent::LeftDown => {
+                    let (mx, my) = (mouse_x as usize, mouse_y as usize);
+                    if home.contains(mx, my) {
+                        return PageAction::Home;
+                    }
+                    if let Some(region) = click_regions.iter().find(|r| mx >= r.x0 && mx < r.x1 && my >= r.y0 && my < r.y1) {
+                        return PageAction::Navigate(resolve_url(target, &region.href));
+                    }
+                }
+                crate::mouse::MouseEvent::LeftUp => {}
             }
-            Some(crate::mouse::MouseEvent::LeftUp) | None => {}
         }
 
         if !redraw {

@@ -154,41 +154,46 @@ pub async fn run(width: usize, height: usize) {
 
     loop {
         let mut redraw = false;
-        match crate::mouse::poll_event() {
-            Some(MouseEvent::Move { dx, dy }) => {
-                mouse_x = (mouse_x + dx).clamp(0, width as i32 - 1);
-                mouse_y = (mouse_y + dy).clamp(0, height as i32 - 1);
-                redraw = true;
-            }
-            Some(MouseEvent::LeftDown) => {
-                let (mx, my) = (mouse_x as usize, mouse_y as usize);
-                if home.contains(mx, my) {
-                    return;
+        // Drains every currently-queued mouse event before redrawing —
+        // see desktop.rs's `run` for why this matters for responsiveness
+        // under real, fast mouse motion.
+        while let Some(event) = crate::mouse::poll_event() {
+            match event {
+                MouseEvent::Move { dx, dy } => {
+                    mouse_x = (mouse_x + dx).clamp(0, width as i32 - 1);
+                    mouse_y = (mouse_y + dy).clamp(0, height as i32 - 1);
+                    redraw = true;
                 }
-                'hit: for (row, cells) in GRID.iter().enumerate() {
-                    for (col, label) in cells.iter().enumerate() {
-                        if label.is_empty() || !cell_rect(row, col).contains(mx, my) {
-                            continue;
-                        }
-                        match *label {
-                            "C" => expr.clear(),
-                            "DEL" => {
-                                expr.pop();
+                MouseEvent::LeftDown => {
+                    let (mx, my) = (mouse_x as usize, mouse_y as usize);
+                    if home.contains(mx, my) {
+                        return;
+                    }
+                    'hit: for (row, cells) in GRID.iter().enumerate() {
+                        for (col, label) in cells.iter().enumerate() {
+                            if label.is_empty() || !cell_rect(row, col).contains(mx, my) {
+                                continue;
                             }
-                            "=" => {
-                                expr = match evaluate(&expr) {
-                                    Some(v) => format_result(v),
-                                    None => String::from("Error"),
-                                };
+                            match *label {
+                                "C" => expr.clear(),
+                                "DEL" => {
+                                    expr.pop();
+                                }
+                                "=" => {
+                                    expr = match evaluate(&expr) {
+                                        Some(v) => format_result(v),
+                                        None => String::from("Error"),
+                                    };
+                                }
+                                token => expr.push_str(token),
                             }
-                            token => expr.push_str(token),
+                            redraw = true;
+                            break 'hit;
                         }
-                        redraw = true;
-                        break 'hit;
                     }
                 }
+                MouseEvent::LeftUp | MouseEvent::ScrollUp | MouseEvent::ScrollDown => {}
             }
-            Some(MouseEvent::LeftUp) | Some(MouseEvent::ScrollUp) | Some(MouseEvent::ScrollDown) | None => {}
         }
 
         if !redraw {

@@ -304,6 +304,20 @@ fn init_locked() -> bool {
         crate::serial_println!("mouse: no wheel support (or detection failed) — using 3-byte packets");
     }
 
+    // The wheel-detection magic sequence above (best-effort or not)
+    // leaves the device's actual sample rate at whichever value its last
+    // step happened to send (80 samples/sec) — an artifact of that
+    // handshake, not a deliberate choice, and a real bottleneck: at
+    // 80Hz the mouse can only ever report ~80 position updates a
+    // second no matter how fast it's physically moved, which reads as a
+    // sluggish, low-refresh-rate cursor even once IRQ delivery itself is
+    // working. Explicitly set it back up to the PS/2 maximum (200) now
+    // that detection is done. Best-effort like everything else here — a
+    // failure just leaves the mouse at whatever rate it already had.
+    if !send_mouse_command(MOUSE_SET_SAMPLE_RATE) || !send_mouse_command(200) {
+        crate::serial_println!("mouse: could not raise sample rate to 200/sec — leaving it as-is");
+    }
+
     // Step 6: turn on data reporting. From here on the mouse sends a
     // packet on every movement/button change, one byte per IRQ12.
     if !send_mouse_command(MOUSE_ENABLE_REPORTING) {
