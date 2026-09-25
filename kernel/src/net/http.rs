@@ -639,7 +639,7 @@ fn draw_at_scroll(resolved: &[ResolvedItem], bg: gfx::Color, content_x0: usize, 
             ResolvedItem::Text { text, style, href } => {
                 content_y += style.margin_top;
                 let pad = style.padding;
-                let x0 = (if style.align_center {
+                let mut x0 = (if style.align_center {
                     content_x0 + content_w.saturating_sub(text.len() * 8) / 2
                 } else {
                     content_x0
@@ -648,7 +648,34 @@ fn draw_at_scroll(resolved: &[ResolvedItem], bg: gfx::Color, content_x0: usize, 
                 let text_height = gfx::measure_wrapped_height(text, x0, right_edge - pad, style.size, weight);
                 let box_height = text_height + 2 * pad;
 
-                let screen_y = (content_y as isize) - (scroll_y as isize);
+                // `position` support: `Relative` nudges the normal-flow
+                // position by `top`/`left`; `Absolute`/`Fixed` draw at an
+                // explicit pixel position (relative to the content
+                // column's own top-left corner — this renderer has no
+                // containing-block tracking, so that's the one "positioned
+                // ancestor" every absolutely-positioned element gets) INSTEAD
+                // of the normal-flow one, with `Fixed` additionally staying
+                // put regardless of `scroll_y`, matching real `position:
+                // fixed`. The item still consumes its normal-flow vertical
+                // space either way (see `layout::ComputedStyle::position`'s
+                // doc comment for why that's a real, documented gap, not an
+                // oversight) — this only fixes WHERE it draws, not whether
+                // later content reflows around its absence.
+                let screen_y = match style.position {
+                    layout::Position::Static => (content_y as isize) - (scroll_y as isize),
+                    layout::Position::Relative => {
+                        x0 = (x0 as isize + style.offset_left).max(0) as usize;
+                        (content_y as isize) - (scroll_y as isize) + style.offset_top
+                    }
+                    layout::Position::Absolute => {
+                        x0 = (content_x0 as isize + style.offset_left).max(0) as usize + pad;
+                        style.offset_top - (scroll_y as isize)
+                    }
+                    layout::Position::Fixed => {
+                        x0 = (content_x0 as isize + style.offset_left).max(0) as usize + pad;
+                        style.offset_top
+                    }
+                };
                 if screen_y + box_height as isize >= 0 && screen_y <= viewport_h as isize {
                     let draw_y = screen_y.max(0) as usize;
                     let para_bg = if let Some(box_color) = style.background {

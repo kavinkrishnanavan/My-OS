@@ -117,6 +117,29 @@ pub struct ComputedStyle {
     pub bold: bool,
     pub size: FontSize,
     pub align_center: bool,
+    /// `position` plus its `top`/`left` offsets — real, if narrow, CSS
+    /// positioning: `Relative` nudges a paragraph from where it would
+    /// normally flow (it still occupies its normal-flow slot); `Absolute`/
+    /// `Fixed` draw it at an explicit pixel position instead of the
+    /// normal-flow one (`net/http.rs`'s `draw_at_scroll` — `Fixed`
+    /// additionally ignores `scroll_y`, staying glued to the viewport the
+    /// way real `position:fixed` does). What's NOT here: the item still
+    /// consumes its normal-flow vertical space even when absolutely/
+    /// fixed-positioned (real CSS removes it from flow entirely) — doing
+    /// that properly needs a real box model this renderer doesn't have;
+    /// this is "draws in the right place" without "reflows everything
+    /// else around its absence," a real but incomplete step.
+    pub position: Position,
+    pub offset_top: isize,
+    pub offset_left: isize,
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum Position {
+    Static,
+    Relative,
+    Absolute,
+    Fixed,
 }
 
 /// A reasonable default for ordinary body text — what a text node
@@ -137,6 +160,9 @@ fn default_style() -> ComputedStyle {
         bold: false,
         size: FontSize::Size16,
         align_center: false,
+        position: Position::Static,
+        offset_top: 0,
+        offset_left: 0,
     }
 }
 
@@ -258,7 +284,20 @@ fn compound_matches(node: &Node, sel: &CompoundSelector) -> bool {
 /// producing this element's own computed style. `color`/`bold`/`size`/
 /// `align_center` all inherit by default (matching real CSS inheritance
 /// for text-ish properties) when not explicitly set on this element.
-fn resolve_style(path: &[&Node], rules: &RuleIndex, inherited: ComputedStyle) -> ComputedStyle {
+/// Returns the resolved style plus the element's own cascade-resolved
+/// `display` value (`None` if nothing sets one) — computed together in
+/// one pass over the matching rules/inline declarations rather than two
+/// separate full scans (an earlier version had a standalone
+/// `declared_display` doing its own identical candidates()/inline scan;
+/// on a page with as many elements and rules as a real Wikipedia article
+/// that doubled this function's already-known-hot selector-matching
+/// cost — see `RuleIndex`'s own doc comment for the earlier performance
+/// cliff this exact kind of per-element O(rules) work caused — and
+/// turned a page load that used to take single-digit seconds into one
+/// that visibly stalled). `display` isn't a `ComputedStyle` field itself
+/// since nothing inherits it or needs it at draw time — only `walk`'s
+/// one "is this a flex/grid container" decision does.
+fn resolve_style(path: &[&Node], rules: &RuleIndex, inherited: ComputedStyle) -> (ComputedStyle, Option<String>) {
     let mut style = inherited;
     // background/margin do not inherit in real CSS — each element starts
     // fresh and only gets one from its OWN matched rules below.
@@ -267,11 +306,18 @@ fn resolve_style(path: &[&Node], rules: &RuleIndex, inherited: ComputedStyle) ->
     style.margin_bottom = 0;
     style.padding = 0;
     style.border_bottom = None;
+    style.position = Position::Static;
+    style.offset_top = 0;
+    style.offset_left = 0;
     let node = *path.last().expect("path is never empty");
+    let mut display = None;
 
     for rule in rules.candidates(&node.tag) {
         if rule.selectors.iter().any(|sel| selector_matches(path, sel)) {
             for decl in &rule.declarations {
+                if decl.property == "display" {
+                    display = Some(decl.value.trim().to_ascii_lowercase());
+                }
                 apply_declaration(&mut style, decl);
             }
         }
@@ -283,42 +329,15 @@ fn resolve_style(path: &[&Node], rules: &RuleIndex, inherited: ComputedStyle) ->
     if let Some(inline) = node.attr("style") {
         for decl_str in inline.split(';') {
             if let Some((prop, val)) = decl_str.split_once(':') {
-                apply_declaration(&mut style, &Declaration { property: prop.trim().to_ascii_lowercase(), value: val.trim().to_string() });
-            }
-        }
-    }
-    style
-}
-
-/// The final (cascade-resolved, inline-wins-last) value of the `display`
-/// property for the element at the end of `path`, or `None` if nothing
-/// sets one. Mirrors `resolve_style`'s own candidate/inline scan order —
-/// kept separate from `ComputedStyle` (rather than adding a `display`
-/// field there) since it's only needed at the one point `walk` decides
-/// "is this a flex/grid container", not for anything that inherits or
-/// gets drawn.
-fn declared_display(path: &[&Node], rules: &RuleIndex) -> Option<String> {
-    let node = *path.last().expect("path is never empty");
-    let mut display = None;
-    for rule in rules.candidates(&node.tag) {
-        if rule.selectors.iter().any(|sel| selector_matches(path, sel)) {
-            for decl in &rule.declarations {
-                if decl.property == "display" {
-                    display = Some(decl.value.trim().to_ascii_lowercase());
-                }
-            }
-        }
-    }
-    if let Some(inline) = node.attr("style") {
-        for decl_str in inline.split(';') {
-            if let Some((prop, val)) = decl_str.split_once(':') {
-                if prop.trim().eq_ignore_ascii_case("display") {
+                let prop = prop.trim().to_ascii_lowercase();
+                if prop == "display" {
                     display = Some(val.trim().to_ascii_lowercase());
                 }
+                apply_declaration(&mut style, &Declaration { property: prop, value: val.trim().to_string() });
             }
         }
     }
-    display
+    (style, display)
 }
 
 fn apply_declaration(style: &mut ComputedStyle, decl: &Declaration) {
@@ -400,6 +419,27 @@ fn apply_declaration(style: &mut ComputedStyle, decl: &Declaration) {
         "padding-top" | "padding-bottom" | "padding-left" | "padding-right" => {
             if let Some(px) = parse_px(&decl.value) {
                 style.padding = px;
+            }
+        }
+        // `sticky` behaves close enough to `static` for this renderer
+        // (no scroll-triggered re-pinning logic exists) to just leave it
+        // alone rather than mishandle it as `absolute`.
+        "position" => {
+            style.position = match decl.value.trim() {
+                "relative" => Position::Relative,
+                "absolute" => Position::Absolute,
+                "fixed" => Position::Fixed,
+                _ => Position::Static,
+            };
+        }
+        "top" => {
+            if let Some(px) = parse_px(&decl.value) {
+                style.offset_top = px as isize;
+            }
+        }
+        "left" => {
+            if let Some(px) = parse_px(&decl.value) {
+                style.offset_left = px as isize;
             }
         }
         "border-bottom" | "border" => {
@@ -627,15 +667,14 @@ fn walk<'a>(node: &'a Node, rules: &RuleIndex, inherited: ComputedStyle, path: &
     if node.tag == "table" {
         flush(state, out);
         path.push(node);
-        let style = resolve_style(path, rules, inherited);
+        let (style, _) = resolve_style(path, rules, inherited);
         walk_table_rows(node, rules, style, path, out);
         path.pop();
         return;
     }
 
     path.push(node);
-    let style = resolve_style(path, rules, inherited);
-    let display = declared_display(path, rules);
+    let (style, display) = resolve_style(path, rules, inherited);
     let display_none = display.as_deref() == Some("none");
     // `display: flex`/`inline-flex`/`grid`/`inline-grid` (the default,
     // row-direction case — `flex-direction: column`/explicit multi-row
@@ -707,7 +746,7 @@ fn walk_table_rows<'a>(node: &'a Node, rules: &RuleIndex, inherited: ComputedSty
             .collect();
         if !cells.is_empty() {
             path.push(node);
-            let style = resolve_style(path, rules, inherited);
+            let (style, _) = resolve_style(path, rules, inherited);
             path.pop();
             out.push(LayoutItem::TableRow { cells, style });
         }
@@ -718,7 +757,7 @@ fn walk_table_rows<'a>(node: &'a Node, rules: &RuleIndex, inherited: ComputedSty
             continue;
         }
         path.push(child);
-        let style = resolve_style(path, rules, inherited);
+        let (style, _) = resolve_style(path, rules, inherited);
         walk_table_rows(child, rules, style, path, out);
         path.pop();
     }
@@ -836,7 +875,7 @@ pub fn page_background(root: &Node, rules: &RuleIndex) -> Color {
     let target = find(root, "body").or_else(|| find(root, "html")).unwrap_or(root);
     let mut path = Vec::new();
     build_path(root, target as *const Node, &mut path);
-    resolve_style(&path, rules, default_style()).background.unwrap_or(Color(0xea, 0xea, 0xea))
+    resolve_style(&path, rules, default_style()).0.background.unwrap_or(Color(0xea, 0xea, 0xea))
 }
 
 /// Resolves the content column width from `<body>`'s (falling back to
