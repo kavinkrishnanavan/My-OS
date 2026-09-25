@@ -156,12 +156,19 @@ pub async fn run(width: usize, height: usize) {
 
     draw(&game, width, height);
     if let Some(fb) = gfx::SCREEN.lock().as_mut() {
+        // Snapshotted so a cursor-only redraw (the mouse moved between
+        // game ticks, with no direction change or step) is a cheap
+        // restore instead of re-running draw() — most redraws here are
+        // still full game-state redraws (a real-time tick every
+        // STEP_NS), this just avoids extra ones squeezed in between.
+        fb.save_content();
         fb.draw_cursor(mouse_x as usize, mouse_y as usize);
         fb.present();
     }
 
     loop {
-        let mut redraw = false;
+        let mut content_dirty = false;
+        let mut cursor_dirty = false;
 
         match keyboard::pop_key() {
             Some(keyboard::KEY_UP) => game.set_dir(Dir::Up),
@@ -171,7 +178,7 @@ pub async fn run(width: usize, height: usize) {
             Some(_) if game.over => {
                 game = Game::new(cols, rows);
                 last_step_ns = tsc::now_ns();
-                redraw = true;
+                content_dirty = true;
             }
             _ => {}
         }
@@ -184,7 +191,7 @@ pub async fn run(width: usize, height: usize) {
                 MouseEvent::Move { dx, dy } => {
                     mouse_x = (mouse_x + dx).clamp(0, width as i32 - 1);
                     mouse_y = (mouse_y + dy).clamp(0, height as i32 - 1);
-                    redraw = true;
+                    cursor_dirty = true;
                 }
                 MouseEvent::LeftDown => {
                     if home.contains(mouse_x as usize, mouse_y as usize) {
@@ -199,17 +206,24 @@ pub async fn run(width: usize, height: usize) {
         if !game.over && now.saturating_sub(last_step_ns) >= STEP_NS {
             game.step();
             last_step_ns = now;
-            redraw = true;
+            content_dirty = true;
         }
 
-        if !redraw {
+        if content_dirty {
+            draw(&game, width, height);
+            if let Some(fb) = gfx::SCREEN.lock().as_mut() {
+                fb.save_content();
+                fb.draw_cursor(mouse_x as usize, mouse_y as usize);
+                fb.present();
+            }
+        } else if cursor_dirty {
+            if let Some(fb) = gfx::SCREEN.lock().as_mut() {
+                fb.restore_content();
+                fb.draw_cursor(mouse_x as usize, mouse_y as usize);
+                fb.present();
+            }
+        } else {
             net_tick().await;
-            continue;
-        }
-        draw(&game, width, height);
-        if let Some(fb) = gfx::SCREEN.lock().as_mut() {
-            fb.draw_cursor(mouse_x as usize, mouse_y as usize);
-            fb.present();
         }
     }
 }

@@ -205,6 +205,13 @@ pub async fn run() -> ! {
         let mut mouse_x: i32 = (width / 2) as i32;
         let mut mouse_y: i32 = (height - TASKBAR_HEIGHT / 2) as i32;
         if let Some(fb) = gfx::SCREEN.lock().as_mut() {
+            // Nothing in this loop below ever changes the desktop's own
+            // content (a click either launches an app — leaving this loop
+            // entirely — or does nothing visible), only the cursor
+            // position, so the content is only ever drawn once here and
+            // snapshotted; every redraw after this is just a cheap
+            // restore_content + cursor draw, not a full desktop re-blit.
+            fb.save_content();
             fb.draw_cursor(mouse_x as usize, mouse_y as usize);
             fb.present();
         }
@@ -240,7 +247,7 @@ pub async fn run() -> ! {
 
             if redraw {
                 if let Some(fb) = gfx::SCREEN.lock().as_mut() {
-                    draw_desktop(fb, width, height);
+                    fb.restore_content();
                     fb.draw_cursor(mouse_x as usize, mouse_y as usize);
                     fb.present();
                 }

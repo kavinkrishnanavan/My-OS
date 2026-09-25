@@ -32,6 +32,21 @@ pub static SCREEN: Mutex<Option<Framebuffer>> = Mutex::new(None);
 pub struct Framebuffer {
     buffer: &'static mut [u8],
     back_buffer: Vec<u8>,
+    /// A snapshot of `back_buffer` taken right after real content (page
+    /// text/images/taskbar/etc, everything except the cursor) was last
+    /// fully redrawn — see `save_content`/`restore_content`. Lets a
+    /// caller whose only change since the last frame is "the cursor
+    /// moved" skip re-running its whole (potentially expensive, e.g. a
+    /// full page's worth of text items) draw routine and instead just
+    /// restore this snapshot (one fast contiguous copy) before drawing
+    /// the cursor on top of it. Without this, every single mouse Move
+    /// event — even just a few pixels, even with no scroll or click
+    /// involved — forced a full page re-render, which is genuinely slow
+    /// for a real page with many items; that's what made the Browser
+    /// specifically feel unresponsive even after event coalescing (which
+    /// only reduces how *often* a redraw happens, not how much work
+    /// each individual redraw does).
+    content_buffer: Vec<u8>,
     info: FrameBufferInfo,
 }
 
@@ -44,7 +59,8 @@ pub const GRAY: Color = Color(0x90, 0x90, 0x98);
 impl Framebuffer {
     pub fn new(buffer: &'static mut [u8], info: FrameBufferInfo) -> Self {
         let back_buffer = vec![0u8; buffer.len()];
-        Framebuffer { buffer, back_buffer, info }
+        let content_buffer = back_buffer.clone();
+        Framebuffer { buffer, back_buffer, content_buffer, info }
     }
 
     pub fn width(&self) -> usize {
@@ -62,6 +78,22 @@ impl Framebuffer {
     /// on screen at all.
     pub fn present(&mut self) {
         self.buffer.copy_from_slice(&self.back_buffer);
+    }
+
+    /// Snapshots the current back buffer as "the real content, cursor not
+    /// yet drawn" — call this right after a full content redraw, before
+    /// drawing the cursor on top of it.
+    pub fn save_content(&mut self) {
+        self.content_buffer.copy_from_slice(&self.back_buffer);
+    }
+
+    /// Restores the back buffer to the last `save_content` snapshot — a
+    /// cheap way to undo a previous frame's cursor draw before drawing
+    /// the cursor again at its new position, without re-running whatever
+    /// (potentially expensive) drawing produced the content in the first
+    /// place.
+    pub fn restore_content(&mut self) {
+        self.back_buffer.copy_from_slice(&self.content_buffer);
     }
 
     fn put_pixel(&mut self, x: usize, y: usize, color: Color) {

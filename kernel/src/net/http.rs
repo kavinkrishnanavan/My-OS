@@ -296,6 +296,14 @@ fn render_status(msg: &str, viewport_h: usize) {
         let w = fb.width();
         fb.fill_rect(0, 0, w, viewport_h, gfx::BLACK);
         fb.draw_wrapped(msg, MARGIN, MARGIN, w - MARGIN, gfx::GRAY, gfx::BLACK, RasterHeight::Size16);
+        // Every status screen used to skip drawing a cursor at all — a
+        // real page's DNS/connect/parse/stylesheet fetch can easily take
+        // tens of seconds over this kernel's own TCP/TLS stack, and for
+        // that whole stretch the mouse pointer was simply invisible.
+        // Not yet interactive here (nothing polls mouse events during
+        // these network waits), but at least visible — centered, since
+        // there's no tracked real position yet this early.
+        fb.draw_cursor(w / 2, viewport_h / 2);
         fb.present();
     }
 }
@@ -334,6 +342,21 @@ enum PageAction {
 /// spin loop). `home` is the desktop taskbar's Home button rect, checked
 /// on every click alongside the page's own link regions.
 async fn render_page(target: &Url<'_>, html_src: &str, viewport_h: usize, home: Rect) -> PageAction {
+    let (screen_w, screen_h) = {
+        let mut guard = gfx::SCREEN.lock();
+        let Some(fb) = guard.as_mut() else { return PageAction::Done };
+        (fb.width(), fb.height())
+    };
+    // Tracked from here (not just once the page is fully loaded) and
+    // drawn on every status update below — a real page's DNS/connect/
+    // parse/stylesheet/image fetches can take a long time (tens of
+    // seconds isn't unusual for a real site over this kernel's own
+    // TCP/TLS stack), and none of those status screens used to draw a
+    // cursor at all, so the mouse pointer was simply invisible for that
+    // entire stretch. Not yet interactive during loading (the fetch
+    // loops below don't poll mouse events), but at least visible.
+    let mut mouse_x: i32 = (screen_w / 2) as i32;
+    let mut mouse_y: i32 = (viewport_h / 2) as i32;
     render_status("Parsing page...", viewport_h);
     let dom_root = crate::dom::parse(html_src);
 
@@ -348,11 +371,8 @@ async fn render_page(target: &Url<'_>, html_src: &str, viewport_h: usize, home: 
     let no_css = layout::build_rules("");
     let quick_items = layout::flatten(&dom_root, &no_css);
     let quick_bg = layout::page_background(&dom_root, &no_css);
-    let (screen_w, screen_h, quick_x0, quick_w) = {
-        let mut guard = gfx::SCREEN.lock();
-        let Some(fb) = guard.as_mut() else { return PageAction::Done };
-        (fb.width(), fb.height(), MARGIN, fb.width() - 2 * MARGIN)
-    };
+    let quick_x0 = MARGIN;
+    let quick_w = screen_w - 2 * MARGIN;
     let quick_resolved: Vec<ResolvedItem> = quick_items
         .into_iter()
         .filter_map(|item| match item {
@@ -363,6 +383,7 @@ async fn render_page(target: &Url<'_>, html_src: &str, viewport_h: usize, home: 
         .collect();
     draw_at_scroll(&quick_resolved, quick_bg, quick_x0, quick_w, viewport_h, 0);
     if let Some(fb) = gfx::SCREEN.lock().as_mut() {
+        fb.draw_cursor(mouse_x as usize, mouse_y as usize);
         fb.present();
     }
 
@@ -439,13 +460,14 @@ async fn render_page(target: &Url<'_>, html_src: &str, viewport_h: usize, home: 
     // `scroll_y` proportionally instead of just moving the cursor.
     let mut dragging_scrollbar = false;
 
-    // Mouse position is tracked here (not in `mouse.rs`, which only
-    // reports relative deltas) since only this loop knows the viewport
-    // bounds to clamp against. Starts centered — a PS/2 mouse has no
-    // concept of absolute position to report on its own.
-    let mut mouse_x: i32 = (screen_w / 2) as i32;
-    let mut mouse_y: i32 = (viewport_h / 2) as i32;
+    // `mouse_x`/`mouse_y` (not in `mouse.rs`, which only reports relative
+    // deltas — only this loop knows the viewport bounds to clamp
+    // against) were already tracked from the very top of this function,
+    // so no re-centering needed here — just snapshot the freshly-drawn
+    // content (so `restore_content` below has something real to fall
+    // back to) and draw the cursor on top of it.
     if let Some(fb) = gfx::SCREEN.lock().as_mut() {
+        fb.save_content();
         fb.draw_cursor(mouse_x as usize, mouse_y as usize);
         fb.present();
     }
@@ -458,23 +480,37 @@ async fn render_page(target: &Url<'_>, html_src: &str, viewport_h: usize, home: 
     // file, just driven by the keyboard/mouse buffers instead of a
     // socket.
     loop {
-        let mut redraw = false;
+        // Two separate dirty flags, not one: `content_dirty` means the
+        // page itself changed (scrolled) and needs a full, comparatively
+        // expensive `draw_at_scroll` re-render; `cursor_dirty` means only
+        // the mouse position changed, which — now that there's a
+        // `save_content`/`restore_content` snapshot to fall back to —
+        // only needs a cheap buffer copy plus a cursor draw, not a full
+        // page re-render. Before this split, EVERY mouse Move triggered a
+        // full `draw_at_scroll` (re-wrapping and re-drawing every text
+        // item, image, and table row currently on screen) just to shift
+        // the cursor a few pixels — genuinely slow for a real page with
+        // many items, which is what made the Browser specifically feel
+        // sluggish even after event-coalescing already cut down how
+        // *often* a redraw happens.
+        let mut content_dirty = false;
+        let mut cursor_dirty = false;
         match crate::keyboard::pop_key() {
             Some(crate::keyboard::KEY_DOWN) => {
                 scroll_y = (scroll_y + LINE_SCROLL_STEP).min(max_scroll);
-                redraw = true;
+                content_dirty = true;
             }
             Some(crate::keyboard::KEY_UP) => {
                 scroll_y = scroll_y.saturating_sub(LINE_SCROLL_STEP);
-                redraw = true;
+                content_dirty = true;
             }
             Some(crate::keyboard::KEY_PAGE_DOWN) => {
                 scroll_y = (scroll_y + viewport_h).min(max_scroll);
-                redraw = true;
+                content_dirty = true;
             }
             Some(crate::keyboard::KEY_PAGE_UP) => {
                 scroll_y = scroll_y.saturating_sub(viewport_h);
-                redraw = true;
+                content_dirty = true;
             }
             Some(_) | None => {}
         }
@@ -490,29 +526,24 @@ async fn render_page(target: &Url<'_>, html_src: &str, viewport_h: usize, home: 
                 crate::mouse::MouseEvent::Move { dx, dy } => {
                     mouse_x = (mouse_x + dx).clamp(0, screen_w as i32 - 1);
                     mouse_y = (mouse_y + dy).clamp(0, screen_h as i32 - 1);
+                    cursor_dirty = true;
                     if dragging_scrollbar && max_scroll > 0 {
                         let thumb_h = ((viewport_h * viewport_h) / content_height.max(1)).clamp(SCROLLBAR_MIN_THUMB, viewport_h);
                         let free = viewport_h.saturating_sub(thumb_h);
                         if free > 0 {
                             let delta_scroll = (dy as isize * max_scroll as isize) / free as isize;
                             scroll_y = (scroll_y as isize + delta_scroll).clamp(0, max_scroll as isize) as usize;
+                            content_dirty = true;
                         }
                     }
-                    // A full redraw per move (rather than a cheaper
-                    // draw-old-position-back/erase trick) is the simplest
-                    // correct way to keep the cursor visible without ever
-                    // leaving a trail behind it — this renderer has no
-                    // separate off-screen content buffer to restore just
-                    // the cursor's old patch of pixels from.
-                    redraw = true;
                 }
                 crate::mouse::MouseEvent::ScrollDown => {
                     scroll_y = (scroll_y + LINE_SCROLL_STEP).min(max_scroll);
-                    redraw = true;
+                    content_dirty = true;
                 }
                 crate::mouse::MouseEvent::ScrollUp => {
                     scroll_y = scroll_y.saturating_sub(LINE_SCROLL_STEP);
-                    redraw = true;
+                    content_dirty = true;
                 }
                 crate::mouse::MouseEvent::LeftDown => {
                     let (mx, my) = (mouse_x as usize, mouse_y as usize);
@@ -532,7 +563,7 @@ async fn render_page(target: &Url<'_>, html_src: &str, viewport_h: usize, home: 
                             let thumb_y = my.saturating_sub(thumb_h / 2).min(free);
                             scroll_y = (thumb_y * max_scroll) / free;
                         }
-                        redraw = true;
+                        content_dirty = true;
                         continue;
                     }
                     if let Some(region) = click_regions.iter().find(|r| mx >= r.x0 && mx < r.x1 && my >= r.y0 && my < r.y1) {
@@ -545,15 +576,22 @@ async fn render_page(target: &Url<'_>, html_src: &str, viewport_h: usize, home: 
             }
         }
 
-        if !redraw {
+        if content_dirty {
+            let (_, regions) = draw_at_scroll(&resolved, bg, content_x0, content_w, viewport_h, scroll_y);
+            click_regions = regions;
+            if let Some(fb) = gfx::SCREEN.lock().as_mut() {
+                fb.save_content();
+                fb.draw_cursor(mouse_x as usize, mouse_y as usize);
+                fb.present();
+            }
+        } else if cursor_dirty {
+            if let Some(fb) = gfx::SCREEN.lock().as_mut() {
+                fb.restore_content();
+                fb.draw_cursor(mouse_x as usize, mouse_y as usize);
+                fb.present();
+            }
+        } else {
             net_tick().await;
-            continue;
-        }
-        let (_, regions) = draw_at_scroll(&resolved, bg, content_x0, content_w, viewport_h, scroll_y);
-        click_regions = regions;
-        if let Some(fb) = gfx::SCREEN.lock().as_mut() {
-            fb.draw_cursor(mouse_x as usize, mouse_y as usize);
-            fb.present();
         }
     }
 }

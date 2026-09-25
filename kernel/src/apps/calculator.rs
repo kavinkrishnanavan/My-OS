@@ -149,12 +149,19 @@ pub async fn run(width: usize, height: usize) {
 
     draw(&expr, width, height);
     if let Some(fb) = gfx::SCREEN.lock().as_mut() {
+        // Only a button click changes this app's content; a plain cursor
+        // move never does, so it's snapshotted once here and every
+        // cursor-only redraw below is a cheap restore instead of
+        // re-running draw() (the whole grid + display) just to move the
+        // cursor.
+        fb.save_content();
         fb.draw_cursor(mouse_x as usize, mouse_y as usize);
         fb.present();
     }
 
     loop {
-        let mut redraw = false;
+        let mut content_dirty = false;
+        let mut cursor_dirty = false;
         // Drains every currently-queued mouse event before redrawing —
         // see desktop.rs's `run` for why this matters for responsiveness
         // under real, fast mouse motion.
@@ -163,7 +170,7 @@ pub async fn run(width: usize, height: usize) {
                 MouseEvent::Move { dx, dy } => {
                     mouse_x = (mouse_x + dx).clamp(0, width as i32 - 1);
                     mouse_y = (mouse_y + dy).clamp(0, height as i32 - 1);
-                    redraw = true;
+                    cursor_dirty = true;
                 }
                 MouseEvent::LeftDown => {
                     let (mx, my) = (mouse_x as usize, mouse_y as usize);
@@ -188,7 +195,7 @@ pub async fn run(width: usize, height: usize) {
                                 }
                                 token => expr.push_str(token),
                             }
-                            redraw = true;
+                            content_dirty = true;
                             break 'hit;
                         }
                     }
@@ -197,14 +204,21 @@ pub async fn run(width: usize, height: usize) {
             }
         }
 
-        if !redraw {
+        if content_dirty {
+            draw(&expr, width, height);
+            if let Some(fb) = gfx::SCREEN.lock().as_mut() {
+                fb.save_content();
+                fb.draw_cursor(mouse_x as usize, mouse_y as usize);
+                fb.present();
+            }
+        } else if cursor_dirty {
+            if let Some(fb) = gfx::SCREEN.lock().as_mut() {
+                fb.restore_content();
+                fb.draw_cursor(mouse_x as usize, mouse_y as usize);
+                fb.present();
+            }
+        } else {
             net_tick().await;
-            continue;
-        }
-        draw(&expr, width, height);
-        if let Some(fb) = gfx::SCREEN.lock().as_mut() {
-            fb.draw_cursor(mouse_x as usize, mouse_y as usize);
-            fb.present();
         }
     }
 }
