@@ -290,6 +290,37 @@ fn resolve_style(path: &[&Node], rules: &RuleIndex, inherited: ComputedStyle) ->
     style
 }
 
+/// The final (cascade-resolved, inline-wins-last) value of the `display`
+/// property for the element at the end of `path`, or `None` if nothing
+/// sets one. Mirrors `resolve_style`'s own candidate/inline scan order —
+/// kept separate from `ComputedStyle` (rather than adding a `display`
+/// field there) since it's only needed at the one point `walk` decides
+/// "is this a flex/grid container", not for anything that inherits or
+/// gets drawn.
+fn declared_display(path: &[&Node], rules: &RuleIndex) -> Option<String> {
+    let node = *path.last().expect("path is never empty");
+    let mut display = None;
+    for rule in rules.candidates(&node.tag) {
+        if rule.selectors.iter().any(|sel| selector_matches(path, sel)) {
+            for decl in &rule.declarations {
+                if decl.property == "display" {
+                    display = Some(decl.value.trim().to_ascii_lowercase());
+                }
+            }
+        }
+    }
+    if let Some(inline) = node.attr("style") {
+        for decl_str in inline.split(';') {
+            if let Some((prop, val)) = decl_str.split_once(':') {
+                if prop.trim().eq_ignore_ascii_case("display") {
+                    display = Some(val.trim().to_ascii_lowercase());
+                }
+            }
+        }
+    }
+    display
+}
+
 fn apply_declaration(style: &mut ComputedStyle, decl: &Declaration) {
     match decl.property.as_str() {
         "color" => {
@@ -604,11 +635,27 @@ fn walk<'a>(node: &'a Node, rules: &RuleIndex, inherited: ComputedStyle, path: &
 
     path.push(node);
     let style = resolve_style(path, rules, inherited);
-    let display_none = node.attr("style").is_some_and(|s| s.contains("display:none") || s.contains("display: none"))
-        || rules.candidates(&node.tag).any(|r| {
-            r.selectors.iter().any(|s| selector_matches(path, s))
-                && r.declarations.iter().any(|d| d.property == "display" && d.value.trim() == "none")
-        });
+    let display = declared_display(path, rules);
+    let display_none = display.as_deref() == Some("none");
+    // `display: flex`/`inline-flex`/`grid`/`inline-grid` (the default,
+    // row-direction case — `flex-direction: column`/explicit multi-row
+    // grid placement isn't tracked) is approximated as a single row of
+    // columns, one per direct child, reusing exactly the same rendering
+    // `walk_table_rows` already gives real `<table>`s: not a real 2D box
+    // model (no wrapping onto multiple rows, no flex-grow/shrink/basis,
+    // no grid-template-columns track sizing), but a real visual
+    // side-by-side layout instead of every flex/grid child just
+    // stacking vertically like any other block — which is what every
+    // flex/grid container looked like before this, and modern real-world
+    // pages use flex/grid constantly for exactly this kind of layout
+    // (nav bars, card rows, button groups).
+    let is_flex_or_grid = matches!(display.as_deref(), Some("flex") | Some("inline-flex") | Some("grid") | Some("inline-grid"));
+    if is_flex_or_grid && !display_none {
+        flush(state, out);
+        walk_flex_row(node, style, out);
+        path.pop();
+        return;
+    }
 
     if !display_none {
         // A real `<a href>` gets its own flush boundary same as a block
@@ -674,6 +721,29 @@ fn walk_table_rows<'a>(node: &'a Node, rules: &RuleIndex, inherited: ComputedSty
         let style = resolve_style(path, rules, inherited);
         walk_table_rows(child, rules, style, path, out);
         path.pop();
+    }
+}
+
+/// Reduces a `display:flex`/`display:grid` container to one
+/// `LayoutItem::TableRow` — one column per direct element child (text-
+/// only children, and whitespace-only text nodes, are skipped: a flex
+/// container's direct children are almost always element wrappers, and
+/// bare text would just show up as a single-column row of its own,
+/// which is more confusing than useful here). Same simplification
+/// `walk_table_rows` already makes for real tables, reused as-is rather
+/// than duplicated: a flex/grid row IS structurally a table row here
+/// (a horizontal strip of independently-wrapped cells), just arrived at
+/// via `display` instead of `<table>`/`<tr>`.
+fn walk_flex_row(node: &Node, style: ComputedStyle, out: &mut Vec<LayoutItem>) {
+    let cells: Vec<String> = node
+        .children
+        .iter()
+        .filter(|c| !c.tag.is_empty() && !is_never_rendered(&c.tag))
+        .map(cell_text)
+        .filter(|text| !text.is_empty())
+        .collect();
+    if !cells.is_empty() {
+        out.push(LayoutItem::TableRow { cells, style });
     }
 }
 
