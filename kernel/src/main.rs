@@ -31,6 +31,7 @@ mod keyboard;
 mod layout;
 mod memory;
 mod mmap;
+mod mouse;
 mod net;
 mod pci;
 mod pipe;
@@ -82,6 +83,19 @@ fn kernel_main(boot_info: &'static mut BootInfo) -> ! {
     task::thread::init();
     tsc::init();
     serial_println!("cpu: GDT/IDT/PIT/FPU online, interrupts enabled");
+
+    // Unlike the keyboard (always unmasked unconditionally — see
+    // interrupts.rs), a PS/2 mouse needs its own enable handshake before
+    // it sends anything, and might not even be present (some QEMU
+    // configs, some real hardware) — only unmask IRQ12 if that handshake
+    // actually succeeded, mirroring how the NIC driver owns unmasking
+    // its own (PCI-scanned) line.
+    if mouse::init() {
+        interrupts::unmask_irq(12);
+        serial_println!("mouse: PS/2 mouse online");
+    } else {
+        serial_println!("mouse: no PS/2 mouse detected");
+    }
 
     // Temporary: prove preemption is real (not just cooperative
     // yielding) by spawning kernel threads that print on their own,

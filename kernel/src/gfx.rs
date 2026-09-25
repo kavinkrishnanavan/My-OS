@@ -96,25 +96,49 @@ impl Framebuffer {
         }
     }
 
-    /// Draws `bitmap` with its top-left corner at `(x0, y0)`, downscaled
+    /// Draws `bitmap` with its top-left corner at `(x0, y0)`, scaled
     /// (nearest-neighbor — no filtering hardware or FPU budget for
-    /// anything fancier here) to fit within `max_w` if it's wider than
-    /// that. Returns the y-coordinate just below the drawn image.
-    pub fn draw_bitmap(&mut self, bitmap: &crate::img::Bitmap, x0: usize, y0: usize, max_w: usize) -> usize {
-        let (draw_w, draw_h) = match bitmap_draw_size(bitmap, max_w) {
-            Some(size) => size,
-            None => return y0,
-        };
-
-        for y in 0..draw_h {
-            let src_y = (y * bitmap.height) / draw_h;
-            for x in 0..draw_w {
-                let src_x = (x * bitmap.width) / draw_w;
+    /// anything fancier here) to an EXACT `(target_w, target_h)` — up or
+    /// down — rather than only capping an oversized image. `net/http.rs`
+    /// computes `target_w`/`target_h` from the page's own declared
+    /// on-page size when it has one (a real Wikipedia-style thumbnail is
+    /// typically encoded far larger than its intended display size, so
+    /// "fit to column if too wide" isn't the right rule at all — the
+    /// page's own size should win), falling back to `bitmap_draw_size`'s
+    /// fit-to-column sizing when the page doesn't declare one.
+    pub fn draw_bitmap_scaled(&mut self, bitmap: &crate::img::Bitmap, x0: usize, y0: usize, target_w: usize, target_h: usize) {
+        if bitmap.width == 0 || bitmap.height == 0 || target_w == 0 || target_h == 0 {
+            return;
+        }
+        for y in 0..target_h {
+            let src_y = (y * bitmap.height) / target_h;
+            for x in 0..target_w {
+                let src_x = (x * bitmap.width) / target_w;
                 let color = bitmap.pixels[src_y * bitmap.width + src_x];
                 self.put_pixel(x0 + x, y0 + y, color);
             }
         }
-        y0 + draw_h
+    }
+
+    /// Draws a simple filled-arrow mouse cursor with its hotspot (the
+    /// point that's actually "where the mouse is") at `(x, y)` — a
+    /// growing-triangle silhouette with a light outline on its trailing
+    /// edge, so it stays visible against light AND dark page
+    /// backgrounds alike (a page's own content color can't be known
+    /// generically here). Always drawn last, on top of everything else
+    /// (`net/http.rs` calls this immediately after `draw_at_scroll`).
+    pub fn draw_cursor(&mut self, x: usize, y: usize) {
+        const HEIGHT: usize = 14;
+        const FILL: Color = Color(0x10, 0x10, 0x10);
+        const OUTLINE: Color = Color(0xf5, 0xf5, 0xf5);
+        for row in 0..HEIGHT {
+            let width = (row + 1).min(9);
+            for col in 0..width {
+                let on_edge = col == width - 1 || row == HEIGHT - 1;
+                let color = if on_edge { OUTLINE } else { FILL };
+                self.put_pixel(x + col, y + row, color);
+            }
+        }
     }
 
     /// Draws `text` starting at `(x0, y0)`, word-wrapping at `max_x`, and

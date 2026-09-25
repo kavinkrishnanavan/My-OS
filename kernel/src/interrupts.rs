@@ -17,7 +17,7 @@
 //! restore the registers, `iretq`. Stable naked functions
 //! (`#[unsafe(naked)]` + `naked_asm!`) make this workable without nightly.
 
-use crate::{gdt, keyboard, net, pci, rtc, serial_println, task::time};
+use crate::{gdt, keyboard, mouse, net, pci, rtc, serial_println, task::time};
 use core::arch::naked_asm;
 use lazy_static::lazy_static;
 use pic8259::ChainedPics;
@@ -185,6 +185,7 @@ extern "C" fn timer_trampoline() {
 
 trampoline_return!(nic_trampoline, nic_interrupt_handler);
 trampoline_return!(keyboard_trampoline, keyboard_interrupt_handler);
+trampoline_return!(mouse_trampoline, mouse_interrupt_handler);
 trampoline_return!(breakpoint_trampoline, breakpoint_handler);
 trampoline_diverging_errcode!(double_fault_trampoline, double_fault_handler);
 trampoline_diverging_errcode!(page_fault_trampoline, page_fault_handler);
@@ -275,6 +276,16 @@ lazy_static! {
             // it's on), so this is unmasked unconditionally in `init()`
             // rather than waiting for a driver's own init call.
             idt[PIC_1_OFFSET + 1].set_handler_addr(fn_addr(keyboard_trampoline));
+            // IRQ12: the legacy PS/2 mouse (auxiliary) port — on the
+            // SECONDARY PIC (IRQ8-15), unlike the keyboard's IRQ1, hence
+            // `PIC_2_OFFSET` here not `PIC_1_OFFSET`. Registered
+            // unconditionally (a handler must exist before anything
+            // could fire), but — unlike the keyboard — NOT unmasked
+            // here: a real PS/2 mouse needs its own enable handshake
+            // (`mouse::init`, called from `main.rs`) before it starts
+            // sending anything, and doing that handshake is itself
+            // polled I/O that has nothing to do with this IDT setup.
+            idt[PIC_2_OFFSET + 4].set_handler_addr(fn_addr(mouse_trampoline));
             // DPL 3: without this, ring-3 code executing `int 0x80` gets
             // an immediate #GP instead of reaching our handler — IDT
             // gates default to DPL 0, i.e. "only the kernel may invoke
@@ -823,6 +834,16 @@ extern "C" fn keyboard_interrupt_handler(_frame: *const RawInterruptFrame) {
     keyboard::on_irq();
     unsafe {
         PICS.lock().notify_end_of_interrupt(PIC_1_OFFSET + 1);
+    }
+}
+
+extern "C" fn mouse_interrupt_handler(_frame: *const RawInterruptFrame) {
+    mouse::on_irq();
+    unsafe {
+        // IRQ12 lives on the secondary PIC — same "EOI the vector that
+        // actually fired, so the crate notifies both cascaded PICs"
+        // reasoning `nic_interrupt_handler`'s own doc comment explains.
+        PICS.lock().notify_end_of_interrupt(PIC_2_OFFSET + 4);
     }
 }
 

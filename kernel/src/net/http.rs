@@ -68,63 +68,75 @@ pub async fn fetch(url: &'static str) {
     }
 
     let mut current = String::from(url);
-    for redirect in 0..=MAX_REDIRECTS {
-        let target = parse_url(&current);
+    // Outer loop: user-driven navigation (clicking a link inside
+    // `render_page`, which returns the clicked-through URL instead of
+    // ever returning normally on its own) — unbounded, since there's no
+    // sense in which "the user clicked too many links" should ever stop
+    // working. The inner loop is the *existing*, still-bounded
+    // (`MAX_REDIRECTS`) HTTP-redirect-following logic for a single
+    // navigation — a real 3xx-loop protection, a different concept from
+    // "how many pages has the user visited this session".
+    'navigate: loop {
+        for redirect in 0..=MAX_REDIRECTS {
+            let target = parse_url(&current);
 
-        render_status(&format!("Resolving {}...", target.host));
-        serial_println!("http: resolving {}", target.host);
-        let ip = match resolve(target.host).await {
-            Some(ip) => ip,
-            None => {
-                render_status(&format!("Could not resolve {}", target.host));
-                serial_println!("http: DNS resolution for {} failed", target.host);
-                return;
+            render_status(&format!("Resolving {}...", target.host));
+            serial_println!("http: resolving {}", target.host);
+            let ip = match resolve(target.host).await {
+                Some(ip) => ip,
+                None => {
+                    render_status(&format!("Could not resolve {}", target.host));
+                    serial_println!("http: DNS resolution for {} failed", target.host);
+                    return;
+                }
+            };
+            serial_println!("http: {} -> {}", target.host, ip);
+
+            render_status(&format!(
+                "Connecting to {} ({ip}) over {}...",
+                target.host,
+                if target.https { "TLS" } else { "plain HTTP" }
+            ));
+            let response = match get(ip, &target).await {
+                Ok(body) => body,
+                Err(e) => {
+                    render_status(&format!("Request to {} failed: {e}", target.host));
+                    serial_println!("http: request failed: {}", e);
+                    return;
+                }
+            };
+            serial_println!("http: received {} bytes", response.len());
+
+            let (headers, body) = split_headers_body(&response);
+
+            if let Some(location) = redirect_location(headers) {
+                if redirect == MAX_REDIRECTS {
+                    render_status("Too many redirects");
+                    serial_println!("http: too many redirects, giving up at {}", location);
+                    return;
+                }
+                let next = resolve_url(&target, location);
+                serial_println!("http: redirecting to {}", next);
+                current = next;
+                continue;
             }
-        };
-        serial_println!("http: {} -> {}", target.host, ip);
 
-        render_status(&format!(
-            "Connecting to {} ({ip}) over {}...",
-            target.host,
-            if target.https { "TLS" } else { "plain HTTP" }
-        ));
-        let response = match get(ip, &target).await {
-            Ok(body) => body,
-            Err(e) => {
-                render_status(&format!("Request to {} failed: {e}", target.host));
-                serial_println!("http: request failed: {}", e);
-                return;
+            let body = if is_chunked(headers) {
+                dechunk(body)
+            } else {
+                body.to_vec()
+            };
+
+            let text = String::from_utf8_lossy(&body);
+            match render_page(&target, &text).await {
+                Some(clicked_url) => {
+                    serial_println!("http: navigating to {}", clicked_url);
+                    current = clicked_url;
+                    continue 'navigate;
+                }
+                None => return,
             }
-        };
-        serial_println!("http: received {} bytes", response.len());
-
-        let (headers, body) = split_headers_body(&response);
-
-        if let Some(location) = redirect_location(headers) {
-            if redirect == MAX_REDIRECTS {
-                render_status("Too many redirects");
-                serial_println!("http: too many redirects, giving up at {}", location);
-                return;
-            }
-            let next = resolve_url(&target, location);
-            serial_println!("http: redirecting to {}", next);
-            current = next;
-            continue;
         }
-
-        let body = if is_chunked(headers) {
-            dechunk(body)
-        } else {
-            body.to_vec()
-        };
-
-        serial_println!("---- response ----");
-        serial_println!("{}", String::from_utf8_lossy(&response));
-        serial_println!("-------------------");
-
-        let text = String::from_utf8_lossy(&body);
-        render_page(&target, &text).await;
-        return;
     }
 }
 
@@ -286,8 +298,8 @@ fn render_status(msg: &str) {
 /// (`draw_at_scroll`) is pure and local: no `.await`, no network, so it
 /// can re-run on every scroll-key press without re-fetching anything.
 enum ResolvedItem {
-    Text { text: String, style: layout::ComputedStyle },
-    Image { bitmap: img::Bitmap },
+    Text { text: String, style: layout::ComputedStyle, href: Option<String> },
+    Image { bitmap: img::Bitmap, intended_width: Option<usize>, intended_height: Option<usize> },
 }
 
 /// Parses `html` into a real DOM (`dom.rs`), resolves CSS (a built-in UA
@@ -299,7 +311,7 @@ enum ResolvedItem {
 /// `crate::keyboard`'s extended-scancode support) via `draw_at_scroll`,
 /// polling non-blockingly between keystrokes the same way every other
 /// wait in this file does (`net_tick().await`, never a spin loop).
-async fn render_page(target: &Url<'_>, html_src: &str) {
+async fn render_page(target: &Url<'_>, html_src: &str) -> Option<String> {
     render_status("Parsing page...");
     let dom_root = crate::dom::parse(html_src);
 
@@ -316,13 +328,13 @@ async fn render_page(target: &Url<'_>, html_src: &str) {
     let quick_bg = layout::page_background(&dom_root, &no_css);
     let (quick_h, quick_x0, quick_w) = {
         let mut guard = gfx::SCREEN.lock();
-        let Some(fb) = guard.as_mut() else { return };
+        let Some(fb) = guard.as_mut() else { return None };
         (fb.height(), MARGIN, fb.width() - 2 * MARGIN)
     };
     let quick_resolved: Vec<ResolvedItem> = quick_items
         .into_iter()
         .filter_map(|item| match item {
-            layout::LayoutItem::Text { text, style } => Some(ResolvedItem::Text { text, style }),
+            layout::LayoutItem::Text { text, style, href } => Some(ResolvedItem::Text { text, style, href }),
             layout::LayoutItem::Image { .. } => None,
         })
         .collect();
@@ -350,9 +362,9 @@ async fn render_page(target: &Url<'_>, html_src: &str) {
     let items = layout::flatten(&dom_root, &rules);
     let bg = layout::page_background(&dom_root, &rules);
 
-    let (viewport_h, content_x0, content_w) = {
+    let (viewport_w, viewport_h, content_x0, content_w) = {
         let mut guard = gfx::SCREEN.lock();
-        let Some(fb) = guard.as_mut() else { return };
+        let Some(fb) = guard.as_mut() else { return None };
         let w = fb.width();
         let h = fb.height();
         // A centered, narrower reading column when the page's own CSS
@@ -361,7 +373,7 @@ async fn render_page(target: &Url<'_>, html_src: &str) {
         // viewport (minus the outer gutter) otherwise.
         let content_w = layout::page_content_width(&dom_root, &rules, w).unwrap_or(w - 2 * MARGIN);
         let content_x0 = (w.saturating_sub(content_w)) / 2;
-        (h, content_x0, content_w)
+        (w, h, content_x0, content_w)
     };
 
     if items.is_empty() {
@@ -379,18 +391,18 @@ async fn render_page(target: &Url<'_>, html_src: &str) {
                 RasterHeight::Size16,
             );
         }
-        return;
+        return None;
     }
 
     let mut resolved = Vec::with_capacity(items.len());
     for item in items {
         match item {
-            layout::LayoutItem::Text { text, style } => resolved.push(ResolvedItem::Text { text, style }),
-            layout::LayoutItem::Image { src } => {
+            layout::LayoutItem::Text { text, style, href } => resolved.push(ResolvedItem::Text { text, style, href }),
+            layout::LayoutItem::Image { src, intended_width, intended_height } => {
                 let image_url = resolve_url(target, &src);
                 serial_println!("http: fetching image {}", image_url);
                 match fetch_bytes_quiet(&image_url).await.and_then(|bytes| img::decode(&bytes)) {
-                    Some(bitmap) => resolved.push(ResolvedItem::Image { bitmap }),
+                    Some(bitmap) => resolved.push(ResolvedItem::Image { bitmap, intended_width, intended_height }),
                     None => serial_println!("http: image {} failed or unsupported format", image_url),
                 }
             }
@@ -398,50 +410,126 @@ async fn render_page(target: &Url<'_>, html_src: &str) {
     }
 
     let mut scroll_y: usize = 0;
-    let content_height = draw_at_scroll(&resolved, bg, content_x0, content_w, viewport_h, 0);
+    let (content_height, mut click_regions) = draw_at_scroll(&resolved, bg, content_x0, content_w, viewport_h, 0);
     let max_scroll = content_height.saturating_sub(viewport_h);
 
-    // Scroll loop: redraws only on an actual key press, otherwise just
-    // yields to the executor — same non-blocking-poll discipline as
-    // every network wait in this file, just driven by the keyboard
-    // buffer instead of a socket.
+    // Mouse position is tracked here (not in `mouse.rs`, which only
+    // reports relative deltas) since only this loop knows the viewport
+    // bounds to clamp against. Starts centered — a PS/2 mouse has no
+    // concept of absolute position to report on its own.
+    let mut mouse_x: i32 = (viewport_w / 2) as i32;
+    let mut mouse_y: i32 = (viewport_h / 2) as i32;
+    if let Some(fb) = gfx::SCREEN.lock().as_mut() {
+        fb.draw_cursor(mouse_x as usize, mouse_y as usize);
+    }
+
+    // Scroll/click loop: redraws only on an actual key press, scroll
+    // wheel tick, or scroll-changing event; a click checks
+    // `click_regions` and returns the target URL for the caller
+    // (`fetch`) to navigate to. Otherwise just yields to the executor —
+    // same non-blocking-poll discipline as every network wait in this
+    // file, just driven by the keyboard/mouse buffers instead of a
+    // socket.
     loop {
+        let mut redraw = false;
         match crate::keyboard::pop_key() {
-            Some(crate::keyboard::KEY_DOWN) => scroll_y = (scroll_y + LINE_SCROLL_STEP).min(max_scroll),
-            Some(crate::keyboard::KEY_UP) => scroll_y = scroll_y.saturating_sub(LINE_SCROLL_STEP),
-            Some(crate::keyboard::KEY_PAGE_DOWN) => scroll_y = (scroll_y + viewport_h).min(max_scroll),
-            Some(crate::keyboard::KEY_PAGE_UP) => scroll_y = scroll_y.saturating_sub(viewport_h),
-            Some(_) | None => {
-                net_tick().await;
-                continue;
+            Some(crate::keyboard::KEY_DOWN) => {
+                scroll_y = (scroll_y + LINE_SCROLL_STEP).min(max_scroll);
+                redraw = true;
             }
+            Some(crate::keyboard::KEY_UP) => {
+                scroll_y = scroll_y.saturating_sub(LINE_SCROLL_STEP);
+                redraw = true;
+            }
+            Some(crate::keyboard::KEY_PAGE_DOWN) => {
+                scroll_y = (scroll_y + viewport_h).min(max_scroll);
+                redraw = true;
+            }
+            Some(crate::keyboard::KEY_PAGE_UP) => {
+                scroll_y = scroll_y.saturating_sub(viewport_h);
+                redraw = true;
+            }
+            Some(_) | None => {}
         }
-        draw_at_scroll(&resolved, bg, content_x0, content_w, viewport_h, scroll_y);
+
+        match crate::mouse::poll_event() {
+            Some(crate::mouse::MouseEvent::Move { dx, dy }) => {
+                mouse_x = (mouse_x + dx).clamp(0, viewport_w as i32 - 1);
+                mouse_y = (mouse_y + dy).clamp(0, viewport_h as i32 - 1);
+                // A full redraw per move (rather than a cheaper
+                // draw-old-position-back/erase trick) is the simplest
+                // correct way to keep the cursor visible without ever
+                // leaving a trail behind it — this renderer has no
+                // separate off-screen content buffer to restore just
+                // the cursor's old patch of pixels from.
+                redraw = true;
+            }
+            Some(crate::mouse::MouseEvent::ScrollDown) => {
+                scroll_y = (scroll_y + LINE_SCROLL_STEP).min(max_scroll);
+                redraw = true;
+            }
+            Some(crate::mouse::MouseEvent::ScrollUp) => {
+                scroll_y = scroll_y.saturating_sub(LINE_SCROLL_STEP);
+                redraw = true;
+            }
+            Some(crate::mouse::MouseEvent::LeftDown) => {
+                let (mx, my) = (mouse_x as usize, mouse_y as usize);
+                if let Some(region) = click_regions.iter().find(|r| mx >= r.x0 && mx < r.x1 && my >= r.y0 && my < r.y1) {
+                    return Some(resolve_url(target, &region.href));
+                }
+            }
+            Some(crate::mouse::MouseEvent::LeftUp) | None => {}
+        }
+
+        if !redraw {
+            net_tick().await;
+            continue;
+        }
+        let (_, regions) = draw_at_scroll(&resolved, bg, content_x0, content_w, viewport_h, scroll_y);
+        click_regions = regions;
+        if let Some(fb) = gfx::SCREEN.lock().as_mut() {
+            fb.draw_cursor(mouse_x as usize, mouse_y as usize);
+        }
     }
 }
 
 const LINE_SCROLL_STEP: usize = 32;
 
+/// A link's on-screen bounding box for the most recent `draw_at_scroll`
+/// call, in screen (not content/document) coordinates — rebuilt on every
+/// redraw since scrolling moves everything. `render_page`'s click
+/// handling checks a mouse-click position against these.
+struct ClickRegion {
+    x0: usize,
+    y0: usize,
+    x1: usize,
+    y1: usize,
+    href: String,
+}
+
 /// Draws `resolved` at vertical scroll offset `scroll_y` — pure and
 /// local (no `.await`, no network), so it's cheap enough to call on
 /// every scroll key press. Returns the total (unscrolled) content
-/// height, which the caller uses once, on the initial call, to compute
-/// `max_scroll`. Every item's position is computed unconditionally
-/// (`content_y` always advances) regardless of whether it's actually
-/// visible, so later items stay correctly positioned even while earlier
-/// ones are scrolled off — only the actual pixel-drawing is skipped for
-/// anything wholly outside `[scroll_y, scroll_y + viewport_h)`.
-fn draw_at_scroll(resolved: &[ResolvedItem], bg: gfx::Color, content_x0: usize, content_w: usize, viewport_h: usize, scroll_y: usize) -> usize {
+/// height (which the caller uses once, on the initial call, to compute
+/// `max_scroll`) plus every currently-visible link's on-screen bounding
+/// box. Every item's position is computed unconditionally (`content_y`
+/// always advances) regardless of whether it's actually visible, so
+/// later items stay correctly positioned even while earlier ones are
+/// scrolled off — only the actual pixel-drawing (and click-region
+/// recording) is skipped for anything wholly outside
+/// `[scroll_y, scroll_y + viewport_h)`.
+fn draw_at_scroll(resolved: &[ResolvedItem], bg: gfx::Color, content_x0: usize, content_w: usize, viewport_h: usize, scroll_y: usize) -> (usize, Vec<ClickRegion>) {
     let mut guard = gfx::SCREEN.lock();
-    let Some(fb) = guard.as_mut() else { return 0 };
+    let Some(fb) = guard.as_mut() else { return (0, Vec::new()) };
     fb.clear(bg);
 
     let mut content_y: usize = MARGIN;
     let right_edge = content_x0 + content_w;
+    let mut click_regions = Vec::new();
 
     for item in resolved {
         match item {
-            ResolvedItem::Text { text, style } => {
+            ResolvedItem::Text { text, style, href } => {
                 content_y += style.margin_top;
                 let pad = style.padding;
                 let x0 = (if style.align_center {
@@ -466,25 +554,62 @@ fn draw_at_scroll(resolved: &[ResolvedItem], bg: gfx::Color, content_x0: usize, 
                     if let Some((border_color, thickness)) = style.border_bottom {
                         fb.fill_rect(content_x0, draw_y + box_height, content_w, thickness, border_color);
                     }
+                    if let Some(link_href) = href {
+                        click_regions.push(ClickRegion {
+                            x0: content_x0,
+                            y0: draw_y,
+                            x1: right_edge,
+                            y1: draw_y + box_height,
+                            href: link_href.clone(),
+                        });
+                    }
                 }
                 content_y += box_height + 6 + style.margin_bottom;
                 if let Some((_, thickness)) = style.border_bottom {
                     content_y += thickness + 4;
                 }
             }
-            ResolvedItem::Image { bitmap } => {
-                let Some((_, img_h)) = gfx::bitmap_draw_size(bitmap, content_w) else {
+            ResolvedItem::Image { bitmap, intended_width, intended_height } => {
+                if bitmap.width == 0 || bitmap.height == 0 {
                     continue;
+                }
+                // The page's own intended on-page size wins over
+                // "fit to column" when it declares one — see
+                // `layout::LayoutItem::Image`'s doc comment for why a
+                // real thumbnail's *decoded* size is usually much
+                // bigger than its *intended* display size. Still capped
+                // to `content_w` so an unusually large declared width
+                // (or a narrow viewport) can't overflow the page.
+                let (target_w, target_h) = match (intended_width, intended_height) {
+                    (Some(iw), Some(ih)) => {
+                        let w = (*iw).min(content_w).max(1);
+                        let h = (ih * w / iw.max(&1)).max(1);
+                        (w, h)
+                    }
+                    (Some(iw), None) => {
+                        let w = (*iw).min(content_w).max(1);
+                        let h = (bitmap.height * w / bitmap.width).max(1);
+                        (w, h)
+                    }
+                    (None, Some(ih)) => {
+                        let w = (bitmap.width * ih / bitmap.height).min(content_w).max(1);
+                        let h = (bitmap.height * w / bitmap.width).max(1);
+                        (w, h)
+                    }
+                    (None, None) => match gfx::bitmap_draw_size(bitmap, content_w) {
+                        Some(size) => size,
+                        None => continue,
+                    },
                 };
                 let screen_y = (content_y as isize) - (scroll_y as isize);
-                if screen_y + img_h as isize >= 0 && screen_y <= viewport_h as isize {
-                    fb.draw_bitmap(bitmap, content_x0, screen_y.max(0) as usize, content_w);
+                if screen_y + target_h as isize >= 0 && screen_y <= viewport_h as isize {
+                    fb.draw_bitmap_scaled(bitmap, content_x0, screen_y.max(0) as usize, target_w, target_h);
                 }
-                content_y += img_h + 6;
+                content_y += target_h + 6;
             }
         }
     }
-    content_y
+    (content_y, click_regions)
 }
 
 /// Finds every `<link rel="stylesheet" href="...">` in document order —

@@ -495,8 +495,27 @@ pub enum LayoutItem {
     /// link (an `<a>` that IS the block, e.g. a nav item) still gets its
     /// own correct color/weight — it's only a style change *within* a
     /// paragraph's running text that's lost.
-    Text { text: String, style: ComputedStyle },
-    Image { src: String },
+    /// `href`: `Some` when this whole item IS a link's own text — see
+    /// `walk`'s handling of `<a>` for why a link always gets its own
+    /// item (flushed as its own paragraph boundary) rather than flowing
+    /// inline within surrounding text, even though `<a>` is technically
+    /// an inline element in real CSS: this kernel's click-to-navigate
+    /// needs a way to know which on-screen text maps to which URL, and
+    /// the "concatenate everything in a block into one string" design
+    /// has no way to track that for a link buried mid-sentence without a
+    /// much bigger rearchitecture — breaking a link onto its own line is
+    /// the deliberate tradeoff made here to keep links genuinely
+    /// clickable at all.
+    Text { text: String, style: ComputedStyle, href: Option<String> },
+    /// `intended_width`/`intended_height`: the page's own `width`/
+    /// `height` HTML attributes on the `<img>` tag, when present — a
+    /// real Wikipedia thumbnail is typically encoded much larger than
+    /// its intended on-page display size (e.g. a `250px`-wide `<img>`
+    /// whose actual decoded bitmap is 1000px+), so scaling to "fit the
+    /// content column" instead of the page's own intended size makes
+    /// every image look oversized. `None` (no attribute present) falls
+    /// back to that fit-to-column behavior.
+    Image { src: String, intended_width: Option<usize>, intended_height: Option<usize> },
 }
 
 /// Walks `node` and its subtree in document order, producing a flat,
@@ -506,7 +525,7 @@ pub enum LayoutItem {
 pub fn flatten(root: &Node, rules: &RuleIndex) -> Vec<LayoutItem> {
     let mut out = Vec::new();
     let mut path: Vec<&Node> = Vec::new();
-    let mut state = ParagraphState { text: String::new(), style: default_style() };
+    let mut state = ParagraphState { text: String::new(), style: default_style(), href: None };
     walk(root, rules, default_style(), &mut path, &mut out, &mut state);
     flush(&mut state, &mut out);
     out
@@ -515,12 +534,13 @@ pub fn flatten(root: &Node, rules: &RuleIndex) -> Vec<LayoutItem> {
 struct ParagraphState {
     text: String,
     style: ComputedStyle,
+    href: Option<String>,
 }
 
 fn flush(state: &mut ParagraphState, out: &mut Vec<LayoutItem>) {
     let trimmed = state.text.trim();
     if !trimmed.is_empty() {
-        out.push(LayoutItem::Text { text: trimmed.to_string(), style: state.style });
+        out.push(LayoutItem::Text { text: trimmed.to_string(), style: state.style, href: state.href.clone() });
     }
     state.text.clear();
 }
@@ -550,7 +570,11 @@ fn walk<'a>(node: &'a Node, rules: &RuleIndex, inherited: ComputedStyle, path: &
     if node.tag == "img" {
         flush(state, out);
         if let Some(src) = node.attr("src") {
-            out.push(LayoutItem::Image { src: src.to_string() });
+            out.push(LayoutItem::Image {
+                src: src.to_string(),
+                intended_width: node.attr("width").and_then(|w| w.parse().ok()),
+                intended_height: node.attr("height").and_then(|h| h.parse().ok()),
+            });
         }
         return;
     }
@@ -564,10 +588,17 @@ fn walk<'a>(node: &'a Node, rules: &RuleIndex, inherited: ComputedStyle, path: &
         });
 
     if !display_none {
-        let block = is_block(&node.tag);
+        // A real `<a href>` gets its own flush boundary same as a block
+        // element — see `LayoutItem::Text`'s doc comment on `href` for
+        // why (click-to-navigate needs a way to know which on-screen
+        // text maps to which URL, which the paragraph-concatenation
+        // design can't track for a link buried mid-sentence otherwise).
+        let link_href = (node.tag == "a").then(|| node.attr("href")).flatten();
+        let block = is_block(&node.tag) || link_href.is_some();
         if block {
             flush(state, out);
             state.style = style;
+            state.href = link_href.map(|h| h.to_string());
             if node.tag == "li" {
                 // ASCII "* " rather than a real bullet glyph (U+2022):
                 // this font only has the basic-Latin/Latin-1-supplement
@@ -582,6 +613,7 @@ fn walk<'a>(node: &'a Node, rules: &RuleIndex, inherited: ComputedStyle, path: &
         }
         if block {
             flush(state, out);
+            state.href = None;
         }
     }
     path.pop();
