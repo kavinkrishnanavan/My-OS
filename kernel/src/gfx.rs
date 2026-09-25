@@ -114,11 +114,17 @@ impl Framebuffer {
 
     /// Draws a simple filled-arrow mouse cursor with its hotspot (the
     /// point that's actually "where the mouse is") at `(x, y)` — a
-    /// growing-triangle silhouette with a light outline on its trailing
-    /// edge, so it stays visible against light AND dark page
-    /// backgrounds alike (a page's own content color can't be known
-    /// generically here). Always drawn last, on top of everything else
-    /// (`net/http.rs` calls this immediately after `draw_at_scroll`).
+    /// growing-triangle silhouette (rows 0..8, tip at the hotspot) plus a
+    /// rectangular "tail" (rows 8..14), outlined on *every* boundary
+    /// edge — left (the long straight side), right/diagonal, and bottom
+    /// — not just the right edge and bottom row. A previous version only
+    /// outlined those latter two, leaving the whole left edge drawn in
+    /// the plain near-black fill color with nothing to contrast it
+    /// against a dark page/desktop background — on screen that reads as
+    /// the cursor being "cut in half" (only the right/bottom ever
+    /// visible), which is exactly the bug this fixes. Always drawn last,
+    /// on top of everything else (`net/http.rs`/the desktop apps call
+    /// this immediately after their own redraw).
     pub fn draw_cursor(&mut self, x: usize, y: usize) {
         const HEIGHT: usize = 14;
         const FILL: Color = Color(0x10, 0x10, 0x10);
@@ -126,7 +132,7 @@ impl Framebuffer {
         for row in 0..HEIGHT {
             let width = (row + 1).min(9);
             for col in 0..width {
-                let on_edge = col == width - 1 || row == HEIGHT - 1;
+                let on_edge = col == 0 || col == width - 1 || row == 0 || row == HEIGHT - 1;
                 let color = if on_edge { OUTLINE } else { FILL };
                 self.put_pixel(x + col, y + row, color);
             }
